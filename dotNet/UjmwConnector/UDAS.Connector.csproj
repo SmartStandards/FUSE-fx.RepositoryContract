@@ -54,6 +54,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Contract\UDAS.Contract.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="UDAS.Contract">
       <HintPath>..\(Stage)\Bin\UDAS.Contract.dll</HintPath>
       <SpecificVersion>false</SpecificVersion>

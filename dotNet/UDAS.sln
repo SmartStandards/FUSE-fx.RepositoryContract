@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30517.126
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "(nuspec)", "(nuspec)", "{B755BBA1-92FA-46E7-B3A7-C253E9BEBCA1}"
 	ProjectSection(SolutionItems) = preProject
@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UDAS.Contract", "Contract\U
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UDAS.Connector", "UjmwConnector\UDAS.Connector.csproj", "{46B829AC-CEA8-425B-93F8-1D9B760E20F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDAS.Generators", "UDAS.Generators\UDAS.Generators.csproj", "{FC307E13-5D62-416E-8EEF-0FF092462990}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{46B829AC-CEA8-425B-93F8-1D9B760E20F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46B829AC-CEA8-425B-93F8-1D9B760E20F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46B829AC-CEA8-425B-93F8-1D9B760E20F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC307E13-5D62-416E-8EEF-0FF092462990}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC307E13-5D62-416E-8EEF-0FF092462990}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC307E13-5D62-416E-8EEF-0FF092462990}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC307E13-5D62-416E-8EEF-0FF092462990}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
