@@ -7,6 +7,6 @@ namespace System.Data.UDAS.v1 {
     TEntity AddOrUpdate(TEntity entity);
     void DeleteEntities(IList<object[]> keyValuesCollection);
     PaginatedResponse<TEntity> Search(ListSearchParams<TSearchFilter> searchParams);
-    PaginatedResponse<TEntity> SearchByParentId(ListSearchParamsByParent searchParams, long parentId);
+    PaginatedResponse<TEntity> SearchByParentId(ListSearchParamsByParent searchParams);
   }
 }
