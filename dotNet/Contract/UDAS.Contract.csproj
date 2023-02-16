@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <PackageId>UDAS.Contract</PackageId>
+    <Company>Smart Standards</Company>
+    <Product>UnifiedDataAccessService</Product>
+    <Authors>Smart Standards</Authors>
+    <Copyright>Smart Standards</Copyright>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <Version>0.1.0</Version>
+    <AssemblyName>UDAS.Contract</AssemblyName>
+    <RootNamespace>System.Data.UDAS</RootNamespace>
+    <RepositoryUrl>https://github.com/SmartStandards/UnifiedDataAccessService</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/SmartStandards/UnifiedDataAccessService</PackageProjectUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\(Stage)\Bin</OutputPath>
+    <DocumentationFile>..\(Stage)\Bin\UDAS.Contract.xml</DocumentationFile>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Deterministic>false</Deterministic>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\(Stage)\Bin</OutputPath>
+    <DocumentationFile>..\(Stage)\Bin\UDAS.Contract.xml</DocumentationFile>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Deterministic>false</Deterministic>
+    <NoWarn>1701;1702;1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="v1\IEventQueueService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EntityAnnotations" Version="2.4.0.551" />
+    <PackageReference Include="EntitySchema" Version="1.0.0.488" />
+    <PackageReference Include="kGEN.Generator" Version="1.5.0.632" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="v1\[API]\Documentation.md">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Documentation.tt</DependentUpon>
+    </None>
+    <None Update="v1\[API]\Documentation.tt">
+      <LastGenOutput>Documentation.md</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+</Project>

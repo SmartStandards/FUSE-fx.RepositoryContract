@@ -1,0 +1,19 @@
+﻿{
+  "inputFile": "..\\..\\dotNet\\(Stage)\\Bin\\UDAS.Contract.dll",
+  "interfaceTypeNamePattern": "System.Data.UDAS.I*Service",
+  "requireXmlDocForNamespaces": [
+    "System.Data.UDAS"
+  ],
+  "template": "Models",
+  "outputLanguage": "TS",
+  "indentDepthPerLevel": 2,
+  "codeGenInfoHeader": "based on UDAS Contract v{InputAssemblyVersion}",
+  "outputNamespace": "",
+  "customImports": [],
+  "writeCustomImportsOnly": true,
+  "modelTypeNameIncludePatterns": [
+    "System.Data.UDAS.*"
+  ],
+  "generateDataAnnotationsForLocalModels": false,
+  "generateNavigationAnnotationsForLocalModels": false
+}

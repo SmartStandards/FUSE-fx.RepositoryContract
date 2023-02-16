@@ -1,0 +1,38 @@
+{
+  "name": "udas-connector",
+  "version": "0.1.0",
+  "description": "UDAS - Connector",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json",
+    "prepare": "npm run build",
+    "prepublishOnly_": "npm run lint",
+    "preversion": "npm run lint",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SmartStandards/UnifiedDataAccessService"
+  },
+  "author": "Smart Standards",
+  "license": "Apache-2.0",
+  "homepage": "kornsw.de",
+  "dependencies": {
+    "udas-contract": "^0.1.0",
+    "axios": "^0.27.2"
+  },
+  "devDependencies": {
+    "prettier": "^2.6.2",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.7.2"
+  },
+  "files": [
+    "lib/**/*"
+  ]
+}

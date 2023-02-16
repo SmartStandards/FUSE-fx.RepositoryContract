@@ -1,0 +1,30 @@
+﻿{
+  "inputFile": "..\\..\\dotNet\\(Stage)\\Bin\\UDAS.Contract.dll",
+  "interfaceTypeNamePattern": "System.Data.UDAS.I*Service",
+  "requireXmlDocForNamespaces": [
+    "System.Data.UDAS"
+  ],
+  "template": "Clients",
+  "outputLanguage": "TS",
+  "indentDepthPerLevel": 2,
+  "codeGenInfoHeader": "based on UDAS v{InputAssemblyVersion}",
+  "outputNamespace": "",
+  "customImports": [
+  ],
+  "writeCustomImportsOnly": true,
+  "nsPrefixForModelTypesUsage": "Models.",
+  "generateFaultProperty": true,
+  "useInterfaceTypeNameToGenerateSubNamespace": false,
+  "removeLeadingCharCountForSubNamespace": 1,
+  "removeTrailingCharCountForSubNamespace": 7,
+  "removeLeadingCharCountForOwnerName": 1,
+  "removeTrailingCharCountForOwnerName": 7,
+  "connectorClassName": "UdasConnector",
+  "authHeaderName": "Authorization",
+  "throwClientExecptionsFromFaultProperty": true,
+  "ImportDtosFrom": "udas-contract",
+  "ImportModelsFrom": "udas-contract",
+  "ImportInterfacesFrom": "udas-contract",
+  "transformRefAndOutArgsToReturnPropertyBag": true,
+  "generateAsyncMethods": true
+}

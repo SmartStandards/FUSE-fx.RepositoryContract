@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>UDAS.Connector</id>
+    <version>0.1.0-localbuild</version>
+    <title>UDAS - Connector</title>
+    <authors>Smart Sandards</authors>
+    <owners>Smart Sandards</owners>
+    <copyright>Smart Sandards</copyright>
+    <description>UDAS - Connector</description>
+    <tags>UDAS</tags>
+    <!-- https://spdx.org/licenses/ -->
+    <license type="expression">Apache-2.0</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <icon>PackageIcon.png</icon>
+    <projectUrl>https://github.com/SmartStandards/UnifiedDataAccessService</projectUrl>
+    <dependencies>
+      <group targetFramework="net5.0">
+        <dependency id="EntityAnnotations" version="[2.2.0,2.9999]" />
+        <dependency id="EntitySchema" version="[1.0.0,1.9999]" />
+        <dependency id="UDAS.Contract" version="[0.1.0,0.9999]" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <!-- https://docs.microsoft.com/en-us/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
+    <file src="PackageIcon.png" target="" />
+    <!-- .NET 5.0 -->
+    <file src="..\(Stage)\Bin\UDAS.Connector.dll" target="lib/net5.0" />
+    <file src="..\(Stage)\Bin\UDAS.Connector.xml" target="lib/net5.0" />
+    <file src="..\(Stage)\Bin\UDAS.Connector.pdb" target="lib/net5.0" />
+  </files>
+</package>
