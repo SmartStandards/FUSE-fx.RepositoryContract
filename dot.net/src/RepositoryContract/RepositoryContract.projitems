@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>cf0a161a-99ba-4f01-af5e-16c6fcbc85ae</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>System</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\EntityRef.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericEntityRepositoryEf.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\IGenericEntityRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from KornSW.kPers%29\IRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from KosrnSW.DynamicRepository%29\DynamicLinqExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\ApiResponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\..\..\%28git%29\SmartStandards\%28SmartStandards%29 FUSE-fx.RepositoryContract\dotnet\src\RepositoryContract\EntityRef.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\IEntityRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\IUdasInfoService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\KeyValuesCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\ListSearchParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\PaginatedResponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\SharedModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SimpleExpressionTree.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IReposiotory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EntityRefById.cs" />
+  </ItemGroup>
+</Project>
