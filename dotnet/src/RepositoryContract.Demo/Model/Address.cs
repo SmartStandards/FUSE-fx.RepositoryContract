@@ -1,4 +1,4 @@
-﻿namespace ModelReader.Demo.Model {
+﻿namespace RepositoryContract.Demo.Model {
   public class Address {
     public int Id { get; set; }
     public string Street { get; set; } = string.Empty;

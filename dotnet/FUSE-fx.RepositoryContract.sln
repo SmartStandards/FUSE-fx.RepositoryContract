@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UjmwRepositoryConnector", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "(old)", "(old)", "{9E8E402C-864A-44AD-B373-CB8B2DAA8516}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.Demo", "src\RepositoryContract.Demo\RepositoryContract.Demo.csproj", "{A9A07287-AB82-4AA3-B677-C1A6850FFB7B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{5BDB2EDA-D142-498B-B6F3-B07429C895EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5BDB2EDA-D142-498B-B6F3-B07429C895EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5BDB2EDA-D142-498B-B6F3-B07429C895EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9A07287-AB82-4AA3-B677-C1A6850FFB7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9A07287-AB82-4AA3-B677-C1A6850FFB7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9A07287-AB82-4AA3-B677-C1A6850FFB7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9A07287-AB82-4AA3-B677-C1A6850FFB7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -70,6 +76,7 @@ Global
 		{2C95571E-07FF-49CB-8BE7-7F2CDCDBE75C} = {EFB5135D-039A-4D92-8FDD-9EA5D070F991}
 		{5BDB2EDA-D142-498B-B6F3-B07429C895EE} = {9E8E402C-864A-44AD-B373-CB8B2DAA8516}
 		{9E8E402C-864A-44AD-B373-CB8B2DAA8516} = {EFB5135D-039A-4D92-8FDD-9EA5D070F991}
+		{A9A07287-AB82-4AA3-B677-C1A6850FFB7B} = {EFB5135D-039A-4D92-8FDD-9EA5D070F991}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D2F37C1D-32F0-4BF2-AAEB-46B9D8C07D23}
@@ -77,7 +84,6 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\RepositoryContract\RepositoryContract.projitems*{7b5baea8-7e79-4a30-b6c1-4da4831af970}*SharedItemsImports = 5
 		src\RepositoryContract\RepositoryContract.projitems*{88f15535-fad8-4372-80dc-fd0d8c81ab4c}*SharedItemsImports = 5
-		src\RepositoryContract\RepositoryContract.projitems*{b0ba06fe-6437-4b9e-8c76-3adfc8d191d2}*SharedItemsImports = 4
 		src\RepositoryContract\RepositoryContract.projitems*{cf0a161a-99ba-4f01-af5e-16c6fcbc85ae}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

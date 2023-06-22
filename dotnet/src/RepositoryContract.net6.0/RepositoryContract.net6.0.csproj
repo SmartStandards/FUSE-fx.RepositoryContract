@@ -40,6 +40,7 @@
 
   <ItemGroup>
     <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.7" />
   </ItemGroup>
 
 </Project>

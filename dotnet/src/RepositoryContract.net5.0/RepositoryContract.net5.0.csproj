@@ -39,7 +39,14 @@
   <Import Project="..\RepositoryContract\RepositoryContract.projitems" Label="Shared" />
 
   <ItemGroup>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.17" />
   </ItemGroup>
 
 </Project>
