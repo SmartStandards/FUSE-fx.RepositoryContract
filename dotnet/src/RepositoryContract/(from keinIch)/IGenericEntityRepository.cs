@@ -10,7 +10,7 @@ namespace System.Data.Fuse {
     IList GetEntities(string entityName);
     IList<Dictionary<string, object>> GetDtos(string entityName);
 
-    IList<EntityRef> GetEntityRefs(string entityName);
+    IList<EntityRefById> GetEntityRefs(string entityName);
 
     object AddOrUpdateEntity(string entityName, Dictionary<string, JsonElement> entity);
     void DeleteEntities(object[][] entityIdsToDelete);

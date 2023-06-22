@@ -143,9 +143,17 @@ namespace System.Data.Fuse {
       }
     }
 
-    public IList<EntityRef> GetEntityRefs(string entityName) {
-      Type entityType = Assembly.GetExecutingAssembly().GetType(entityName);
+    public IList<EntityRefById> GetEntityRefs(string entityName) {
       throw new NotImplementedException();
+      //IList entities = GetEntities(entityName);
+      //List<EntityRef> result = new List<EntityRef>();
+      //if (entities.Count == 0) { return result; }
+      
+      //if (entityType == null) { return null; }
+      //foreach (object entity in entities) {
+      //  EntityRefById entityRef = new EntityRefById();
+      //  entityRef.Id = 
+      //}
     }
   }
 
