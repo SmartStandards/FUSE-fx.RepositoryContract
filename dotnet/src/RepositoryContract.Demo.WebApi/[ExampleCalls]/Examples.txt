@@ -1,0 +1,27 @@
+{
+  "entityName": "Employee",
+  "entity": {
+    "id": 0,
+    "FirstName": "John",
+    "LastName": "Doe"
+  }
+}
+
+{
+  "entityName": "BusinessUnit",
+  "entity": {
+    "id": 0,
+    "name": "BU1",
+    "description": "First Business Unit"
+  }
+}
+
+{
+  "entityName": "Employee",
+  "entity": {
+    "id": 0,
+    "firstName": "John",
+    "lastName": "Doe",
+    "businessUnit": {"id": 1, "label": "asdsada"}
+  }
+}
