@@ -144,16 +144,19 @@ namespace System.Data.Fuse {
     }
 
     public IList<EntityRefById> GetEntityRefs(string entityName) {
-      throw new NotImplementedException();
-      //IList entities = GetEntities(entityName);
-      //List<EntityRef> result = new List<EntityRef>();
-      //if (entities.Count == 0) { return result; }
-      
-      //if (entityType == null) { return null; }
-      //foreach (object entity in entities) {
-      //  EntityRefById entityRef = new EntityRefById();
-      //  entityRef.Id = 
-      //}
+      IList entities = GetEntities(entityName);
+      List<EntityRefById> result = new List<EntityRefById>();
+      if (entities.Count == 0) { return result; }
+      Type entityType = entities[0].GetType();
+      PropertyInfo idProp = entityType.GetProperty("Id");
+      if (idProp == null) { return result; }
+      foreach (object entity in entities) {
+        EntityRefById entityRef = new EntityRefById();
+        entityRef.Id = idProp.GetValue(entity).ToString();
+        entityRef.Label = entity.ToString();
+        result.Add(entityRef);
+      }
+      return result;
     }
   }
 

@@ -29,5 +29,9 @@ namespace RepositoryContract.Demo.Model {
 
     [Lookup]
     public virtual ObservableCollection<BusinessProject> AssignedBusinessProjects { get; set; } = new ObservableCollection<BusinessProject>();
+
+    public override string ToString() {
+      return $"{FirstName} {LastName}";
+    }
   }
 }

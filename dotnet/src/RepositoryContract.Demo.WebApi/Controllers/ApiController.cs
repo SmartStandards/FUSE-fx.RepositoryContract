@@ -43,6 +43,17 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
       }
     }
 
+    [HttpPost(Name = "GetEntityRefs")]
+    public IActionResult GetEntityRefs([FromBody] GenericListSearchParams searchParams) {
+      try {
+        var result2 = _GenericEntityRepository.GetEntityRefs(searchParams.EntityName);
+        return Ok(new { Return = result2 });
+      } catch (Exception ex) {
+        _Logger.LogCritical(ex, ex.Message);
+        return null;
+      }
+    }
+
     [HttpPost(Name = "AddOrUpdate")]
     public IActionResult AddOrUpdate([FromBody] GenericAddOrUpdateParams addOrUpdateParams) {
       try {
