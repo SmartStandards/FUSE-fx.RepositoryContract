@@ -8,6 +8,12 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
+*(none)*
+
+
+
+## v 0.1.1
+released **2023-06-23**, including:
  - GenericEntityRepo Prototype
 
 
