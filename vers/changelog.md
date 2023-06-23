@@ -8,6 +8,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* reorganized project structure
+*(none)*
+
+
+
+## v 0.1.0
+released **2023-06-23**, including:
+ - reorganized project structure
+
 
 
