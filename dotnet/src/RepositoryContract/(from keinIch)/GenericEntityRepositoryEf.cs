@@ -75,7 +75,7 @@ namespace System.Data.Fuse {
         includeMethod = includeMethod.MakeGenericMethod(entityType);
         resultSet = (IQueryable)includeMethod.Invoke(null, new object[] { resultSet, navProp.Name });
       }
-     
+
       MethodInfo toListMethod = typeof(Enumerable).GetMethod("ToList");
       toListMethod = toListMethod.MakeGenericMethod(entityType);
 
@@ -88,12 +88,16 @@ namespace System.Data.Fuse {
       Type entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
       if (entityType == null) { return null; }
 
-      //TODO -> id?
-      if (!entity.ContainsKey("id")) { return null; }
-      JsonElement id = entity["id"];
-      Int32 idValue = id.GetInt32();
+      IEntityType efEntityType = _DbContext.Model.GetEntityTypes().FirstOrDefault((et) => et.Name == entityType.FullName);
+      IKey primaryKey = efEntityType.GetKeys().First((k) => k.IsPrimaryKey());
+      List<object> keyValues = new List<object>();
+      foreach (IProperty keyProp in primaryKey.Properties) {
+        JsonElement keyPropValueJson = entity[keyProp.Name.ToLowerFirst()];
+        object keyValue = GetValue(keyProp, keyPropValueJson);
+        keyValues.Add(keyValue);
+      }
 
-      object existingEntity = _DbContext.Find(entityType, idValue);
+      object existingEntity = _DbContext.Find(entityType, keyValues.ToArray());
 
       if (existingEntity == null) {
         return Add(entityType, entity);
@@ -140,6 +144,24 @@ namespace System.Data.Fuse {
         targetProperty.SetValue(target, propertyValue.GetBoolean());
       } else if (targetProperty.PropertyType == typeof(DateTime)) {
         targetProperty.SetValue(target, propertyValue.GetDateTime());
+      } else if (targetProperty.PropertyType == typeof(Int32)) {
+        targetProperty.SetValue(target, propertyValue.GetInt32());
+      }
+    }
+
+    private object GetValue(IProperty prop, JsonElement propertyValue) {
+      if (prop.PropertyInfo.PropertyType == typeof(string)) {
+        return propertyValue.GetString();
+      } else if (prop.PropertyInfo.PropertyType == typeof(Int64)) {
+        return propertyValue.GetInt64();
+      } else if (prop.PropertyInfo.PropertyType == typeof(bool)) {
+        return propertyValue.GetBoolean();
+      } else if (prop.PropertyInfo.PropertyType == typeof(DateTime)) {
+        return propertyValue.GetDateTime();
+      } else if (prop.PropertyInfo.PropertyType == typeof(Int32)) {
+        return propertyValue.GetInt32();
+      } else {
+        return null;
       }
     }
 
@@ -163,6 +185,9 @@ namespace System.Data.Fuse {
   internal static class StringExtensions {
     public static string CapitalizeFirst(this string str) {
       return char.ToUpper(str[0]) + str.Substring(1);
+    }
+    public static string ToLowerFirst(this string str) {
+      return char.ToLower(str[0]) + str.Substring(1);
     }
   }
 }

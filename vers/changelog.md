@@ -9,5 +9,6 @@ This files contains a version history including all changes relevant for semanti
 ## Upcoming Changes
 
 * reorganized project structure
+* GenericEntityRepository Prototype
 
 
