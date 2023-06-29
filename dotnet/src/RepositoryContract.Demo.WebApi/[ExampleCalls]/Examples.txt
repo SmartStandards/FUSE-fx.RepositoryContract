@@ -25,3 +25,54 @@
     "businessUnit": {"id": 1, "label": "asdsada"}
   }
 }
+
+
+{
+  "rootNode": {
+    "operator": "string",
+    "expressionArguments": [
+{
+    "operator": "string",
+    "expressionArguments": [],
+    "atomArguments": [
+      {
+        "relation": "string",
+        "propertyName": "string",
+        "propertyType": "string",
+        "values": [
+          "string"
+        ]
+      }
+    ]
+  }
+],
+    "atomArguments": [
+      {
+        "relation": "string",
+        "propertyName": "string",
+        "propertyType": "string",
+        "values": [
+          "string"
+        ]
+      }
+    ]
+  }
+}
+
+{
+  "entityName": "Employee",
+  "filter": {
+    "rootNode": {
+      "operator": "",
+      "expressionArguments": [],
+      "atomArguments": [
+        {
+          "relation": "==",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": "John"
+        }
+      ]
+    }
+  }
+}
