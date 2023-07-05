@@ -8,7 +8,7 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
- - Fix Simple Expression Tree
+ - Fix Simple Expression Tree 2
 
 
 
