@@ -12,6 +12,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 0.1.4
+released **2023-07-05**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.1.3
 released **2023-07-05**, including:
  - SimpleExpressionTree
