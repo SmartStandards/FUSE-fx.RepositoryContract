@@ -9,7 +9,7 @@ namespace System.Data.Fuse {
   public interface IGenericRepository {
 
     IList GetEntities(string entityName, SimpleExpressionTree filter);
-    IList<Dictionary<string, object>> GetDtos(string entityName);
+    IList<Dictionary<string, object>> GetDtos(string entityName, SimpleExpressionTree filter);
 
     IList<EntityRefById> GetEntityRefs(string entityName);
 

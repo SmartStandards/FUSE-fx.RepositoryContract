@@ -44,6 +44,17 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
       }
     }
 
+    [HttpPost(Name = "GetDtos")]
+    public IActionResult GetDtos([FromBody] GenericListSearchParams searchParams) {
+      try {
+        var result = _Repo.GetDtos(searchParams.EntityName, searchParams.Filter);
+        return Ok(new { Return = result });
+      } catch (Exception ex) {
+        _Logger.LogCritical(ex, ex.Message);
+        return null;
+      }
+    }
+
     [HttpPost(Name = "GetEntityRefs")]
     public IActionResult GetEntityRefs([FromBody] GenericListSearchParams searchParams) {
       try {

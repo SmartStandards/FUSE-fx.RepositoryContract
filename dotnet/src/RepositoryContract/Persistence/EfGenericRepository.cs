@@ -13,6 +13,13 @@ namespace System.Data.Fuse {
 
     private Dictionary<string, EfRepository> _InnerRepos = new Dictionary<string, EfRepository>();
 
+    protected EfRepository GetInnerRepo(string entityName) {
+      if (!_InnerRepos.ContainsKey(entityName)) {
+        _InnerRepos.Add(entityName, CreateInnerRepo(entityName));
+      }
+      return _InnerRepos[entityName];
+    }
+
     protected readonly DbContext _DbContext;
     protected readonly Assembly _Assembly;
 
@@ -22,22 +29,19 @@ namespace System.Data.Fuse {
     }
 
     public object AddOrUpdateEntity(string entityName, Dictionary<string, JsonElement> entity) {
-      throw new NotImplementedException();
+      return GetInnerRepo(entityName).AddOrUpdate1(entity);
     }
 
     public void DeleteEntities(object[][] entityIdsToDelete) {
       throw new NotImplementedException();
     }
 
-    public IList<Dictionary<string, object>> GetDtos(string entityName) {
-      throw new NotImplementedException();
-    } 
+    public IList<Dictionary<string, object>> GetDtos(string entityName, SimpleExpressionTree filter) {
+      return GetInnerRepo(entityName).GetDtos1(filter);
+    }
 
-    public Collections.IList GetEntities(string entityName, SimpleExpressionTree filter) {
-      if (!_InnerRepos.ContainsKey(entityName)) {
-        _InnerRepos.Add(entityName, CreateInnerRepo(entityName));
-      }
-      return _InnerRepos[entityName].GetEntities1(filter);
+    public Collections.IList GetEntities(string entityName, SimpleExpressionTree filter) {     
+      return GetInnerRepo(entityName).GetEntities1(filter);
     }
 
     public IList<EntityRefById> GetEntityRefs(string entityName) {

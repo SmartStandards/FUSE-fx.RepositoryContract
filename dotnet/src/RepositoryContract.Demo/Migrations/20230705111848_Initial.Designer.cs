@@ -12,7 +12,7 @@ using RepositoryContract.Demo.WebApi.Persistence;
 namespace RepositoryContract.Demo.Migrations
 {
     [DbContext(typeof(DemoDbContext))]
-    [Migration("20230622144635_Initial")]
+    [Migration("20230705111848_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -169,6 +169,9 @@ namespace RepositoryContract.Demo.Migrations
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("SomeUid")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Title")
                         .IsRequired()

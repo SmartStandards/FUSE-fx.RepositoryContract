@@ -7,6 +7,9 @@ namespace RepositoryContract.Demo.Model {
   public class Employee {
 
     public int Id { get; set; }
+
+    public long SomeUid { get; set; }
+
     public string LastName { get; set; } = string.Empty;  
     public string FirstName { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
