@@ -8,8 +8,12 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
- - Fix Simple Expression Tree 2
+ - Fix Simple Expression Tree 3
 
+
+## v 0.1.5
+released **2023-07-05**, including:
+ - Fix Simple Expression Tree 2
 
 
 ## v 0.1.4
