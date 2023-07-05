@@ -8,8 +8,8 @@ namespace System.Data.Fuse.Logic {
     /// </summary>
     public string Operator { get; set; }
 
-    public List<LogicalExpression> ExpressionArguments { get; set; }
+    public List<LogicalExpression> ExpressionArguments { get; set; } = new List<LogicalExpression>();
 
-    public IList<RelationElement> AtomArguments { get; set; }
+    public IList<RelationElement> AtomArguments { get; set; } = new List<RelationElement>();
   }
 }

@@ -7,6 +7,8 @@ namespace System.Data.Fuse {
   public static class FilterExtensions {
 
     public static string CompileToDynamicLinq(this SimpleExpressionTree tree) {
+      if (tree == null) return null;
+      if (tree.RootNode == null) return null;
       return tree.RootNode.CompileToDynamicLinq();
     }
 
@@ -15,7 +17,7 @@ namespace System.Data.Fuse {
       if (expression == null) { return ""; }
 
       if (expression.Operator == "") {
-        if (expression.AtomArguments.Count != 1) { return ""; }
+        if (expression.AtomArguments?.Count != 1) { return ""; }
         return CompileRelation(expression.AtomArguments[0]);
       }
 
