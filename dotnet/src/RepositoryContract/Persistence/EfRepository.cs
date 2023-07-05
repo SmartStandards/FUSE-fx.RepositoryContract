@@ -151,6 +151,9 @@ namespace System.Data.Fuse {
     }
 
     public IQueryable<TEntity> GetEntitiesDynamic(string dynamicLinqFilter) {
+      if (string.IsNullOrEmpty(dynamicLinqFilter)) {
+        return context.Set<TEntity>();
+      }
       return context.Set<TEntity>().Where(dynamicLinqFilter);
     }
 
