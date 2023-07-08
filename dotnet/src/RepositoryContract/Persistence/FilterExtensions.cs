@@ -63,7 +63,8 @@ namespace System.Data.Fuse {
           serializedValue = $"\"{relationElement.Value}\"";
           break;
         default:
-          return serializedValue = relationElement.Value.ToString();
+          serializedValue = relationElement.Value.ToString();
+          break;
       }
 
       StringBuilder result = new StringBuilder();

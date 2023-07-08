@@ -40,8 +40,16 @@ namespace System.Data.Fuse {
       return GetInnerRepo(entityName).GetDtos1(filter);
     }
 
+    public IList<Dictionary<string, object>> GetDtos(string entityName, string dynamicLinqFilter) {
+      return GetInnerRepo(entityName).GetDtos1(dynamicLinqFilter);
+    }
+
     public Collections.IList GetEntities(string entityName, SimpleExpressionTree filter) {     
       return GetInnerRepo(entityName).GetEntities1(filter);
+    }
+
+    public Collections.IList GetEntities(string entityName, string dynamicLinqFilter) {
+      return GetInnerRepo(entityName).GetEntities1(dynamicLinqFilter);
     }
 
     public IList<EntityRefById> GetEntityRefs(string entityName) {

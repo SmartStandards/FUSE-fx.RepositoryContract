@@ -21,10 +21,12 @@ namespace System.Data.Fuse {
     }
 
     public abstract IList GetEntities1(SimpleExpressionTree filter);
+    public abstract IList GetEntities1(string dynamicLinqFilter);
 
     public abstract object AddOrUpdate1(Dictionary<string, JsonElement> entity);
 
     public abstract IList<Dictionary<string, object>> GetDtos1(SimpleExpressionTree filter);
+    public abstract IList<Dictionary<string, object>> GetDtos1(string dynamicLinqFilter);
   }
 
   public class EfRepository1<TEntity> : EfRepository, IRepository<TEntity> where TEntity : class, new() {
@@ -106,6 +108,15 @@ namespace System.Data.Fuse {
 
     public override IList<Dictionary<string, object>> GetDtos1(SimpleExpressionTree filter) {
       IList entities = GetEntities1(filter);
+      return ConvertToDtos(entities);
+    }
+
+    public override IList<Dictionary<string, object>> GetDtos1(string dynamicLinqFilter) {
+      IList entities = GetEntitiesDynamic(dynamicLinqFilter).ToList();
+      return ConvertToDtos(entities);
+    }
+
+    private IList<Dictionary<string, object>> ConvertToDtos(IList entities) {
       Type entityType = typeof(TEntity);
       IEntityType efEntityType = context.Model.GetEntityTypes().FirstOrDefault((et) => et.Name == entityType.FullName);
 
@@ -144,6 +155,10 @@ namespace System.Data.Fuse {
 
     public override IList GetEntities1(SimpleExpressionTree filter) {
       return GetEntitiesDynamic(filter.CompileToDynamicLinq()).ToList();
+    }
+
+    public override IList GetEntities1(string dynamicLinqFilter) {
+      return GetEntitiesDynamic(dynamicLinqFilter).ToList();
     }
 
     public IList<EntityRefById> GetEntityRefs() {
