@@ -8,6 +8,12 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
+*(none)*
+
+
+
+## v 0.1.7
+released **2023-07-08**, including:
  - DynamicLinqFIlter in IGenericRepository
 
 
