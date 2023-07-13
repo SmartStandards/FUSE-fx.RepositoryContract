@@ -12,6 +12,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 0.1.8
+released **2023-07-13**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.1.7
 released **2023-07-08**, including:
  - DynamicLinqFIlter in IGenericRepository
