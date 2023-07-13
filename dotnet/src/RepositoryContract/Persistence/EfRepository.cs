@@ -26,6 +26,7 @@ namespace System.Data.Fuse {
     public abstract object AddOrUpdate1(Dictionary<string, JsonElement> entity);
 
     public abstract IList<Dictionary<string, object>> GetDtos1(SimpleExpressionTree filter);
+    public abstract void DeleteEntities1(JsonElement[][] entityIdsToDelete);
     public abstract IList<Dictionary<string, object>> GetDtos1(string dynamicLinqFilter);
   }
 
@@ -102,8 +103,29 @@ namespace System.Data.Fuse {
       throw new NotImplementedException();
     }
 
-    public void DeleteEntities(object[][] entityIdsToDelete) {
-      throw new NotImplementedException();
+    public override void DeleteEntities1(JsonElement[][] entityIdsToDelete) {
+      DeleteEntities(entityIdsToDelete);
+    }
+
+    public void DeleteEntities(JsonElement[][] entityIdsToDelete) {
+      foreach (JsonElement[] entityIdToDelete in entityIdsToDelete) {
+        if (entityIdsToDelete.Length == 0) {
+          continue;
+        }
+        object[] keysetToDelete = new object[entityIdsToDelete.Length];
+        IKey keyInfo = context.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey();
+        if (keyInfo.Properties.Count() != keysetToDelete.Count()) { continue; }
+        int j = 0;
+        foreach (IProperty keyPropery in keyInfo.Properties) {
+          keysetToDelete[j] = GetValue(keyPropery, entityIdToDelete[j]);
+        }
+        TEntity entityToDelete = context.Set<TEntity>().Find(keysetToDelete);
+        if (entityToDelete == null) {
+          continue;
+        }
+        context.Set<TEntity>().Remove(entityToDelete);
+      }
+      context.SaveChanges();
     }
 
     public override IList<Dictionary<string, object>> GetDtos1(SimpleExpressionTree filter) {
@@ -190,6 +212,7 @@ namespace System.Data.Fuse {
         return null;
       }
     }
+
   }
 
   internal static class StringExtensions {

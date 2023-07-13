@@ -76,3 +76,19 @@
     }
   }
 }
+
+{
+  "entityName": "Employee",
+  "filter": {
+    "rootNode": {
+      "operator": "",
+      "expressionArguments": [],
+      "atomArguments": []
+    }
+  }
+}
+
+{
+  "entityName": "Employee",
+  "idsToDelete": [[1]]
+}

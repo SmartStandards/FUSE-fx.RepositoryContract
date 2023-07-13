@@ -79,6 +79,19 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
       }
     }
 
+    [HttpPost(Name = "DeleteEntities")]
+    public IActionResult DeleteEntities([FromBody] DeletionParams deletionParams) {
+      try {
+        _Repo.DeleteEntities(
+          deletionParams.EntityName, deletionParams.IdsToDelete
+        );
+        return Ok();
+      } catch (Exception ex) {
+        _Logger.LogCritical(ex, ex.Message);
+        return null;
+      }
+    }
+
     [HttpPost(Name = "SearchTest")]
     public IActionResult SearchTest([FromBody] SimpleExpressionTree tree) {
       try {        

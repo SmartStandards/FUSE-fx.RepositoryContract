@@ -19,7 +19,7 @@ namespace System.Data.Fuse {
 
     TEntity AddOrUpdateEntity(Dictionary<string, JsonElement> entity);
 
-    void DeleteEntities(object[][] entityIdsToDelete);
+    void DeleteEntities(JsonElement[][] entityIdsToDelete);
 
   }
 

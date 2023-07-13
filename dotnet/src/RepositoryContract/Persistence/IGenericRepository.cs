@@ -17,7 +17,7 @@ namespace System.Data.Fuse {
     IList<EntityRefById> GetEntityRefs(string entityName);
 
     object AddOrUpdateEntity(string entityName, Dictionary<string, JsonElement> entity);
-    void DeleteEntities(object[][] entityIdsToDelete);
+    void DeleteEntities(string entityName, JsonElement[][] entityIdsToDelete);
 
   }
 

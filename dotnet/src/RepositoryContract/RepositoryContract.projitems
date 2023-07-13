@@ -9,6 +9,7 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)%28from keinich%29\DeletionParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\EntityRef.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericAddOrUpdateParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericEntityRepositoryEf.cs" />

@@ -32,8 +32,8 @@ namespace System.Data.Fuse {
       return GetInnerRepo(entityName).AddOrUpdate1(entity);
     }
 
-    public void DeleteEntities(object[][] entityIdsToDelete) {
-      throw new NotImplementedException();
+    public void DeleteEntities(string entityName, JsonElement[][] entityIdsToDelete) {
+      GetInnerRepo(entityName).DeleteEntities1(entityIdsToDelete);
     }
 
     public IList<Dictionary<string, object>> GetDtos(string entityName, SimpleExpressionTree filter) {
