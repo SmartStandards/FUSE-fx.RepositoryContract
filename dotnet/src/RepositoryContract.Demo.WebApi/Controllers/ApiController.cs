@@ -14,11 +14,11 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
   public class ApiController : ControllerBase {
 
     private readonly ILogger<ApiController> _Logger;
-    private readonly IGenericRepository _Repo;
+    private readonly IRepository _Repo;
 
     public ApiController(ILogger<ApiController> logger, DemoDbContext demoDbContext) {
       _Logger = logger;
-      _Repo = new EfGenericRepository(demoDbContext, typeof(Employee).Assembly);
+      _Repo = new EfRepository(demoDbContext, typeof(Employee).Assembly);
     }
 
     [HttpPost(Name = "GetSchemaRoot")]
@@ -35,7 +35,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
     [HttpPost(Name = "GetEntities")]
     public IActionResult GetEntities([FromBody] GenericListSearchParams searchParams) {
       try {
-        var result = _Repo.GetEntities(searchParams.EntityName, searchParams.Filter);
+        var result = _Repo.GetDbEntities(searchParams.EntityName, searchParams.Filter);
         return Ok(new { Return = result });
       }
       catch (Exception ex) {
@@ -47,7 +47,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
     [HttpPost(Name = "GetDtos")]
     public IActionResult GetDtos([FromBody] GenericListSearchParams searchParams) {
       try {
-        var result = _Repo.GetDtos(searchParams.EntityName, searchParams.Filter);
+        var result = _Repo.GetBusinessModels(searchParams.EntityName, searchParams.Filter);
         return Ok(new { Return = result });
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);

@@ -14,10 +14,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericAddOrUpdateParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericEntityRepositoryEf.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinich%29\GenericListSearchParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfGenericRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfRepository.cs" />
+    <Compile Include="..\RepositoryContract\Persistence\EfRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\EfRepository1.cs" />
+    <Compile Include="..\RepositoryContract\Persistence\EfRepositoryBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\FilterExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\IGenericRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\ILinqRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Persistence\IRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from KornSW.kPers%29\IRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from KosrnSW.DynamicRepository%29\DynamicLinqExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\ApiResponse.cs" />
@@ -36,7 +38,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Logic\SimpleExpressionTree.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IReposiotory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityRefById.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\IRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Persistence\IRepository1.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)%28from keinIch%29\Directory.Build.props" />

@@ -1,25 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+using System.Data.Fuse.Logic;
 using System.Text.Json;
 
-//TODO: rename namespace of the final versions to "System.Data.Fuse"
 namespace System.Data.Fuse {
 
-  public interface IRepository<TEntity> where TEntity : class {
+  public interface IRepository {
 
-    IQueryable<TEntity> GetEntities(Expression<Func<TEntity, bool>> filter);
+    IList GetDbEntities(string entityName, SimpleExpressionTree filter);
+    IList GetDbEntities(string entityName, string dynamicLinqFilter);
 
-    IQueryable<TEntity> GetEntitiesDynamic(string dynamicLinqFilter);
+    IList<Dictionary<string, object>> GetBusinessModels(string entityName, SimpleExpressionTree filter);
+    IList<Dictionary<string, object>> GetBusinessModels(string entityName, string dynamicLinqFilter);
 
-    IList<Dictionary<string, object>> GetDtos();
+    IList<EntityRefById> GetEntityRefs(string entityName);
 
-    IList<EntityRefById> GetEntityRefs();
-
-    TEntity AddOrUpdateEntity(Dictionary<string, JsonElement> entity);
-
-    void DeleteEntities(JsonElement[][] entityIdsToDelete);
+    object AddOrUpdateEntity(string entityName, Dictionary<string, JsonElement> businessModel);
+    void DeleteEntities(string entityName, JsonElement[][] entityIdsToDelete);
 
   }
 
