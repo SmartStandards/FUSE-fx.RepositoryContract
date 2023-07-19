@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Fuse.Logic;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 
 namespace System.Data.Fuse {
   public static class FilterExtensions {
@@ -18,12 +21,12 @@ namespace System.Data.Fuse {
 
       if (expression.Operator == "") {
         if (expression.AtomArguments?.Count != 1) { return ""; }
-        return CompileRelation(expression.AtomArguments[0]);
+        return CompileRelationToDynamicLinq(expression.AtomArguments[0]);
       }
 
       List<string> childResults = new List<string>();
       foreach (RelationElement relationElement in expression.AtomArguments) {
-        childResults.Add(CompileRelation(relationElement));
+        childResults.Add(CompileRelationToDynamicLinq(relationElement));
       }
       foreach (LogicalExpression ex in expression.ExpressionArguments) {
         childResults.Add(CompileToDynamicLinq(ex));
@@ -54,23 +57,86 @@ namespace System.Data.Fuse {
       return result.ToString();
     }
 
-    private static string CompileRelation(RelationElement relationElement) {
+    private static string CompileRelationToDynamicLinq(RelationElement relationElement) {
+
+      //TODO in and not in in oder usw übersetzen!
+      string[] inRels = new string[] { "in" };
+      if (inRels.Contains(relationElement.Relation)) {
+        JsonElement valuesJson = (JsonElement)relationElement.Value;
+        foreach (var value in valuesJson.EnumerateArray()) {
+
+        }
+        IEnumerable test = valuesJson.EnumerateArray();
+        int x = 0;
+      }
 
       string serializedValue;
-      switch (relationElement.PropertyType) {
-        case "string":
-        case "String":
-          serializedValue = $"\"{relationElement.Value}\"";
-          break;
-        default:
-          serializedValue = relationElement.Value.ToString();
-          break;
+      string propertyName = relationElement.PropertyName + " ";
+      string relation = relationElement.Relation;
+
+      string[] ineqRels = new string[] { "!=", "<>", "isnot", "is not", "!==", "Isnot", "IsNot", "Is not", "Is Not" };
+      if (ineqRels.Contains(relation)) {
+        relation = "!=";
+      }
+
+      bool checkNull = false;
+      string[] notNullRels = new string[] { "exists", "Exists", "has value", "HasValue", "not null", "!= null", "is not null" };
+      if (notNullRels.Contains(relation)) {
+        relation = "!= null";
+        checkNull = true;
+      }
+      string[] isNullRels = new string[] { "!exists", "not exists", "is null", "== null" };
+      if (isNullRels.Contains(relation)) {
+        relation = "== null";
+        checkNull = true;
+      }
+
+
+      if (checkNull) {
+        serializedValue = "";
+      }
+      else {
+
+        switch (relationElement.PropertyType) {
+          case "string":
+          case "String":
+            serializedValue = $"\"{relationElement.Value}\"";
+            string[] containsRelations = new string[] { ">", ">=", "contains", "Contains", "includes", "Includes" };
+            string[] reversContainsRelations = new string[] { "<", "<=", "is substring of", "substring", "substringOf" }; //TODO
+            if (containsRelations.Contains(relation)) {
+              propertyName = relationElement.PropertyName;
+              relation = ".Contains";
+              serializedValue = $"(\"{relationElement.Value}\")";
+            }
+            if (containsRelations.Contains(relation)) {
+              propertyName = $"(\"{relationElement.Value}\")";
+              relation = ".Contains";
+              serializedValue = relationElement.PropertyName;
+            }
+            break;
+          case "dateTime":
+          case "DateTime":
+          case "datetime":
+          case "Datetime":
+            DateTime date = DateTime.Parse(relationElement.Value.ToString());
+            serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
+            break;
+          case "date":
+          case "Date":
+            DateTime date2 = DateTime.Parse(relationElement.Value.ToString());
+            serializedValue = $"DateTime({date2.Year}, {date2.Month}, {date2.Day}).Date";
+            propertyName = $"{relationElement.PropertyName}.Date ";
+            break;
+          default:
+            serializedValue = relationElement.Value.ToString();
+            break;
+        }
       }
 
       StringBuilder result = new StringBuilder();
       result.Append("(");
-      result.Append(relationElement.PropertyName + " ");
-      result.Append(relationElement.Relation);
+      result.Append(propertyName);
+      result.Append(relation);
       result.Append(serializedValue);
       result.Append(")");
       return result.ToString();

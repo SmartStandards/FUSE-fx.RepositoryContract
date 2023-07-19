@@ -11,3 +11,4 @@ namespace System.Data.Fuse.Logic {
     public object Value { get; set; }
   }
 }
+

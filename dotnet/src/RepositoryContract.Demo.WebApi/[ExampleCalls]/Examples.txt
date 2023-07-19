@@ -92,3 +92,76 @@
   "entityName": "Employee",
   "idsToDelete": [[1]]
 }
+
+{
+  "entityName": "Employee",
+  "filter": {
+    "rootNode": {
+      "operator": "",
+      "expressionArguments": [],
+      "atomArguments": [
+        {
+          "relation": "==",
+          "propertyName": "DateOfBirth",
+          "propertyType": "date",
+          "value": "2023-07-19T14:30:00"
+        }
+      ]
+    }
+  }
+}
+
+{
+  "entityName": "Employee",
+  "filter": {
+    "rootNode": {
+      "operator": "",
+      "expressionArguments": [],
+      "atomArguments": [
+        {
+          "relation": ">=",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": "Joh"
+        }
+      ]
+    }
+  }
+}
+
+{
+  "entityName": "Employee",
+  "filter": {
+    "rootNode": {
+      "operator": "",
+      "expressionArguments": [],
+      "atomArguments": [
+        {
+          "relation": "exists",
+          "propertyName": "ContractDetailsId",
+          "propertyType": "number",
+          "value": ""
+        }
+      ]
+    }
+  }
+}
+
+
+{
+  "entityName": "Employee",
+  "filter": {
+    "rootNode": {
+      "operator": "",
+      "expressionArguments": [],
+      "atomArguments": [
+        {
+          "relation": "in",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": ["John"]
+        }
+      ]
+    }
+  }
+}
