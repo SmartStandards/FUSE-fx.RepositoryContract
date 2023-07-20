@@ -159,7 +159,74 @@
           "relation": "in",
           "propertyName": "FirstName",
           "propertyType": "string",
-          "value": ["John"]
+          "value": ["John", "Hans"]
+        }
+      ]
+    }
+  }
+}
+
+{
+  "entityName": "Employee",
+  "filter": {
+    "rootNode": {
+      "operator": "and",
+      "expressionArguments": [],
+      "atomArguments": [
+        {
+          "relation": "in",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": ["John", "Hans"]
+        },
+        {
+          "relation": "=",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": "John"
+        }
+      ]
+    }
+  }
+}
+
+{
+  "entityName": "Employee",
+  "filter": {
+    "rootNode": {
+      "operator": "and",
+      "expressionArguments": [
+        {
+          "operator": "or",
+          "expressionArguments": [],
+          "atomArguments": [
+            {
+              "relation": "in",
+              "propertyName": "FirstName",
+              "propertyType": "string",
+              "value": ["John", "Hans"]
+            },
+            {
+              "relation": "=",
+              "propertyName": "FirstName",
+              "propertyType": "string",
+              "value": "John1"
+            }
+          ]
+        }
+      ],
+      "atomArguments": [
+        {
+          "relation": "in",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": ["John", "Hans"]
+        },
+        {
+          "relation": "=",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": "John"
         }
       ]
     }

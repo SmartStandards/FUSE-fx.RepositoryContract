@@ -5,6 +5,7 @@ using System.Data.Fuse.Logic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using static System.Text.Json.JsonElement;
 
 namespace System.Data.Fuse {
   public static class FilterExtensions {
@@ -12,24 +13,30 @@ namespace System.Data.Fuse {
     public static string CompileToDynamicLinq(this SimpleExpressionTree tree) {
       if (tree == null) return null;
       if (tree.RootNode == null) return null;
-      return tree.RootNode.CompileToDynamicLinq();
+      return tree.RootNode.CompileToWhereStatement("dynamic linq");
     }
 
-    public static string CompileToDynamicLinq(this LogicalExpression expression) {
+    public static string CompileToSqlWhere(this SimpleExpressionTree tree) {
+      if (tree == null) return null;
+      if (tree.RootNode == null) return null;
+      return tree.RootNode.CompileToWhereStatement("sql");
+    }
+
+    public static string CompileToWhereStatement(this LogicalExpression expression, string mode) {
 
       if (expression == null) { return ""; }
 
       if (expression.Operator == "") {
         if (expression.AtomArguments?.Count != 1) { return ""; }
-        return CompileRelationToDynamicLinq(expression.AtomArguments[0]);
+        return CompileRelationToWhereStatement(expression.AtomArguments[0], mode);
       }
 
       List<string> childResults = new List<string>();
       foreach (RelationElement relationElement in expression.AtomArguments) {
-        childResults.Add(CompileRelationToDynamicLinq(relationElement));
+        childResults.Add(CompileRelationToWhereStatement(relationElement, mode));
       }
       foreach (LogicalExpression ex in expression.ExpressionArguments) {
-        childResults.Add(CompileToDynamicLinq(ex));
+        childResults.Add(CompileToWhereStatement(ex, mode));
       }
 
       string dlOperator;
@@ -42,6 +49,14 @@ namespace System.Data.Fuse {
         case "&":
           dlOperator = "and";
           break;
+        case "or":
+        case "Or":
+        case "oder":
+        case "Oder":
+        case "||":
+        case "|":
+          dlOperator = "or";
+          break;
         default:
           return "";
 
@@ -53,25 +68,59 @@ namespace System.Data.Fuse {
         result.Append(childResult);
         result.Append(" " + dlOperator + " ");
       }
+      result.Length -= (2 + dlOperator.Length);
       result.Append(")");
       return result.ToString();
     }
 
-    private static string CompileRelationToDynamicLinq(RelationElement relationElement) {
+    private static string CompileRelationToWhereStatement(
+      RelationElement relationElement, string mode
+    ) {
 
-      //TODO in and not in in oder usw übersetzen!
       string[] inRels = new string[] { "in" };
       if (inRels.Contains(relationElement.Relation)) {
+        StringBuilder result1 = new StringBuilder();
+        result1.Append("(");
         JsonElement valuesJson = (JsonElement)relationElement.Value;
-        foreach (var value in valuesJson.EnumerateArray()) {
-
+        ArrayEnumerator values = valuesJson.EnumerateArray();
+        foreach (JsonElement value in values) {
+          RelationElement innerRelationElement = new RelationElement() {
+            PropertyName = relationElement.PropertyName,
+            PropertyType = relationElement.PropertyType,
+            Relation = "=",
+            Value = value
+          };
+          result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode));
+          result1.Append(" or ");
         }
-        IEnumerable test = valuesJson.EnumerateArray();
-        int x = 0;
+        result1.Length -= 4;
+        result1.Append(")");
+        return result1.ToString();
+      }
+
+      string[] notInRels = new string[] { "not in" };
+      if (notInRels.Contains(relationElement.Relation)) {
+        StringBuilder result1 = new StringBuilder();
+        result1.Append("(");
+        JsonElement valuesJson = (JsonElement)relationElement.Value;
+        ArrayEnumerator values = valuesJson.EnumerateArray();
+        foreach (JsonElement value in values) {
+          RelationElement innerRelationElement = new RelationElement() {
+            PropertyName = relationElement.PropertyName,
+            PropertyType = relationElement.PropertyType,
+            Relation = "!=",
+            Value = value
+          };
+          result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode));
+          result1.Append(" and ");
+        }
+        result1.Length -= 5;
+        result1.Append(")");
+        return result1.ToString();
       }
 
       string serializedValue;
-      string propertyName = relationElement.PropertyName + " ";
+      string propertyName = relationElement.PropertyName;
       string relation = relationElement.Relation;
 
       string[] ineqRels = new string[] { "!=", "<>", "isnot", "is not", "!==", "Isnot", "IsNot", "Is not", "Is Not" };
@@ -79,15 +128,30 @@ namespace System.Data.Fuse {
         relation = "!=";
       }
 
+      string[] eqRels = new string[] { "==", "=", "is", "===", "equals" };
+      if (eqRels.Contains(relation)) {
+        relation = "=";
+      }
+
       bool checkNull = false;
       string[] notNullRels = new string[] { "exists", "Exists", "has value", "HasValue", "not null", "!= null", "is not null" };
       if (notNullRels.Contains(relation)) {
-        relation = "!= null";
+        if (mode == "sql") {
+          relation = "is not null";
+        }
+        else {
+          relation = "!= null";
+        }
         checkNull = true;
       }
       string[] isNullRels = new string[] { "!exists", "not exists", "is null", "== null" };
       if (isNullRels.Contains(relation)) {
-        relation = "== null";
+        if (mode == "sql") {
+          relation = "is null";
+        }
+        else {
+          relation = "== null";
+        }
         checkNull = true;
       }
 
@@ -102,16 +166,29 @@ namespace System.Data.Fuse {
           case "String":
             serializedValue = $"\"{relationElement.Value}\"";
             string[] containsRelations = new string[] { ">", ">=", "contains", "Contains", "includes", "Includes" };
-            string[] reversContainsRelations = new string[] { "<", "<=", "is substring of", "substring", "substringOf" }; //TODO
+            string[] reversContainsRelations = new string[] { "<", "<=", "is substring of", "substring", "substringOf" };
             if (containsRelations.Contains(relation)) {
               propertyName = relationElement.PropertyName;
-              relation = ".Contains";
-              serializedValue = $"(\"{relationElement.Value}\")";
+              if (mode == "sql") {
+                relation = " like ";
+                serializedValue = $"'%{relationElement.Value}%'";
+              }
+              else {
+                relation = ".Contains";
+                serializedValue = $"(\"{relationElement.Value}\")";
+              }
             }
-            if (containsRelations.Contains(relation)) {
-              propertyName = $"(\"{relationElement.Value}\")";
-              relation = ".Contains";
-              serializedValue = relationElement.PropertyName;
+            if (reversContainsRelations.Contains(relation)) {
+              if (mode == "sql") {
+                propertyName = $"'{relationElement.Value}'";
+                relation = " like ";
+                serializedValue = $"'%'+{relationElement.PropertyName}+'%'";
+              }
+              else {
+                propertyName = $"\"{relationElement.Value}\"";
+                relation = ".Contains";
+                serializedValue = $"({relationElement.PropertyName})";
+              }
             }
             break;
           case "dateTime":
@@ -119,13 +196,24 @@ namespace System.Data.Fuse {
           case "datetime":
           case "Datetime":
             DateTime date = DateTime.Parse(relationElement.Value.ToString());
-            serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
+            if (mode == "sql") {
+              serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
+            }
+            else {
+              serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
+            }
             break;
           case "date":
           case "Date":
             DateTime date2 = DateTime.Parse(relationElement.Value.ToString());
-            serializedValue = $"DateTime({date2.Year}, {date2.Month}, {date2.Day}).Date";
-            propertyName = $"{relationElement.PropertyName}.Date ";
+            if (mode == "sql") {
+              serializedValue = $"'{date2.Year}-{date2.Month}-{date2.Day}'";
+              propertyName = relationElement.PropertyName;
+            }
+            else {
+              serializedValue = $"DateTime({date2.Year}, {date2.Month}, {date2.Day}).Date";
+              propertyName = $"{relationElement.PropertyName}.Date ";
+            }
             break;
           default:
             serializedValue = relationElement.Value.ToString();
@@ -136,9 +224,16 @@ namespace System.Data.Fuse {
       StringBuilder result = new StringBuilder();
       result.Append("(");
       result.Append(propertyName);
+      result.Append(" ");
       result.Append(relation);
+      result.Append(" ");
       result.Append(serializedValue);
       result.Append(")");
+
+      if (mode == "sql") {
+        result.Replace("\"", "'");
+      }
+
       return result.ToString();
     }
   }
