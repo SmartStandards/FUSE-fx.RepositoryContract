@@ -8,7 +8,7 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
- - SimpleExpressionTree to Dynamic Linq and sql
+ - SimpleExpressionTree to Dynamic Linq and Sql
 
 
 

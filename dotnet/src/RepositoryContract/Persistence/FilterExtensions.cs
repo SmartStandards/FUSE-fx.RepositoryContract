@@ -68,7 +68,9 @@ namespace System.Data.Fuse {
         result.Append(childResult);
         result.Append(" " + dlOperator + " ");
       }
-      result.Length -= (2 + dlOperator.Length);
+      if (childResults.Count() > 0) {
+        result.Length -= (2 + dlOperator.Length);
+      }
       result.Append(")");
       return result.ToString();
     }
@@ -93,7 +95,9 @@ namespace System.Data.Fuse {
           result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode));
           result1.Append(" or ");
         }
-        result1.Length -= 4;
+        if (values.Count() > 0) {
+          result1.Length -= 4;
+        }
         result1.Append(")");
         return result1.ToString();
       }
@@ -114,7 +118,9 @@ namespace System.Data.Fuse {
           result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode));
           result1.Append(" and ");
         }
-        result1.Length -= 5;
+        if (values.Count() > 0) {
+          result1.Length -= 5;
+        }
         result1.Append(")");
         return result1.ToString();
       }
