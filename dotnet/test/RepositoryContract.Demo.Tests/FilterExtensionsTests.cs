@@ -1,9 +1,10 @@
 using System.Data.Fuse;
 using System.Data.Fuse.Logic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace RepositoryContract.Demo.Tests {
   [TestClass]
-  public class UnitTest1 {
+  public class FilterExtensionsTests {
     [TestMethod]
     public void CompileToSqlWhere_SimpleString_Works() {
 
