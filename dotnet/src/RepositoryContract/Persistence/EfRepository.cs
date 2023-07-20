@@ -37,11 +37,11 @@ namespace System.Data.Fuse {
     }
 
     public IList<Dictionary<string, object>> GetBusinessModels(string entityName, SimpleExpressionTree filter) {
-      return GetInnerRepo(entityName).GetDtos1(filter);
+      return GetInnerRepo(entityName).GetBusinessModels1(filter);
     }
 
     public IList<Dictionary<string, object>> GetBusinessModels(string entityName, string dynamicLinqFilter) {
-      return GetInnerRepo(entityName).GetDtos1(dynamicLinqFilter);
+      return GetInnerRepo(entityName).GetBusinessModels1(dynamicLinqFilter);
     }
 
     public Collections.IList GetDbEntities(string entityName, SimpleExpressionTree filter) {     

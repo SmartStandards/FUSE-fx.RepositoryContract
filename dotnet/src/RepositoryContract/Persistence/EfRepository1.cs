@@ -39,7 +39,7 @@ namespace System.Data.Fuse {
       return QueryDbEntities(dynamicLinqFilter).ToList();
     }
 
-    public override IList<Dictionary<string, object>> GetDtos1(string dynamicLinqFilter) {
+    public override IList<Dictionary<string, object>> GetBusinessModels1(string dynamicLinqFilter) {
       IList entities = QueryDbEntities(dynamicLinqFilter).ToList();
       return ConvertToDtos(entities);
     }

@@ -27,7 +27,7 @@ namespace System.Data.Fuse {
 
     public abstract IList<Dictionary<string, object>> GetBusinessModels1(SimpleExpressionTree filter);
     public abstract void DeleteEntities1(JsonElement[][] entityIdsToDelete);
-    public abstract IList<Dictionary<string, object>> GetDtos1(string dynamicLinqFilter);
+    public abstract IList<Dictionary<string, object>> GetBusinessModels1(string dynamicLinqFilter);
   
   }
   
