@@ -4,9 +4,9 @@ using System.Linq;
 namespace System.Data.Fuse {
 
   public interface ILinqRepository<TDbEntity> {
-    IQueryable<TDbEntity> GetEntities(Expression<Func<TDbEntity, bool>> filter);
+    IQueryable<TDbEntity> QueryDbEntities(Expression<Func<TDbEntity, bool>> filter);
 
-    IQueryable<TDbEntity> GetEntitiesDynamic(string dynamicLinqFilter);
+    IQueryable<TDbEntity> QueryDbEntities(string dynamicLinqFilter);
   }
 
 }

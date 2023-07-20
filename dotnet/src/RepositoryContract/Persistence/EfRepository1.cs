@@ -11,14 +11,44 @@ using System.Linq.Dynamic.Core;
 
 namespace System.Data.Fuse {
 
-  public class EfRepository1<TEntity> : EfRepositoryBase, IRepository<TEntity> where TEntity : class, new() {
+  public class EfRepository1<TEntity> : EfRepositoryBase, IRepository<TEntity>, ILinqRepository<TEntity> where TEntity : class, new() {
 
     public EfRepository1(DbContext context) : base(context) {
     }
 
+    #region Forward Base Functions
+
     public override object AddOrUpdate1(Dictionary<string, JsonElement> entity) {
+      return AddOrUpdateEntity(entity);      
+    }
 
+    public override void DeleteEntities1(JsonElement[][] entityIdsToDelete) {
+      DeleteEntities(entityIdsToDelete);
+    }
 
+    public override IList GetEntities1(SimpleExpressionTree filter) {
+      return QueryDbEntities(filter.CompileToDynamicLinq()).ToList();
+    }
+
+    public override IList<Dictionary<string, object>> GetBusinessModels1(SimpleExpressionTree filter) {
+      IList entities = GetEntities1(filter);
+      return ConvertToDtos(entities);
+    }
+
+    public override IList GetEntities1(string dynamicLinqFilter) {
+      return QueryDbEntities(dynamicLinqFilter).ToList();
+    }
+
+    public override IList<Dictionary<string, object>> GetDtos1(string dynamicLinqFilter) {
+      IList entities = QueryDbEntities(dynamicLinqFilter).ToList();
+      return ConvertToDtos(entities);
+    }
+
+    #endregion
+
+    #region IRepository1
+
+    public TEntity AddOrUpdateEntity(Dictionary<string, JsonElement> entity) {
       IEntityType efEntityType = context.Model.GetEntityTypes().FirstOrDefault((et) => et.Name == typeof(TEntity).FullName);
       IKey primaryKey = efEntityType.GetKeys().First((k) => k.IsPrimaryKey());
       List<object> keyValues = new List<object>();
@@ -28,64 +58,15 @@ namespace System.Data.Fuse {
         keyValues.Add(keyValue);
       }
 
-      object existingEntity = context.Set<TEntity>().Find(keyValues.ToArray());
+      TEntity existingEntity = context.Set<TEntity>().Find(keyValues.ToArray());
 
       if (existingEntity == null) {
         return Add(entity);
       } else {
-        CopyProperties(entity, existingEntity);
+        Utils.CopyProperties(entity, existingEntity);
         context.SaveChanges();
         return existingEntity;
       }
-    }
-
-    private object Add(Dictionary<string, JsonElement> entity) {
-      TEntity newEntity = new TEntity();
-      CopyProperties(entity, newEntity);
-      context.Set<TEntity>().Add(newEntity);
-      context.SaveChanges();
-      return newEntity;
-    }
-
-    private void CopyProperties(Dictionary<string, JsonElement> source, object target) {
-      foreach (KeyValuePair<string, JsonElement> sourceProperty in source) {
-        JsonElement propertyValue = sourceProperty.Value;
-        if (propertyValue.ValueKind == JsonValueKind.Object) {
-          JsonElement foreignKeyProperty;
-          if (!propertyValue.TryGetProperty("id", out foreignKeyProperty)) { continue; }
-          Int32 idValue = foreignKeyProperty.GetInt32();
-          string foreignKeyPropertyName = sourceProperty.Key + "Id";
-          PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
-          if (foreignKeyPropertyTarget == null) { continue; }
-          foreignKeyPropertyTarget.SetValue(target, idValue);
-        } else {
-          PropertyInfo targetProperty = target.GetType().GetProperty(sourceProperty.Key.CapitalizeFirst());
-          if (targetProperty == null) { continue; }
-          SetPropertyValue(targetProperty, target, propertyValue);
-        }
-      }
-    }
-
-    private void SetPropertyValue(PropertyInfo targetProperty, object target, JsonElement propertyValue) {
-      if (targetProperty.PropertyType == typeof(string)) {
-        targetProperty.SetValue(target, propertyValue.GetString());
-      } else if (targetProperty.PropertyType == typeof(Int64)) {
-        targetProperty.SetValue(target, propertyValue.GetInt64());
-      } else if (targetProperty.PropertyType == typeof(bool)) {
-        targetProperty.SetValue(target, propertyValue.GetBoolean());
-      } else if (targetProperty.PropertyType == typeof(DateTime)) {
-        targetProperty.SetValue(target, propertyValue.GetDateTime());
-      } else if (targetProperty.PropertyType == typeof(Int32)) {
-        targetProperty.SetValue(target, propertyValue.GetInt32());
-      }
-    }
-
-    public TEntity AddOrUpdateEntity(Dictionary<string, JsonElement> entity) {
-      throw new NotImplementedException();
-    }
-
-    public override void DeleteEntities1(JsonElement[][] entityIdsToDelete) {
-      DeleteEntities(entityIdsToDelete);
     }
 
     public void DeleteEntities(JsonElement[][] entityIdsToDelete) {
@@ -109,14 +90,62 @@ namespace System.Data.Fuse {
       context.SaveChanges();
     }
 
-    public override IList<Dictionary<string, object>> GetDtos1(SimpleExpressionTree filter) {
-      IList entities = GetEntities1(filter);
-      return ConvertToDtos(entities);
+  
+
+    public IList<EntityRefById> GetEntityRefs() {
+      throw new NotImplementedException();
     }
 
-    public override IList<Dictionary<string, object>> GetDtos1(string dynamicLinqFilter) {
-      IList entities = GetEntitiesDynamic(dynamicLinqFilter).ToList();
-      return ConvertToDtos(entities);
+    public IList<TEntity> GetDbEntities(SimpleExpressionTree filter) {
+      return QueryDbEntities(filter.CompileToDynamicLinq()).ToList();
+    }
+
+    public IList<TEntity> GetDbEntities(string dynamicLinqFilter) {
+      return QueryDbEntities(dynamicLinqFilter).ToList();
+    }
+
+    public IList<Dictionary<string, object>> GetBusinessModels(SimpleExpressionTree filter) {
+      return ConvertToDtos(GetDbEntities(filter).ToList());
+    }
+
+    public IList<Dictionary<string, object>> GetBusinessModels(string dynamicLinqFilter) {
+      return ConvertToDtos(GetDbEntities(dynamicLinqFilter).ToList());
+    }
+
+    public IList<EntityRefById> GetEntityRefs(SimpleExpressionTree filter) {
+      throw new NotImplementedException();
+    }
+
+    public IList<EntityRefById> GetEntityRefs(string dynamicLinqFilter) {
+      throw new NotImplementedException();
+    }
+
+
+    #endregion
+
+    #region ILinqRepository
+
+    public IQueryable<TEntity> QueryDbEntities(string dynamicLinqFilter) {
+      if (string.IsNullOrEmpty(dynamicLinqFilter)) {
+        return context.Set<TEntity>();
+      }
+      return context.Set<TEntity>().Where(dynamicLinqFilter);
+    }
+
+    public IQueryable<TEntity> QueryDbEntities(Expression<Func<TEntity, bool>> filter) {
+      return context.Set<TEntity>().Where(filter);
+    }
+
+    #endregion
+
+    #region Helper Functions
+
+    private TEntity Add(Dictionary<string, JsonElement> entity) {
+      TEntity newEntity = new TEntity();
+      Utils.CopyProperties(entity, newEntity);
+      context.Set<TEntity>().Add(newEntity);
+      context.SaveChanges();
+      return newEntity;
     }
 
     private IList<Dictionary<string, object>> ConvertToDtos(IList entities) {
@@ -151,33 +180,6 @@ namespace System.Data.Fuse {
       }
       return result;
     }
-
-    public IList<Dictionary<string, object>> GetBusinessModels() {
-      throw new NotImplementedException();
-    }
-
-    public override IList GetEntities1(SimpleExpressionTree filter) {
-      return GetEntitiesDynamic(filter.CompileToDynamicLinq()).ToList();
-    }
-
-    public override IList GetEntities1(string dynamicLinqFilter) {
-      return GetEntitiesDynamic(dynamicLinqFilter).ToList();
-    }
-
-    public IList<EntityRefById> GetEntityRefs() {
-      throw new NotImplementedException();
-    }
-
-    public IQueryable<TEntity> GetEntitiesDynamic(string dynamicLinqFilter) {
-      if (string.IsNullOrEmpty(dynamicLinqFilter)) {
-        return context.Set<TEntity>();
-      }
-      return context.Set<TEntity>().Where(dynamicLinqFilter);
-    }
-
-    public IQueryable<TEntity> GetEntities(Expression<Func<TEntity, bool>> filter) {
-      return context.Set<TEntity>().Where(filter);
-    }
     private object GetValue(IProperty prop, JsonElement propertyValue) {
       if (prop.PropertyInfo.PropertyType == typeof(string)) {
         return propertyValue.GetString();
@@ -193,6 +195,8 @@ namespace System.Data.Fuse {
         return null;
       }
     }
+   
+    #endregion
 
   }
 
