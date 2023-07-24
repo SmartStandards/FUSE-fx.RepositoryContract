@@ -13,30 +13,30 @@ namespace System.Data.Fuse {
     public static string CompileToDynamicLinq(this SimpleExpressionTree tree) {
       if (tree == null) return null;
       if (tree.RootNode == null) return null;
-      return tree.RootNode.CompileToWhereStatement("dynamic linq");
+      return tree.RootNode.CompileToWhereStatement("dynamic linq", "");
     }
 
-    public static string CompileToSqlWhere(this SimpleExpressionTree tree) {
+    public static string CompileToSqlWhere(this SimpleExpressionTree tree, string prefix = "") {
       if (tree == null) return null;
       if (tree.RootNode == null) return null;
-      return tree.RootNode.CompileToWhereStatement("sql");
+      return tree.RootNode.CompileToWhereStatement("sql", prefix);
     }
 
-    public static string CompileToWhereStatement(this LogicalExpression expression, string mode) {
+    public static string CompileToWhereStatement(this LogicalExpression expression, string mode, string prefix) {
 
       if (expression == null) { return ""; }
 
       if (expression.Operator == "") {
         if (expression.AtomArguments?.Count != 1) { return ""; }
-        return CompileRelationToWhereStatement(expression.AtomArguments[0], mode);
+        return CompileRelationToWhereStatement(expression.AtomArguments[0], mode, prefix);
       }
 
       List<string> childResults = new List<string>();
       foreach (RelationElement relationElement in expression.AtomArguments) {
-        childResults.Add(CompileRelationToWhereStatement(relationElement, mode));
+        childResults.Add(CompileRelationToWhereStatement(relationElement, mode, prefix));
       }
       foreach (LogicalExpression ex in expression.ExpressionArguments) {
-        childResults.Add(CompileToWhereStatement(ex, mode));
+        childResults.Add(CompileToWhereStatement(ex, mode, prefix));
       }
 
       string dlOperator;
@@ -76,7 +76,7 @@ namespace System.Data.Fuse {
     }
 
     private static string CompileRelationToWhereStatement(
-      RelationElement relationElement, string mode
+      RelationElement relationElement, string mode, string prefix
     ) {
 
       string[] inRels = new string[] { "in" };
@@ -92,7 +92,7 @@ namespace System.Data.Fuse {
             Relation = "=",
             Value = value
           };
-          result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode));
+          result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
           result1.Append(" or ");
         }
         if (values.Count() > 0) {
@@ -115,7 +115,7 @@ namespace System.Data.Fuse {
             Relation = "!=",
             Value = value
           };
-          result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode));
+          result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
           result1.Append(" and ");
         }
         if (values.Count() > 0) {
@@ -126,7 +126,7 @@ namespace System.Data.Fuse {
       }
 
       string serializedValue;
-      string propertyName = relationElement.PropertyName;
+      string propertyName = prefix+relationElement.PropertyName;
       string relation = relationElement.Relation;
 
       string[] ineqRels = new string[] { "!=", "<>", "isnot", "is not", "!==", "Isnot", "IsNot", "Is not", "Is Not" };
@@ -174,7 +174,7 @@ namespace System.Data.Fuse {
             string[] containsRelations = new string[] { ">", ">=", "contains", "Contains", "includes", "Includes" };
             string[] reversContainsRelations = new string[] { "<", "<=", "is substring of", "substring", "substringOf" };
             if (containsRelations.Contains(relation)) {
-              propertyName = relationElement.PropertyName;
+              propertyName = prefix + relationElement.PropertyName;
               if (mode == "sql") {
                 relation = " like ";
                 serializedValue = $"'%{relationElement.Value}%'";
@@ -188,12 +188,12 @@ namespace System.Data.Fuse {
               if (mode == "sql") {
                 propertyName = $"'{relationElement.Value}'";
                 relation = " like ";
-                serializedValue = $"'%'+{relationElement.PropertyName}+'%'";
+                serializedValue = $"'%'+{prefix + relationElement.PropertyName}+'%'";
               }
               else {
                 propertyName = $"\"{relationElement.Value}\"";
                 relation = ".Contains";
-                serializedValue = $"({relationElement.PropertyName})";
+                serializedValue = $"({prefix + relationElement.PropertyName})";
               }
             }
             break;
@@ -214,11 +214,11 @@ namespace System.Data.Fuse {
             DateTime date2 = DateTime.Parse(relationElement.Value.ToString());
             if (mode == "sql") {
               serializedValue = $"'{date2.Year}-{date2.Month}-{date2.Day}'";
-              propertyName = relationElement.PropertyName;
+              propertyName = prefix + relationElement.PropertyName;
             }
             else {
               serializedValue = $"DateTime({date2.Year}, {date2.Month}, {date2.Day}).Date";
-              propertyName = $"{relationElement.PropertyName}.Date ";
+              propertyName = $"{prefix + relationElement.PropertyName}.Date ";
             }
             break;
           default:

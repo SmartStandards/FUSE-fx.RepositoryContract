@@ -126,5 +126,33 @@ namespace RepositoryContract.Demo.Tests {
       string result = tree.CompileToSqlWhere();
       Assert.AreEqual("((DateOfBirth <= '2023-7-19') or (DateOfBirth >= '2023-7-19'))", result);
     }
+
+
+    [TestMethod]
+    public void CompileToSqlWhere_OrWithPrefix_Works() {
+
+      SimpleExpressionTree tree = new SimpleExpressionTree();
+      tree.RootNode = new LogicalExpression();
+      tree.RootNode.Operator = "Or";
+      tree.RootNode.AtomArguments.Add(
+        new RelationElement() {
+          PropertyName = "DateOfBirth",
+          PropertyType = "date",
+          Relation = "<=",
+          Value = "2023-07-19T14:30:00"
+        }
+      );
+      tree.RootNode.AtomArguments.Add(
+        new RelationElement() {
+          PropertyName = "DateOfBirth",
+          PropertyType = "date",
+          Relation = ">=",
+          Value = "2023-07-19T14:30:00"
+        }
+      );
+
+      string result = tree.CompileToSqlWhere("t_final.");
+      Assert.AreEqual("((t_final.DateOfBirth <= '2023-7-19') or (t_final.DateOfBirth >= '2023-7-19'))", result);
+    }
   }
 }
