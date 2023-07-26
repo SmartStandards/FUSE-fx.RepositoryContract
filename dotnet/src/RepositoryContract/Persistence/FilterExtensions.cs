@@ -203,7 +203,11 @@ namespace System.Data.Fuse {
           case "Datetime":
             DateTime date = DateTime.Parse(relationElement.Value.ToString());
             if (mode == "sql") {
+              if (date.Hour > 9) {
               serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
+              } else {
+                serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T0{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
+              }
             }
             else {
               serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
