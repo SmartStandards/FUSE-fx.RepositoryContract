@@ -170,7 +170,12 @@ namespace System.Data.Fuse {
         switch (relationElement.PropertyType) {
           case "string":
           case "String":
-            serializedValue = $"\"{relationElement.Value}\"";
+            if (mode == "sql") {
+              serializedValue = $"'{relationElement.Value}'";
+            }
+            else {
+              serializedValue = $"\"{relationElement.Value}\"";
+            }
             string[] containsRelations = new string[] { ">", ">=", "contains", "Contains", "includes", "Includes" };
             string[] reversContainsRelations = new string[] { "<", "<=", "is substring of", "substring", "substringOf" };
             if (containsRelations.Contains(relation)) {
