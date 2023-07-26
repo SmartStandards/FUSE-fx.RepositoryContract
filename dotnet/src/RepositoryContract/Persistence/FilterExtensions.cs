@@ -240,7 +240,7 @@ namespace System.Data.Fuse {
       result.Append(serializedValue);
       result.Append(")");
 
-      if (mode == "sql") {
+      if (mode == "sql" && relationElement.PropertyType != "string" && relationElement.PropertyType != "String") {
         result.Replace("\"", "'");
       }
 
