@@ -77,6 +77,7 @@ namespace System.Data.Fuse {
         result.Append("(");
         result.Append(childResults[0]);
         result.Append(")");
+        return result.ToString();
       }
 
       
