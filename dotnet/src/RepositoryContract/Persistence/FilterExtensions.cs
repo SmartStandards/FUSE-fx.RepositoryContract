@@ -41,6 +41,12 @@ namespace System.Data.Fuse {
 
       string dlOperator;
       switch (expression.Operator) {
+        case "not":
+        case "Not":
+        case "NOT":
+        case "!":
+          dlOperator = "not";
+          break;
         case "and":
         case "And":
         case "und":
@@ -61,8 +67,19 @@ namespace System.Data.Fuse {
           return "";
 
       }
-
       StringBuilder result = new StringBuilder();
+      if (dlOperator == "not") {
+        if (childResults.Count > 1 || childResults.Count == 0) {
+          return "";
+        }
+        result.Append(dlOperator);
+        result.Append("");
+        result.Append("(");
+        result.Append(childResults[0]);
+        result.Append(")");
+      }
+
+      
       result.Append("(");
       foreach (string childResult in childResults) {
         result.Append(childResult);
