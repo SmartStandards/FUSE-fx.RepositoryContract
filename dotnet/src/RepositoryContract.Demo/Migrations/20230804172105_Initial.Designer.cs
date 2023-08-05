@@ -12,7 +12,7 @@ using RepositoryContract.Demo.WebApi.Persistence;
 namespace RepositoryContract.Demo.Migrations
 {
     [DbContext(typeof(DemoDbContext))]
-    [Migration("20230705111848_Initial")]
+    [Migration("20230804172105_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -37,7 +37,7 @@ namespace RepositoryContract.Demo.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("EmployeeId")
+                    b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
                     b.Property<string>("PostalCode")
@@ -188,9 +188,13 @@ namespace RepositoryContract.Demo.Migrations
 
             modelBuilder.Entity("RepositoryContract.Demo.Model.Address", b =>
                 {
-                    b.HasOne("RepositoryContract.Demo.Model.Employee", null)
+                    b.HasOne("RepositoryContract.Demo.Model.Employee", "Employee")
                         .WithMany("Addresses")
-                        .HasForeignKey("EmployeeId");
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("RepositoryContract.Demo.Model.BusinessProject", b =>

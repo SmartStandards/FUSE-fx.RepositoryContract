@@ -14,6 +14,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericAddOrUpdateParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericEntityRepositoryEf.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinich%29\GenericListSearchParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PaginatedResponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SortingField.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PagingParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\Utils.cs" />
     <Compile Include="..\RepositoryContract\Persistence\EfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\EfRepository1.cs" />

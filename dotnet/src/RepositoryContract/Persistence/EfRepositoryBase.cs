@@ -20,14 +20,19 @@ namespace System.Data.Fuse {
       this.context = dbContext;
     }
 
-    public abstract IList GetEntities1(SimpleExpressionTree filter);
-    public abstract IList GetEntities1(string dynamicLinqFilter);
+    public abstract IList GetEntities1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams);
+    public abstract IList GetEntities1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
 
-    public abstract object AddOrUpdate1(Dictionary<string, JsonElement> entity);
+    public abstract IList<Dictionary<string, object>> GetBusinessModels1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams);
+    public abstract IList<Dictionary<string, object>> GetBusinessModels1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
 
-    public abstract IList<Dictionary<string, object>> GetBusinessModels1(SimpleExpressionTree filter);
+    public abstract IList<EntityRefById> GetEntityRefs1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams);
+    public abstract IList<EntityRefById> GetEntityRefs1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
+
+    public abstract int GetCount1(SimpleExpressionTree filter);
+
     public abstract void DeleteEntities1(JsonElement[][] entityIdsToDelete);
-    public abstract IList<Dictionary<string, object>> GetBusinessModels1(string dynamicLinqFilter);
+    public abstract object AddOrUpdate1(Dictionary<string, JsonElement> entity);
   
   }
   

@@ -232,3 +232,28 @@
     }
   }
 }
+
+{
+  "entityName": "Employee",
+  "sortingParams": [{fieldName: "FirstName", descending: false}]
+  "filter": {
+    "rootNode": {
+      "operator": "and",
+      "expressionArguments": [],
+      "atomArguments": [
+        {
+          "relation": "in",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": ["John", "Hans"]
+        },
+        {
+          "relation": "=",
+          "propertyName": "FirstName",
+          "propertyType": "string",
+          "value": "John"
+        }
+      ]
+    }
+  }
+}

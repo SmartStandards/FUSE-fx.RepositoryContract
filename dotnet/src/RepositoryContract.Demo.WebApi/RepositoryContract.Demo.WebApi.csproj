@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="FUSE-fx.EntityAnnotations" Version="3.0.0" />
     <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.0" />
-    <PackageReference Include="FUSE-fx.ModelReader" Version="0.1.0" />
+    <PackageReference Include="FUSE-fx.ModelReader" Version="0.1.1" />
     <PackageReference Include="jose-jwt" Version="4.1.0" />
     <PackageReference Include="kGEN.Generator" Version="1.5.0.632" />
     <PackageReference Include="KornSW.AccessControl" Version="1.0.0.547" />

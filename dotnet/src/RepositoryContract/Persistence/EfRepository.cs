@@ -36,24 +36,32 @@ namespace System.Data.Fuse {
       GetInnerRepo(entityName).DeleteEntities1(entityIdsToDelete);
     }
 
-    public IList<Dictionary<string, object>> GetBusinessModels(string entityName, SimpleExpressionTree filter) {
-      return GetInnerRepo(entityName).GetBusinessModels1(filter);
+    public IList<Dictionary<string, object>> GetBusinessModels(string entityName, SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return GetInnerRepo(entityName).GetBusinessModels1(filter, pagingParams, sortingParams);
     }
 
-    public IList<Dictionary<string, object>> GetBusinessModels(string entityName, string dynamicLinqFilter) {
-      return GetInnerRepo(entityName).GetBusinessModels1(dynamicLinqFilter);
+    public IList<Dictionary<string, object>> GetBusinessModels(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return GetInnerRepo(entityName).GetBusinessModels1(dynamicLinqFilter, pagingParams, sortingParams);
     }
 
-    public Collections.IList GetDbEntities(string entityName, SimpleExpressionTree filter) {     
-      return GetInnerRepo(entityName).GetEntities1(filter);
+    public Collections.IList GetDbEntities(string entityName, SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return GetInnerRepo(entityName).GetEntities1(filter, pagingParams, sortingParams);
     }
 
-    public Collections.IList GetDbEntities(string entityName, string dynamicLinqFilter) {
-      return GetInnerRepo(entityName).GetEntities1(dynamicLinqFilter);
+    public Collections.IList GetDbEntities(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return GetInnerRepo(entityName).GetEntities1(dynamicLinqFilter, pagingParams, sortingParams);
     }
 
-    public IList<EntityRefById> GetEntityRefs(string entityName) {
-      throw new NotImplementedException();
+    public IList<EntityRefById> GetEntityRefs(string entityName, SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return GetInnerRepo(entityName).GetEntityRefs1(filter, pagingParams, sortingParams);
+    }
+
+    public IList<EntityRefById> GetEntityRefs(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return GetInnerRepo(entityName).GetEntityRefs1(dynamicLinqFilter, pagingParams, sortingParams);
+    }
+
+    public int GetCount(string entityName, SimpleExpressionTree filter) {
+      return GetInnerRepo(entityName).GetCount1(filter);
     }
 
     private EfRepositoryBase CreateInnerRepo(string entityName) {

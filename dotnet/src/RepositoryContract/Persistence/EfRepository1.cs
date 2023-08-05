@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Data.Fuse.Logic;
 using System.Collections;
 using System.Linq.Dynamic.Core;
+using System.Text;
 
 namespace System.Data.Fuse {
 
@@ -19,29 +20,45 @@ namespace System.Data.Fuse {
     #region Forward Base Functions
 
     public override object AddOrUpdate1(Dictionary<string, JsonElement> entity) {
-      return AddOrUpdateEntity(entity);      
+      return AddOrUpdateEntity(entity);
     }
 
     public override void DeleteEntities1(JsonElement[][] entityIdsToDelete) {
       DeleteEntities(entityIdsToDelete);
     }
 
-    public override IList GetEntities1(SimpleExpressionTree filter) {
-      return QueryDbEntities(filter.CompileToDynamicLinq()).ToList();
+    public override IList GetEntities1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return QueryDbEntities(filter.CompileToDynamicLinq(), pagingParams, sortingParams).ToList();
     }
 
-    public override IList<Dictionary<string, object>> GetBusinessModels1(SimpleExpressionTree filter) {
-      IList entities = GetEntities1(filter);
+    public override IList GetEntities1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return QueryDbEntities(dynamicLinqFilter, pagingParams, sortingParams).ToList();
+    }
+
+    public override IList<Dictionary<string, object>> GetBusinessModels1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      IList entities = GetEntities1(filter, pagingParams, sortingParams);
       return ConvertToDtos(entities);
     }
 
-    public override IList GetEntities1(string dynamicLinqFilter) {
-      return QueryDbEntities(dynamicLinqFilter).ToList();
+    public override IList<Dictionary<string, object>> GetBusinessModels1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      IList entities = QueryDbEntities(dynamicLinqFilter, pagingParams, sortingParams).ToList();
+      return ConvertToDtos(entities);
     }
 
-    public override IList<Dictionary<string, object>> GetBusinessModels1(string dynamicLinqFilter) {
-      IList entities = QueryDbEntities(dynamicLinqFilter).ToList();
-      return ConvertToDtos(entities);
+    public override IList<EntityRefById> GetEntityRefs1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      throw new NotImplementedException();
+      //IList entities = GetEntities1(filter, pagingParams, sortingParams);
+      //return ConvertToDtos(entities);
+    }
+
+    public override IList<EntityRefById> GetEntityRefs1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      throw new NotImplementedException();
+      //IList entities = GetEntities1(filter, pagingParams, sortingParams);
+      //return ConvertToDtos(entities);
+    }
+
+    public override int GetCount1(SimpleExpressionTree filter) {
+      return QueryDbEntities(filter.CompileToDynamicLinq(), null, null).Count();
     }
 
     #endregion
@@ -90,33 +107,33 @@ namespace System.Data.Fuse {
       context.SaveChanges();
     }
 
-  
 
-    public IList<EntityRefById> GetEntityRefs() {
+
+    public IList<EntityRefById> GetEntityRefs(PagingParams pagingParams, SortingField[] sortingParams) {
       throw new NotImplementedException();
     }
 
-    public IList<TEntity> GetDbEntities(SimpleExpressionTree filter) {
-      return QueryDbEntities(filter.CompileToDynamicLinq()).ToList();
+    public IList<TEntity> GetDbEntities(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return QueryDbEntities(filter.CompileToDynamicLinq(), pagingParams, sortingParams).ToList();
     }
 
-    public IList<TEntity> GetDbEntities(string dynamicLinqFilter) {
-      return QueryDbEntities(dynamicLinqFilter).ToList();
+    public IList<TEntity> GetDbEntities(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return QueryDbEntities(dynamicLinqFilter, pagingParams, sortingParams).ToList();
     }
 
-    public IList<Dictionary<string, object>> GetBusinessModels(SimpleExpressionTree filter) {
-      return ConvertToDtos(GetDbEntities(filter).ToList());
+    public IList<Dictionary<string, object>> GetBusinessModels(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return ConvertToDtos(GetDbEntities(filter, pagingParams, sortingParams).ToList());
     }
 
-    public IList<Dictionary<string, object>> GetBusinessModels(string dynamicLinqFilter) {
-      return ConvertToDtos(GetDbEntities(dynamicLinqFilter).ToList());
+    public IList<Dictionary<string, object>> GetBusinessModels(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      return ConvertToDtos(GetDbEntities(dynamicLinqFilter, pagingParams, sortingParams).ToList());
     }
 
-    public IList<EntityRefById> GetEntityRefs(SimpleExpressionTree filter) {
+    public IList<EntityRefById> GetEntityRefs(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
       throw new NotImplementedException();
     }
 
-    public IList<EntityRefById> GetEntityRefs(string dynamicLinqFilter) {
+    public IList<EntityRefById> GetEntityRefs(string dynamicLinqFilter, PagingParams pagingParams , SortingField[] sortingParams) {
       throw new NotImplementedException();
     }
 
@@ -125,20 +142,56 @@ namespace System.Data.Fuse {
 
     #region ILinqRepository
 
-    public IQueryable<TEntity> QueryDbEntities(string dynamicLinqFilter) {
+    public IQueryable<TEntity> QueryDbEntities(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      IQueryable<TEntity> result;
       if (string.IsNullOrEmpty(dynamicLinqFilter)) {
-        return context.Set<TEntity>();
+        result = context.Set<TEntity>();
+      } else {
+        result = context.Set<TEntity>().Where(dynamicLinqFilter);
       }
-      return context.Set<TEntity>().Where(dynamicLinqFilter);
+    
+      return ApplyPaging(ApplySorting(result, sortingParams), pagingParams);
     }
 
-    public IQueryable<TEntity> QueryDbEntities(Expression<Func<TEntity, bool>> filter) {
-      return context.Set<TEntity>().Where(filter);
+    public IQueryable<TEntity> QueryDbEntities(Expression<Func<TEntity, bool>> filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      IQueryable<TEntity> result;
+      if (filter is null) {
+        result = context.Set<TEntity>();
+      } else {
+        result = context.Set<TEntity>().Where(filter);
+      }
+
+      return ApplyPaging(ApplySorting(result, sortingParams), pagingParams);
     }
 
     #endregion
 
     #region Helper Functions
+
+    private IQueryable<TEntity> ApplyPaging(IQueryable<TEntity> result, PagingParams pagingParams) {
+      if (pagingParams == null || pagingParams.PageSize == 0) {
+        return result;
+      }
+      int skip = pagingParams.PageSize * (pagingParams.PageNumber - 1);
+      return result.Skip(skip).Take(pagingParams.PageSize);
+    }
+
+    private IQueryable<TEntity> ApplySorting(IQueryable<TEntity> result, SortingField[] sortingParams) {
+      if (sortingParams == null || sortingParams.Count() == 0) {
+        return result;
+      }
+      StringBuilder sorting = new StringBuilder();
+      foreach (SortingField sortingField in sortingParams) {
+        if (sortingField.Descending) {
+          sorting.Append(sortingField.FieldName + " descending,");
+        } else {
+          sorting.Append(sortingField.FieldName + ",");
+        }
+      }
+      sorting.Length -= 1;
+      result = result.OrderBy(sorting.ToString());
+      return result;
+    }
 
     private TEntity Add(Dictionary<string, JsonElement> entity) {
       TEntity newEntity = new TEntity();
@@ -195,7 +248,7 @@ namespace System.Data.Fuse {
         return null;
       }
     }
-   
+
     #endregion
 
   }
