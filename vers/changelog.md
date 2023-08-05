@@ -8,6 +8,12 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
+*(none)*
+
+
+
+## v 0.1.11
+released **2023-08-05**, including:
  - SimpleExpressionTree to Dynamic Linq and Sql
 
 
