@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.1.11",
-  "currentVersionWithSuffix": "0.1.11",
+  "currentVersion": "0.1.12",
+  "currentVersionWithSuffix": "0.1.12",
   "releaseType": "official",
-  "previousVersion": "0.1.10",
+  "previousVersion": "0.1.11",
   "changeGrade": "patch",
   "currentMajor": 0,
   "currentMinor": 1,
-  "currentPatch": 11,
-  "versionDateInfo": "2023-08-05",
-  "versionTimeInfo": "10:55:02",
-  "versionNotes": "- SimpleExpressionTree to Dynamic Linq and Sql\n"
+  "currentPatch": 12,
+  "versionDateInfo": "2023-09-12",
+  "versionTimeInfo": "11:13:31",
+  "versionNotes": "- Repository Improvements\n"
 }
