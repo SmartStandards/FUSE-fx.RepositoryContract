@@ -1,0 +1,1 @@
+{"version":3,"file":"LogicalExpression.d.ts","sourceRoot":"","sources":["../src/LogicalExpression.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,mBAAmB,CAAA;AAEnD,qBAAa,iBAAiB;IAC5B,QAAQ,EAAE,IAAI,GAAG,KAAK,GAAG,KAAK,GAAG,MAAM,GAAG,EAAE,CAAS;IACrD,mBAAmB,EAAE,iBAAiB,EAAE,CAAK;IAC7C,aAAa,EAAE,eAAe,EAAE,CAAK;CACtC"}
