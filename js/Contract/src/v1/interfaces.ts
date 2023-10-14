@@ -1,6 +1,6 @@
 /* based on UDAS Contract v0.1.0.0 */
 
-import * as Models from './models';
+// import * as Models from './models';
 
 export interface IUdasInfoService {
   
@@ -27,6 +27,6 @@ export interface IUdasInfoService {
   /**
    * GetEntitySchema
    */
-  GetEntitySchema() : Promise<Models.SchemaRoot>;
+  // GetEntitySchema() : Promise<Models.SchemaRoot>;
   
 }
