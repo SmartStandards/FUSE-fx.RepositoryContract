@@ -224,7 +224,7 @@ namespace System.Data.Fuse {
           case "DateTime":
           case "datetime":
           case "Datetime":
-            DateTime date = DateTime.Parse(relationElement.Value.ToString());
+            DateTime date = DateTime.Parse(relationElement.Value.ToString()).ToUniversalTime() ;
             if (mode == "sql") {
               if (date.Hour > 9) {
               serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
