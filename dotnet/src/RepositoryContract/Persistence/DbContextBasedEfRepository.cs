@@ -1,3 +1,5 @@
+#if NETCOREAPP
+
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -12,22 +14,22 @@ using System.Text;
 
 namespace System.Data.Fuse {
 
-  public class EfRepository1<TEntity> : EfRepositoryBase, IRepository<TEntity>, ILinqRepository<TEntity> where TEntity : class, new() {
+  public class DbContextBasedEfRepository<TEntity> : EfRepositoryBase, IRepository<TEntity>, ILinqRepository<TEntity> where TEntity : class, new() {
 
-    public EfRepository1(DbContext context) : base(context) {
+    public DbContextBasedEfRepository(DbContext context) : base(context) {
     }
 
     #region Forward Base Functions
 
-    public override object AddOrUpdate1(Dictionary<string, JsonElement> entity) {
+    public override object AddOrUpdate1(Dictionary<string, object> entity) {
       return AddOrUpdateEntity(entity);
     }
 
-    public override void DeleteEntities1(JsonElement[][] entityIdsToDelete) {
+    public override void DeleteEntities1(object[][] entityIdsToDelete) {
       DeleteEntities(entityIdsToDelete);
     }
 
-    public override IList GetEntities1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public override IList GetEntities1(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
       return QueryDbEntities(filter.CompileToDynamicLinq(), pagingParams, sortingParams).ToList();
     }
 
@@ -35,7 +37,7 @@ namespace System.Data.Fuse {
       return QueryDbEntities(dynamicLinqFilter, pagingParams, sortingParams).ToList();
     }
 
-    public override IList<Dictionary<string, object>> GetBusinessModels1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public override IList<Dictionary<string, object>> GetBusinessModels1(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
       IList entities = GetEntities1(filter, pagingParams, sortingParams);
       return ConvertToDtos(entities);
     }
@@ -45,19 +47,17 @@ namespace System.Data.Fuse {
       return ConvertToDtos(entities);
     }
 
-    public override IList<EntityRefById> GetEntityRefs1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
-      throw new NotImplementedException();
-      //IList entities = GetEntities1(filter, pagingParams, sortingParams);
-      //return ConvertToDtos(entities);
+    public override IList<EntityRef> GetEntityRefs1(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
+      IList entities = GetEntities1(filter, pagingParams, sortingParams);
+      return ConvertToEntityRefs(entities);
     }
 
-    public override IList<EntityRefById> GetEntityRefs1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
-      throw new NotImplementedException();
-      //IList entities = GetEntities1(filter, pagingParams, sortingParams);
-      //return ConvertToDtos(entities);
+    public override IList<EntityRef> GetEntityRefs1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+      IList entities = GetEntities1(dynamicLinqFilter, pagingParams, sortingParams);
+      return ConvertToEntityRefs(entities);
     }
 
-    public override int GetCount1(SimpleExpressionTree filter) {
+    public override int GetCount1(LogicalExpression filter) {
       return QueryDbEntities(filter.CompileToDynamicLinq(), null, null).Count();
     }
 
@@ -65,14 +65,17 @@ namespace System.Data.Fuse {
 
     #region IRepository1
 
-    public TEntity AddOrUpdateEntity(Dictionary<string, JsonElement> entity) {
+    public TEntity AddOrUpdateEntity(Dictionary<string, object> entity) {
       IEntityType efEntityType = context.Model.GetEntityTypes().FirstOrDefault((et) => et.Name == typeof(TEntity).FullName);
       IKey primaryKey = efEntityType.GetKeys().First((k) => k.IsPrimaryKey());
       List<object> keyValues = new List<object>();
       foreach (IProperty keyProp in primaryKey.Properties) {
-        JsonElement keyPropValueJson = entity[keyProp.Name.ToLowerFirst()];
-        object keyValue = GetValue(keyProp, keyPropValueJson);
-        keyValues.Add(keyValue);
+        object keyPropValue = entity[keyProp.Name.ToLowerFirst()];
+        if (typeof(JsonElement).IsAssignableFrom(keyPropValue?.GetType())) {
+          JsonElement keyPropValueJson = (JsonElement)keyPropValue;
+          keyPropValue = GetValue(keyProp, keyPropValueJson);
+        }
+        keyValues.Add(keyPropValue);
       }
 
       TEntity existingEntity = context.Set<TEntity>().Find(keyValues.ToArray());
@@ -86,8 +89,8 @@ namespace System.Data.Fuse {
       }
     }
 
-    public void DeleteEntities(JsonElement[][] entityIdsToDelete) {
-      foreach (JsonElement[] entityIdToDelete in entityIdsToDelete) {
+    public void DeleteEntities(object[][] entityIdsToDelete) {
+      foreach (object[] entityIdToDelete in entityIdsToDelete) {
         if (entityIdsToDelete.Length == 0) {
           continue;
         }
@@ -96,7 +99,12 @@ namespace System.Data.Fuse {
         if (keyInfo.Properties.Count() != keysetToDelete.Count()) { continue; }
         int j = 0;
         foreach (IProperty keyPropery in keyInfo.Properties) {
-          keysetToDelete[j] = GetValue(keyPropery, entityIdToDelete[j]);
+          object keyPropValue = entityIdToDelete[j];
+          if (keyPropValue != null && typeof(JsonElement).IsAssignableFrom(keyPropValue.GetType())) {
+            JsonElement keyPropValueJson = (JsonElement)keyPropValue;
+            keyPropValue = GetValue(keyPropery, keyPropValueJson);
+          }
+          keysetToDelete[j] = keyPropValue;
         }
         TEntity entityToDelete = context.Set<TEntity>().Find(keysetToDelete);
         if (entityToDelete == null) {
@@ -113,7 +121,7 @@ namespace System.Data.Fuse {
       throw new NotImplementedException();
     }
 
-    public IList<TEntity> GetDbEntities(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<TEntity> GetDbEntities(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
       return QueryDbEntities(filter.CompileToDynamicLinq(), pagingParams, sortingParams).ToList();
     }
 
@@ -121,7 +129,7 @@ namespace System.Data.Fuse {
       return QueryDbEntities(dynamicLinqFilter, pagingParams, sortingParams).ToList();
     }
 
-    public IList<Dictionary<string, object>> GetBusinessModels(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<Dictionary<string, object>> GetBusinessModels(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
       return ConvertToDtos(GetDbEntities(filter, pagingParams, sortingParams).ToList());
     }
 
@@ -129,11 +137,11 @@ namespace System.Data.Fuse {
       return ConvertToDtos(GetDbEntities(dynamicLinqFilter, pagingParams, sortingParams).ToList());
     }
 
-    public IList<EntityRefById> GetEntityRefs(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<EntityRefById> GetEntityRefs(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
       throw new NotImplementedException();
     }
 
-    public IList<EntityRefById> GetEntityRefs(string dynamicLinqFilter, PagingParams pagingParams , SortingField[] sortingParams) {
+    public IList<EntityRefById> GetEntityRefs(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
       throw new NotImplementedException();
     }
 
@@ -149,7 +157,7 @@ namespace System.Data.Fuse {
       } else {
         result = context.Set<TEntity>().Where(dynamicLinqFilter);
       }
-    
+
       return ApplyPaging(ApplySorting(result, sortingParams), pagingParams);
     }
 
@@ -193,7 +201,7 @@ namespace System.Data.Fuse {
       return result;
     }
 
-    private TEntity Add(Dictionary<string, JsonElement> entity) {
+    private TEntity Add(Dictionary<string, object> entity) {
       TEntity newEntity = new TEntity();
       Utils.CopyProperties(entity, newEntity);
       context.Set<TEntity>().Add(newEntity);
@@ -233,6 +241,33 @@ namespace System.Data.Fuse {
       }
       return result;
     }
+
+    private IList<EntityRef> ConvertToEntityRefs(IList entities) {
+      Type entityType = typeof(TEntity);
+      IEntityType efEntityType = context.Model.GetEntityTypes().FirstOrDefault((et) => et.Name == entityType.FullName);
+
+      IList<EntityRef> result = new List<EntityRef>();
+
+      IKey primaryKey = efEntityType.FindPrimaryKey();
+      if (primaryKey == null) {
+        return result;
+      }
+      IReadOnlyList<IProperty> primaryKeyProperties = primaryKey.Properties;
+      foreach (object entity in entities) {
+        List<object> primaryKeyValues = new List<object>();
+        foreach (IProperty primaryKeyProperty in primaryKeyProperties) {
+          object primaryKeyValue = primaryKeyProperty.PropertyInfo.GetValue(entity, null);
+          primaryKeyValues.Add(primaryKeyValue);
+        }
+        EntityRef entityRef = new EntityRef() {
+          KeyValues = primaryKeyValues.ToArray(),
+          Label = entity.ToString()
+        };
+        result.Add(entityRef);
+      }
+      return result;
+    }
+
     private object GetValue(IProperty prop, JsonElement propertyValue) {
       if (prop.PropertyInfo.PropertyType == typeof(string)) {
         return propertyValue.GetString();
@@ -253,5 +288,6 @@ namespace System.Data.Fuse {
 
   }
 
-
 }
+
+#endif

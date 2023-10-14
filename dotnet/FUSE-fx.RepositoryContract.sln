@@ -35,7 +35,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepositoryContract.net461",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{CD3C708D-7B37-40E1-8808-68DA9E2AD789}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepositoryContract.Demo.Tests", "test\RepositoryContract.Demo.Tests\RepositoryContract.Demo.Tests.csproj", "{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.Demo.Tests", "test\RepositoryContract.Demo.Tests\RepositoryContract.Demo.Tests.csproj", "{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NewFolder1", "NewFolder1", "{DCC216C5-D109-4BDB-911A-D46DFE7BA6B3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NewFolder2", "NewFolder2", "{33D05535-B24F-4592-838B-3C07E16E765E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -93,6 +97,7 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\RepositoryContract\RepositoryContract.projitems*{7b5baea8-7e79-4a30-b6c1-4da4831af970}*SharedItemsImports = 5
 		src\RepositoryContract\RepositoryContract.projitems*{88f15535-fad8-4372-80dc-fd0d8c81ab4c}*SharedItemsImports = 5
+		src\RepositoryContract\RepositoryContract.projitems*{b0ba06fe-6437-4b9e-8c76-3adfc8d191d2}*SharedItemsImports = 4
 		src\RepositoryContract\RepositoryContract.projitems*{cf0a161a-99ba-4f01-af5e-16c6fcbc85ae}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

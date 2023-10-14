@@ -4,22 +4,22 @@ using System.Collections.Generic;
 using System.Data.Fuse.Logic;
 using System.Linq;
 using System.Text;
+#if NETCOREAPP
 using System.Text.Json;
 using static System.Text.Json.JsonElement;
+#endif
 
 namespace System.Data.Fuse {
   public static class FilterExtensions {
 
-    public static string CompileToDynamicLinq(this SimpleExpressionTree tree) {
+    public static string CompileToDynamicLinq(this LogicalExpression tree) {
       if (tree == null) return null;
-      if (tree.RootNode == null) return null;
-      return tree.RootNode.CompileToWhereStatement("dynamic linq", "");
+      return tree.CompileToWhereStatement("dynamic linq", "");
     }
 
-    public static string CompileToSqlWhere(this SimpleExpressionTree tree, string prefix = "") {
+    public static string CompileToSqlWhere(this LogicalExpression tree, string prefix = "") {
       if (tree == null) return null;
-      if (tree.RootNode == null) return null;
-      return tree.RootNode.CompileToWhereStatement("sql", prefix);
+      return tree.CompileToWhereStatement("sql", prefix);
     }
 
     public static string CompileToWhereStatement(this LogicalExpression expression, string mode, string prefix) {
@@ -27,8 +27,13 @@ namespace System.Data.Fuse {
       if (expression == null) { return ""; }
 
       if (expression.Operator == "") {
-        if (expression.AtomArguments?.Count != 1) { return ""; }
-        return CompileRelationToWhereStatement(expression.AtomArguments[0], mode, prefix);
+        int numberOfArguments = expression.AtomArguments.Count + expression.ExpressionArguments.Count;
+        if (numberOfArguments != 1) { return ""; }
+        if (expression.AtomArguments.Count == 1) {
+          return CompileRelationToWhereStatement(expression.AtomArguments[0], mode, prefix);
+        } else {
+          return CompileToWhereStatement(expression.ExpressionArguments[0], mode, prefix);
+        }
       }
 
       List<string> childResults = new List<string>();
@@ -80,7 +85,7 @@ namespace System.Data.Fuse {
         return result.ToString();
       }
 
-      
+
       result.Append("(");
       foreach (string childResult in childResults) {
         result.Append(childResult);
@@ -101,21 +106,45 @@ namespace System.Data.Fuse {
       if (inRels.Contains(relationElement.Relation)) {
         StringBuilder result1 = new StringBuilder();
         result1.Append("(");
-        JsonElement valuesJson = (JsonElement)relationElement.Value;
-        ArrayEnumerator values = valuesJson.EnumerateArray();
-        foreach (JsonElement value in values) {
-          RelationElement innerRelationElement = new RelationElement() {
-            PropertyName = relationElement.PropertyName,
-            PropertyType = relationElement.PropertyType,
-            Relation = "=",
-            Value = value
-          };
-          result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
-          result1.Append(" or ");
+        object rawValues = relationElement.Value;
+#if NETCOREAPP
+        if (typeof(JsonElement).IsAssignableFrom(rawValues?.GetType())) {
+          JsonElement valuesJson = (JsonElement)relationElement.Value;
+          ArrayEnumerator values = valuesJson.EnumerateArray();
+          foreach (JsonElement value in values) {
+            RelationElement innerRelationElement = new RelationElement() {
+              PropertyName = relationElement.PropertyName,
+              PropertyType = relationElement.PropertyType,
+              Relation = "=",
+              Value = value
+            };
+            result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
+            result1.Append(" or ");
+          }
+          if (values.Count() > 0) {
+            result1.Length -= 4;
+          }
+        } else {
+#endif
+          IEnumerable values = (IEnumerable)rawValues;
+          int count = 0;
+          foreach (object value in values) {
+            count++;
+            RelationElement innerRelationElement = new RelationElement() {
+              PropertyName = relationElement.PropertyName,
+              PropertyType = relationElement.PropertyType,
+              Relation = "=",
+              Value = value
+            };
+            result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
+            result1.Append(" or ");
+          }
+          if (count > 0) {
+            result1.Length -= 4;
+          }
+#if NETCOREAPP
         }
-        if (values.Count() > 0) {
-          result1.Length -= 4;
-        }
+#endif
         result1.Append(")");
         return result1.ToString();
       }
@@ -124,27 +153,51 @@ namespace System.Data.Fuse {
       if (notInRels.Contains(relationElement.Relation)) {
         StringBuilder result1 = new StringBuilder();
         result1.Append("(");
-        JsonElement valuesJson = (JsonElement)relationElement.Value;
-        ArrayEnumerator values = valuesJson.EnumerateArray();
-        foreach (JsonElement value in values) {
-          RelationElement innerRelationElement = new RelationElement() {
-            PropertyName = relationElement.PropertyName,
-            PropertyType = relationElement.PropertyType,
-            Relation = "!=",
-            Value = value
-          };
-          result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
-          result1.Append(" and ");
+        object rawValues = relationElement.Value;
+#if NETCOREAPP
+        if (typeof(JsonElement).IsAssignableFrom(rawValues?.GetType())) {
+          JsonElement valuesJson = (JsonElement)relationElement.Value;
+          ArrayEnumerator values = valuesJson.EnumerateArray();
+          foreach (JsonElement value in values) {
+            RelationElement innerRelationElement = new RelationElement() {
+              PropertyName = relationElement.PropertyName,
+              PropertyType = relationElement.PropertyType,
+              Relation = "!=",
+              Value = value
+            };
+            result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
+            result1.Append(" and ");
+          }
+          if (values.Count() > 0) {
+            result1.Length -= 5;
+          }
+        } else {
+#endif
+          IEnumerable values = (IEnumerable)rawValues;
+          int count = 0;
+          foreach (object value in values) {
+            count++;
+            RelationElement innerRelationElement = new RelationElement() {
+              PropertyName = relationElement.PropertyName,
+              PropertyType = relationElement.PropertyType,
+              Relation = "!=",
+              Value = value
+            };
+            result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
+            result1.Append(" and ");
+          }
+          if (count > 0) {
+            result1.Length -= 5;
+          }
+#if NETCOREAPP
         }
-        if (values.Count() > 0) {
-          result1.Length -= 5;
-        }
+#endif
         result1.Append(")");
         return result1.ToString();
       }
 
       string serializedValue;
-      string propertyName = prefix+relationElement.PropertyName;
+      string propertyName = prefix + relationElement.PropertyName;
       string relation = relationElement.Relation;
 
       string[] ineqRels = new string[] { "!=", "<>", "isnot", "is not", "!==", "Isnot", "IsNot", "Is not", "Is Not" };
@@ -162,8 +215,7 @@ namespace System.Data.Fuse {
       if (notNullRels.Contains(relation)) {
         if (mode == "sql") {
           relation = "is not null";
-        }
-        else {
+        } else {
           relation = "!= null";
         }
         checkNull = true;
@@ -172,8 +224,7 @@ namespace System.Data.Fuse {
       if (isNullRels.Contains(relation)) {
         if (mode == "sql") {
           relation = "is null";
-        }
-        else {
+        } else {
           relation = "== null";
         }
         checkNull = true;
@@ -182,16 +233,14 @@ namespace System.Data.Fuse {
 
       if (checkNull) {
         serializedValue = "";
-      }
-      else {
+      } else {
 
         switch (relationElement.PropertyType) {
           case "string":
           case "String":
             if (mode == "sql") {
               serializedValue = $"'{relationElement.Value}'";
-            }
-            else {
+            } else {
               serializedValue = $"\"{relationElement.Value}\"";
             }
             string[] containsRelations = new string[] { ">", ">=", "contains", "Contains", "includes", "Includes" };
@@ -201,8 +250,7 @@ namespace System.Data.Fuse {
               if (mode == "sql") {
                 relation = " like ";
                 serializedValue = $"'%{relationElement.Value}%'";
-              }
-              else {
+              } else {
                 relation = ".Contains";
                 serializedValue = $"(\"{relationElement.Value}\")";
               }
@@ -212,8 +260,7 @@ namespace System.Data.Fuse {
                 propertyName = $"'{relationElement.Value}'";
                 relation = " like ";
                 serializedValue = $"'%'+{prefix + relationElement.PropertyName}+'%'";
-              }
-              else {
+              } else {
                 propertyName = $"\"{relationElement.Value}\"";
                 relation = ".Contains";
                 serializedValue = $"({prefix + relationElement.PropertyName})";
@@ -224,15 +271,14 @@ namespace System.Data.Fuse {
           case "DateTime":
           case "datetime":
           case "Datetime":
-            DateTime date = DateTime.Parse(relationElement.Value.ToString()).ToUniversalTime() ;
+            DateTime date = DateTime.Parse(relationElement.Value.ToString());
             if (mode == "sql") {
               if (date.Hour > 9) {
-              serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
+                serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
               } else {
                 serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T0{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
               }
-            }
-            else {
+            } else {
               serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
             }
             break;
@@ -242,8 +288,7 @@ namespace System.Data.Fuse {
             if (mode == "sql") {
               serializedValue = $"'{date2.Year}-{date2.Month}-{date2.Day}'";
               propertyName = prefix + relationElement.PropertyName;
-            }
-            else {
+            } else {
               serializedValue = $"DateTime({date2.Year}, {date2.Month}, {date2.Day}).Date";
               propertyName = $"{prefix + relationElement.PropertyName}.Date ";
             }

@@ -1,15 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
+﻿#if NETCOREAPP
+using Microsoft.EntityFrameworkCore;
+#else
+using System.Data.Entity;
+#endif
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Fuse.Logic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.Linq.Dynamic.Core;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace System.Data.Fuse {
 
@@ -20,19 +16,19 @@ namespace System.Data.Fuse {
       this.context = dbContext;
     }
 
-    public abstract IList GetEntities1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams);
+    public abstract IList GetEntities1(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
     public abstract IList GetEntities1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
 
-    public abstract IList<Dictionary<string, object>> GetBusinessModels1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams);
+    public abstract IList<Dictionary<string, object>> GetBusinessModels1(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
     public abstract IList<Dictionary<string, object>> GetBusinessModels1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
 
-    public abstract IList<EntityRefById> GetEntityRefs1(SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams);
-    public abstract IList<EntityRefById> GetEntityRefs1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
+    public abstract IList<EntityRef> GetEntityRefs1(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
+    public abstract IList<EntityRef> GetEntityRefs1(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
 
-    public abstract int GetCount1(SimpleExpressionTree filter);
+    public abstract int GetCount1(LogicalExpression filter);
 
-    public abstract void DeleteEntities1(JsonElement[][] entityIdsToDelete);
-    public abstract object AddOrUpdate1(Dictionary<string, JsonElement> entity);
+    public abstract void DeleteEntities1(object[][] entityIdsToDelete);
+    public abstract object AddOrUpdate1(Dictionary<string, object> entity);
   
   }
   

@@ -13,13 +13,15 @@
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\EntityRef.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericAddOrUpdateParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericEntityRepositoryEf.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from keinich%29\GenericListSearchParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\EntitySchemaBasedEfRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\GenericListSearchParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PaginatedResponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\IRepository2.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SortingField.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PagingParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\Utils.cs" />
     <Compile Include="..\RepositoryContract\Persistence\EfRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)persistence\EfRepository1.cs" />
+    <Compile Include="..\RepositoryContract\persistence\DbContextBasedEfRepository.cs" />
     <Compile Include="..\RepositoryContract\Persistence\EfRepositoryBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\FilterExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\ILinqRepository.cs" />

@@ -14,6 +14,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="PortfolioHandling\ValidationProfileClientC.json" />
+    <Content Remove="PortfolioHandling\ValidationProfileClientD.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="PortfolioHandling\ValidationProfileClientC.json" />
+    <EmbeddedResource Include="PortfolioHandling\ValidationProfileClientD.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FUSE-fx.EntityAnnotations" Version="3.0.0" />
     <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.0" />
     <PackageReference Include="FUSE-fx.ModelReader" Version="0.1.1" />

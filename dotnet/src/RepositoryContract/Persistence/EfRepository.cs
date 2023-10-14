@@ -1,9 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿#if NETCOREAPP
+using Microsoft.EntityFrameworkCore;
+#else
+using System.Data.Entity;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using System.Linq;
 using System.Data.Fuse.Logic;
 
@@ -28,15 +31,15 @@ namespace System.Data.Fuse {
       this._Assembly = assembly;
     }
 
-    public object AddOrUpdateEntity(string entityName, Dictionary<string, JsonElement> entity) {
+    public object AddOrUpdateEntity(string entityName, Dictionary<string, object> entity) {
       return GetInnerRepo(entityName).AddOrUpdate1(entity);
     }
 
-    public void DeleteEntities(string entityName, JsonElement[][] entityIdsToDelete) {
+    public void DeleteEntities(string entityName, object[][] entityIdsToDelete) {
       GetInnerRepo(entityName).DeleteEntities1(entityIdsToDelete);
     }
 
-    public IList<Dictionary<string, object>> GetBusinessModels(string entityName, SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<Dictionary<string, object>> GetBusinessModels(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
       return GetInnerRepo(entityName).GetBusinessModels1(filter, pagingParams, sortingParams);
     }
 
@@ -44,7 +47,7 @@ namespace System.Data.Fuse {
       return GetInnerRepo(entityName).GetBusinessModels1(dynamicLinqFilter, pagingParams, sortingParams);
     }
 
-    public Collections.IList GetDbEntities(string entityName, SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public Collections.IList GetDbEntities(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
       return GetInnerRepo(entityName).GetEntities1(filter, pagingParams, sortingParams);
     }
 
@@ -52,15 +55,15 @@ namespace System.Data.Fuse {
       return GetInnerRepo(entityName).GetEntities1(dynamicLinqFilter, pagingParams, sortingParams);
     }
 
-    public IList<EntityRefById> GetEntityRefs(string entityName, SimpleExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<EntityRef> GetEntityRefs(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
       return GetInnerRepo(entityName).GetEntityRefs1(filter, pagingParams, sortingParams);
     }
 
-    public IList<EntityRefById> GetEntityRefs(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<EntityRef> GetEntityRefs(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
       return GetInnerRepo(entityName).GetEntityRefs1(dynamicLinqFilter, pagingParams, sortingParams);
     }
 
-    public int GetCount(string entityName, SimpleExpressionTree filter) {
+    public int GetCount(string entityName, LogicalExpression filter) {
       return GetInnerRepo(entityName).GetCount1(filter);
     }
 
@@ -68,7 +71,11 @@ namespace System.Data.Fuse {
       Type[] allTypes = _Assembly.GetTypes();
       Type entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
       if (entityType == null) { return null; }
-      Type repoType = typeof(EfRepository1<>);
+#if NETCOREAPP
+      Type repoType = typeof(DbContextBasedEfRepository<>);
+#else
+      Type repoType = typeof(EntitySchemaBasedEfRepository<>);
+#endif
       repoType = repoType.MakeGenericType(entityType);
       return (EfRepositoryBase)Activator.CreateInstance(repoType, _DbContext);
     }

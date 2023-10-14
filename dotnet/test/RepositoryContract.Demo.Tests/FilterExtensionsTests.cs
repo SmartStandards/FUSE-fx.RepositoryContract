@@ -20,7 +20,7 @@ namespace RepositoryContract.Demo.Tests {
         }
       );
 
-      string result = tree.CompileToSqlWhere();
+      string result = tree.RootNode.CompileToSqlWhere();
       Assert.AreEqual("(FirstName = 'John')", result);
     }
 
@@ -39,7 +39,7 @@ namespace RepositoryContract.Demo.Tests {
         }
       );
 
-      string result = tree.CompileToSqlWhere();
+      string result = tree.RootNode.CompileToSqlWhere();
       Assert.AreEqual("(FirstName  like  '%Joh%')", result);
     }
 
@@ -58,7 +58,7 @@ namespace RepositoryContract.Demo.Tests {
         }
       );
 
-      string result = tree.CompileToSqlWhere();
+      string result = tree.RootNode.CompileToSqlWhere();
       Assert.AreEqual("('Joh'  like  '%'+FirstName+'%')", result);
     }
 
@@ -77,7 +77,7 @@ namespace RepositoryContract.Demo.Tests {
         }
       );
 
-      string result = tree.CompileToSqlWhere();
+      string result = tree.RootNode.CompileToSqlWhere();
       Assert.AreEqual("(DateOfBirth <= '2023-7-19T14:30:0.0')", result);
     }
 
@@ -96,7 +96,7 @@ namespace RepositoryContract.Demo.Tests {
         }
       );
 
-      string result = tree.CompileToSqlWhere();
+      string result = tree.RootNode.CompileToSqlWhere();
       Assert.AreEqual("(DateOfBirth <= '2023-7-19')", result);
     }
 
@@ -123,7 +123,7 @@ namespace RepositoryContract.Demo.Tests {
         }
       );
 
-      string result = tree.CompileToSqlWhere();
+      string result = tree.RootNode.CompileToSqlWhere();
       Assert.AreEqual("((DateOfBirth <= '2023-7-19') or (DateOfBirth >= '2023-7-19'))", result);
     }
 
@@ -151,7 +151,7 @@ namespace RepositoryContract.Demo.Tests {
         }
       );
 
-      string result = tree.CompileToSqlWhere("t_final.");
+      string result = tree.RootNode.CompileToSqlWhere("t_final.");
       Assert.AreEqual("((t_final.DateOfBirth <= '2023-7-19') or (t_final.DateOfBirth >= '2023-7-19'))", result);
     }
   }

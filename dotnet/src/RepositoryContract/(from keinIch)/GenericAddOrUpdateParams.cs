@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json;
+﻿using System.Collections.Generic;
 
 namespace System.Data.Fuse {
   public class GenericAddOrUpdateParams {
     public string EntityName { get; set; }
-    public Dictionary<string, JsonElement> Entity { get; set; }
+    public Dictionary<string, object> Entity { get; set; }
   }
 }

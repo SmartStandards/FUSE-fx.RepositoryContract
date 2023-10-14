@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using RepositoryContract.Demo.Model;
 using RepositoryContract.Demo.WebApi.Persistence;
+using RepositoryContract.Demo.WebApi.PortfolioHandling;
 using System;
 using System.Collections;
 using System.Data.Fuse;
@@ -36,7 +37,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
     [HttpPost(Name = "GetEntities")]
     public IActionResult GetEntities([FromBody] GenericListSearchParams searchParams) {
       try {
-        IList page = _Repo.GetDbEntities(searchParams.EntityName, searchParams.Filter, searchParams.PagingParams, searchParams.SortingParams) ;
+        IList page = _Repo.GetDbEntities(searchParams.EntityName, searchParams.Filter, searchParams.PagingParams, searchParams.SortingParams);
         int count = _Repo.GetCount(searchParams.EntityName, searchParams.Filter);
         return Ok(new { Return = new PaginatedResponse() { Page = page, Total = count } });
       } catch (Exception ex) {
@@ -59,8 +60,9 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
     [HttpPost(Name = "GetEntityRefs")]
     public IActionResult GetEntityRefs([FromBody] GenericListSearchParams searchParams) {
       try {
-        var result2 = _Repo.GetEntityRefs(searchParams.EntityName,searchParams.Filter, searchParams.PagingParams, searchParams.SortingParams);
-        return Ok(new { Return = result2 });
+        var page = _Repo.GetEntityRefs(searchParams.EntityName, searchParams.Filter, searchParams.PagingParams, searchParams.SortingParams);
+        int count = _Repo.GetCount(searchParams.EntityName, searchParams.Filter);
+        return Ok(new { Return = new PaginatedResponse<EntityRef>() { Page = page, Total = count } });
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);
         return null;
