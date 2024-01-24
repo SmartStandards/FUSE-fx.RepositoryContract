@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.1.19",
-  "currentVersionWithSuffix": "0.1.19",
+  "currentVersion": "0.1.20",
+  "currentVersionWithSuffix": "0.1.20",
   "releaseType": "official",
-  "previousVersion": "0.1.18",
+  "previousVersion": "0.1.19",
   "changeGrade": "patch",
   "currentMajor": 0,
   "currentMinor": 1,
-  "currentPatch": 19,
+  "currentPatch": 20,
   "versionDateInfo": "2024-01-24",
-  "versionTimeInfo": "15:11:26",
+  "versionTimeInfo": "16:36:10",
   "versionNotes": "- new revision without significant changes\n"
 }
