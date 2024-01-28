@@ -20,7 +20,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)SortingField.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PagingParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\Utils.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)WebApi\DbContextBasedFuseController.cs" />
     <Compile Include="..\RepositoryContract\Persistence\EfRepository.cs" />
     <Compile Include="..\RepositoryContract\persistence\DbContextBasedEfRepository.cs" />
     <Compile Include="..\RepositoryContract\Persistence\EfRepositoryBase.cs" />
