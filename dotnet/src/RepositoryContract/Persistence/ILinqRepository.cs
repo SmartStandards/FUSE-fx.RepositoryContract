@@ -8,9 +8,7 @@ namespace System.Data.Fuse {
     IList<EntityRefById> GetEntityRefs(
       Expression<Func<TEntity, bool>> filter, PagingParams pagingParams, SortingField[] sortingParams
     );
-    int GetCount(Expression<Func<TEntity, bool>> filter);
-    TEntity AddOrUpdateEntity(TEntity entity);
-    void DeleteEntities(object[][] entityIdsToDelete);
+    int GetCount(Expression<Func<TEntity, bool>> filter);   
   }
 
 }
