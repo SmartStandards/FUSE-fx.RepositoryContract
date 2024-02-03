@@ -9,8 +9,8 @@ namespace System.Data.Fuse {
     IList GetEntities(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
     IList GetEntities(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
       
-    IList<EntityRef> GetEntityRefs(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
-    IList<EntityRef> GetEntityRefs(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
+    IList<EntityRefById> GetEntityRefs(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
+    IList<EntityRefById> GetEntityRefs(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
 
     int GetCount(string entityName, LogicalExpression filter);
     int GetCount(string entityName, string dynamicLinqFilter);

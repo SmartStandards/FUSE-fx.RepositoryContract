@@ -9,6 +9,8 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\DynamicRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\DynamicRepositoryFacade.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ModelVsEntityRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GenericListSearchParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ICommitable.cs" />

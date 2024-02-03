@@ -130,7 +130,7 @@ namespace System.Data.Fuse.Convenience {
       result.Add(pi.Name, entityRef);
     }
 
-    private static T Deserialize<T>(this Dictionary<string, object> businessModel) {
+    public static T Deserialize<T>(this Dictionary<string, object> businessModel) {
       Type type = typeof(T);
       T result = (T)Activator.CreateInstance(type);
 
@@ -145,7 +145,7 @@ namespace System.Data.Fuse.Convenience {
       return result;
     }
 
-    private static Dictionary<string, object> Serialize<T>(this T input, Func<PropertyInfo, bool> ignore) {
+    public static Dictionary<string, object> Serialize<T>(this T input, Func<PropertyInfo, bool> ignore) {
       Type type = typeof(T);
       Dictionary<string, object> result = new Dictionary<string, object>();
       foreach (PropertyInfo pi in type.GetProperties()) {
