@@ -11,7 +11,7 @@ namespace System.Data.Fuse.Convenience {
   public static class ConversionExtensions {
 
     public static IList<T2> ToBuseinssModels<T1, T2>(
-      this IList<T1> entityList, 
+      this IList<T1> entityList,
       Func<PropertyInfo, bool> isForeignKey,
       Func<PropertyInfo, bool> isNavigation,
       Action<T1, T2> onAfterConvert = null
@@ -20,7 +20,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public static IList<T2> ToEntities<T1, T2>(
-      this IList<T1> businessModelList, 
+      this IList<T1> businessModelList,
       Func<PropertyInfo, bool> isForeignKey,
       Func<PropertyInfo, bool> isNavigation,
       Action<T1, T2> onAfterConvert = null
@@ -141,9 +141,38 @@ namespace System.Data.Fuse.Convenience {
         if (pi.PropertyType.IsAssignableFrom(propValue.GetType())) {
           pi.SetValue(result, propValue, null);
         }
+#if NETCOREAPP
+        if (typeof(JsonElement).IsAssignableFrom(propValue.GetType())) {
+          pi.SetValue(result, GetValue(pi, (JsonElement)propValue));
+        }
+#endif
       }
       return result;
     }
+
+#if NETCOREAPP
+    public static object GetValue(PropertyInfo prop, JsonElement propertyValue) {
+      if (prop.PropertyType == typeof(string)) {
+        return propertyValue.GetString();
+      } else if (prop.PropertyType == typeof(Int64)) {
+        return propertyValue.GetInt64();
+      } else if (prop.PropertyType == typeof(bool)) {
+        return propertyValue.GetBoolean();
+      } else if (prop.PropertyType == typeof(DateTime)) {
+        return propertyValue.GetDateTime();
+      } else if (prop.PropertyType == typeof(Int32)) {
+        return propertyValue.GetInt32();
+      } else if (prop.PropertyType == typeof(decimal)) {
+        return propertyValue.GetDecimal();
+      } else if (prop.PropertyType == typeof(Guid)) {
+        return propertyValue.GetGuid();
+      } else if (prop.PropertyType == typeof(double)) {
+        return propertyValue.GetDouble();
+      } else {
+        return null;
+      }
+    }
+#endif
 
     public static Dictionary<string, object> Serialize<T>(this T input, Func<PropertyInfo, bool> ignore) {
       Type type = typeof(T);

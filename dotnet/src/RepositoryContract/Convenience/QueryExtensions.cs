@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Fuse.Logic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 #if NETCOREAPP
 using System.Text.Json;
@@ -10,7 +11,8 @@ using static System.Text.Json.JsonElement;
 #endif
 
 namespace System.Data.Fuse.Convenience {
-  public static class FilterExtensions {
+
+  public static class QueryExtensions {
 
     public static string CompileToDynamicLinq(this LogicalExpression tree) {
       if (tree == null) return null;
@@ -313,6 +315,33 @@ namespace System.Data.Fuse.Convenience {
       }
 
       return result.ToString();
+    }
+
+    public static void DeleteEntities(
+      object[][] entityIdsToDelete,
+      Func< PropertyInfo[]> getKeyProperties,
+      Action<object[]> deleteEntityByKeyset
+    ) {
+      foreach (object[] entityIdToDelete in entityIdsToDelete) {
+        if (entityIdsToDelete.Length == 0) {
+          continue;
+        }
+        object[] keysetToDelete = new object[entityIdsToDelete.Length];
+        PropertyInfo[] keyProperties = getKeyProperties();
+        if (keyProperties.Count() != keysetToDelete.Count()) { continue; }
+        int j = 0;
+        foreach (PropertyInfo keyProperty in keyProperties) {
+          object keyPropValue = entityIdToDelete[j];
+#if NETCOREAPP
+          if (keyPropValue != null && typeof(JsonElement).IsAssignableFrom(keyPropValue.GetType())) {
+            JsonElement keyPropValueJson = (JsonElement)keyPropValue;
+            keyPropValue = ConversionExtensions.GetValue(keyProperty, keyPropValueJson);
+          }
+#endif
+          keysetToDelete[j] = keyPropValue;
+        }
+        deleteEntityByKeyset.Invoke(keysetToDelete);
+      }
     }
   }
 }

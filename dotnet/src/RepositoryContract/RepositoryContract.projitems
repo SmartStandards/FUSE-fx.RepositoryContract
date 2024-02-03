@@ -32,7 +32,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\EfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\DbContextBasedEfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\EfRepositoryBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Convenience\FilterExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Convenience\QueryExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from KornSW.kPers%29\IRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from KosrnSW.DynamicRepository%29\DynamicLinqExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from UDAS%29\ApiResponse.cs" />

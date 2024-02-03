@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RepositoryContract.Demo.Model {
 
-  public class Employee {
+  public class Employee : IEquatable<Employee> {
 
     public int Id { get; set; }
 
@@ -32,6 +32,10 @@ namespace RepositoryContract.Demo.Model {
 
     [Lookup]
     public virtual ObservableCollection<BusinessProject> AssignedBusinessProjects { get; set; } = new ObservableCollection<BusinessProject>();
+
+    public bool Equals(Employee? other) {
+      return this.Id == other?.Id;
+    }
 
     public override string ToString() {
       return $"{FirstName} {LastName}";
