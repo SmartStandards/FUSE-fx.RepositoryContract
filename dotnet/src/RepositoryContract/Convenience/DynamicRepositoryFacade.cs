@@ -69,7 +69,7 @@ namespace System.Data.Fuse.Convenience {
       return _InternalRepo.GetEntityRefs(filter, pagingParams, sortingParams).ToList();
     }
 
-    public override IList<EntityRefById> GetEntityRefsBase(
+    public override IList<EntityRefById> GetEntityRefs(
       string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     ) {
       return _InternalRepo.GetEntityRefs(dynamicLinqFilter, pagingParams, sortingParams).ToList();
