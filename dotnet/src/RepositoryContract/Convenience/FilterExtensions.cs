@@ -9,7 +9,7 @@ using System.Text.Json;
 using static System.Text.Json.JsonElement;
 #endif
 
-namespace System.Data.Fuse {
+namespace System.Data.Fuse.Convenience {
   public static class FilterExtensions {
 
     public static string CompileToDynamicLinq(this LogicalExpression tree) {

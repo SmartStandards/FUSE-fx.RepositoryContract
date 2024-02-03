@@ -1,4 +1,4 @@
-namespace System.Data.Fuse {
+namespace System.Data.Fuse.Convenience {
 
   internal static class StringExtensions {
     public static string CapitalizeFirst(this string str) {

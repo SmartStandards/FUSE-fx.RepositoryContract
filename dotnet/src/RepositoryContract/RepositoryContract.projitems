@@ -9,33 +9,38 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)%28from keinich%29\DeletionParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\EntityRef.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericAddOrUpdateParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericEntityRepositoryEf.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EntitySchemaBasedEfRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\GenericListSearchParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Convenience\ModelVsEntityRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GenericListSearchParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ICommitable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ICommitableRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IDataStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IDynamicRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ILinqRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\tionParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\tyRef.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\ricAddOrUpdateParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\ricEntityRepositoryEf.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\EntitySchemaBasedEfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PaginatedResponse.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\IRepository2.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\IRepository2.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SortingField.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PagingParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\Utils.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\DbContextBasedEfRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfRepositoryBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\FilterExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\ILinqRepository.cs" />
-    <Compile Include="..\RepositoryContract\Persistence\IDynamicRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from KornSW.kPers%29\IRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from KosrnSW.DynamicRepository%29\DynamicLinqExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\ApiResponse.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\IEntityRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\IUdasInfoService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\KeyValuesCollection.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\ListSearchParams.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\PaginatedResponse.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from UDAS%29\SharedModels.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)%28from keinIch%29\GenericEntityRepositoryEf2.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Convenience\ConversionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\EfRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\DbContextBasedEfRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\EfRepositoryBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Convenience\FilterExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from KornSW.kPers%29\ository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from KosrnSW.DynamicRepository%29\micLinqExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from UDAS%29\esponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from UDAS%29\ityRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from UDAS%29\sInfoService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from UDAS%29\aluesCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from UDAS%29\SearchParams.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from UDAS%29\natedResponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from UDAS%29\edModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\ricEntityRepositoryEf2.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityRef.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logic\LogicalExpression.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logic\LogicalOperator.cs" />
@@ -44,10 +49,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Logic\SimpleExpressionTree.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IReposiotory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityRefById.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\IRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Convenience\StringExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)%28from keinIch%29\Directory.Build.props" />
+    <None Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\ctory.Build.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)[old]\" />
   </ItemGroup>
 </Project>
