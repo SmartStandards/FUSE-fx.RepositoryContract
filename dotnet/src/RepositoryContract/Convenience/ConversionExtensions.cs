@@ -45,7 +45,7 @@ namespace System.Data.Fuse.Convenience {
       Func<PropertyInfo, bool> isNavigation,
       Action<T1, T2> onAfterConvert = null
     ) {
-      Func<PropertyInfo, bool> ignore = (pi) => { return !isForeignKey(pi) && !isNavigation(pi); };
+      Func<PropertyInfo, bool> ignore = (pi) => { return isForeignKey(pi) || isNavigation(pi); };
       T2 result = businessModel.Serialize(ignore).ConvertToEntityDynamic<T2>(isForeignKey, isNavigation);
       onAfterConvert?.Invoke(businessModel, result);
       return result;
