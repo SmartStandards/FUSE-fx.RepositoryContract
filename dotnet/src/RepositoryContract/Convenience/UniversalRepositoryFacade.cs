@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace System.Data.Fuse.Convenience {
 
-  public abstract class DynamicRepositoryFacade {
+  public abstract class UniversalRepositoryFacade {
 
     public abstract object AddOrUpdateEntity(Dictionary<string, object> entity);
 
@@ -34,7 +34,7 @@ namespace System.Data.Fuse.Convenience {
   }
 
   public class DynamicRepositoryFacade<T>  
-    : DynamicRepositoryFacade
+    : UniversalRepositoryFacade
     where T : class{
 
     private IRepository<T> _InternalRepo;

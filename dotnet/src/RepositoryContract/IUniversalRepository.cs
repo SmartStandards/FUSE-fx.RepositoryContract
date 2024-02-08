@@ -4,7 +4,7 @@ using System.Data.Fuse.Logic;
 
 namespace System.Data.Fuse {
 
-  public interface IDynamicRepository {
+  public interface IUniversalRepository {
 
     IList GetEntities(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
     IList GetEntities(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);

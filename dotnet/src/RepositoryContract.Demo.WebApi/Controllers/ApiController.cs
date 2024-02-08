@@ -14,7 +14,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
   public class ApiController : ControllerBase {
 
     private readonly ILogger<ApiController> _Logger;
-    private readonly IDynamicRepository _Repo;
+    private readonly IUniversalRepository _Repo;
 
     public ApiController(ILogger<ApiController> logger, DemoDbContext demoDbContext) {
       _Logger = logger;

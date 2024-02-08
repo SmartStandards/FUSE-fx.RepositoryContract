@@ -4,11 +4,11 @@ using System.Data.Fuse.Convenience;
 
 namespace System.Data.Fuse {
 
-  public abstract class DynamicRepository : IDynamicRepository {
+  public abstract class UniversalRepository : IUniversalRepository {
 
-    private Dictionary<string, DynamicRepositoryFacade> _InnerRepos = new Dictionary<string, DynamicRepositoryFacade>();
+    private Dictionary<string, UniversalRepositoryFacade> _InnerRepos = new Dictionary<string, UniversalRepositoryFacade>();
 
-    protected DynamicRepositoryFacade GetInnerRepo(string entityName) {
+    protected UniversalRepositoryFacade GetInnerRepo(string entityName) {
       if (!_InnerRepos.ContainsKey(entityName)) {
         _InnerRepos.Add(entityName, CreateInnerRepo(entityName));
       }
@@ -63,7 +63,7 @@ namespace System.Data.Fuse {
       return GetInnerRepo(entityName).GetCount(dynamicLinqfilter);
     }
 
-    protected abstract DynamicRepositoryFacade CreateInnerRepo(string entityName);
+    protected abstract UniversalRepositoryFacade CreateInnerRepo(string entityName);
 //      {
 //      Type[] allTypes = _Assembly.GetTypes();
 //      Type entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();

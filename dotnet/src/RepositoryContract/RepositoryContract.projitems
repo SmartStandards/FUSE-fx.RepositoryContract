@@ -9,14 +9,14 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)convenience\DynamicRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)convenience\DynamicRepositoryFacade.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\UniversalRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\UniversalRepositoryFacade.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ModelVsEntityRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)GenericListSearchParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ICommitable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ICommitableRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IDataStore.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)IDynamicRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ILinqRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\DeletionParams.cs" />

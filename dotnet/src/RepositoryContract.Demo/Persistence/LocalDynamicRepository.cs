@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 
 namespace RepositoryContract.Demo.Persistence {
-  public class LocalDynamicRepository : DynamicRepository {
+  public class LocalDynamicRepository : UniversalRepository {
 
     protected readonly Assembly _Assembly;
 
@@ -13,7 +13,7 @@ namespace RepositoryContract.Demo.Persistence {
       this._Assembly = assembly;
     }
 
-    protected override DynamicRepositoryFacade CreateInnerRepo(string entityName) {
+    protected override UniversalRepositoryFacade CreateInnerRepo(string entityName) {
       Type[] allTypes = _Assembly.GetTypes();
       Type? entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
       if (entityType == null) { return null; }
@@ -25,7 +25,7 @@ namespace RepositoryContract.Demo.Persistence {
       repoType = repoType.MakeGenericType(entityType);
       object repo = Activator.CreateInstance(repoType);
 
-      return (DynamicRepositoryFacade)Activator.CreateInstance(repoFacadeType, repo);
+      return (UniversalRepositoryFacade)Activator.CreateInstance(repoFacadeType, repo);
     }
 
   }
