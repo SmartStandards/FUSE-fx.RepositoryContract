@@ -12,14 +12,14 @@ namespace System.Data.Fuse {
       string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     );
        
-    IList<EntityRefById> GetEntityRefs(
+    IList<EntityRef> GetEntityRefs(
       LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams
     );
-    IList<EntityRefById> GetEntityRefs(
+    IList<EntityRef> GetEntityRefs(
       string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     );
 
-    int GetCount( LogicalExpression filter);
+    int GetCount(LogicalExpression filter);
     int GetCount(string dynamicLinqFilter);
 
     TEntity AddOrUpdateEntity(TEntity entity);

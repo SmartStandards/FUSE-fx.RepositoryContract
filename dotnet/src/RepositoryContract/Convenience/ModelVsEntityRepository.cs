@@ -47,25 +47,33 @@ namespace System.Data.Fuse.Convenience {
       return _Repository.GetCount(dynamicLinqFilter);
     }
 
-    public IList<TModel> GetEntities(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<TModel> GetEntities(
+      LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams
+    ) {
       return _Repository.GetEntities(
         filter, pagingParams, sortingParams
       ).ToBuseinssModels(this._IsForeignKey, this._IsNavigation, this._OnAfterEntityToModel);
     }
 
-    public IList<TModel> GetEntities(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<TModel> GetEntities(
+      string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
+    ) {
       return _Repository.GetEntities(
         dynamicLinqFilter, pagingParams, sortingParams
       ).ToBuseinssModels(this._IsForeignKey, this._IsNavigation, this._OnAfterEntityToModel);
     }
 
-    public IList<EntityRefById> GetEntityRefs(LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<EntityRef> GetEntityRefs(
+      LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams
+    ) {
       return _Repository.GetEntityRefs(
         filter, pagingParams, sortingParams
       );
     }
 
-    public IList<EntityRefById> GetEntityRefs(string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams) {
+    public IList<EntityRef> GetEntityRefs(
+      string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
+    ) {
       return _Repository.GetEntityRefs(
          dynamicLinqFilter, pagingParams, sortingParams
        );

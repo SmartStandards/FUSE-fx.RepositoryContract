@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using RepositoryContract.Demo.Model;
 using RepositoryContract.Demo.Persistence;
@@ -29,7 +30,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
         return Ok();
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);
-        return null;
+        return new StatusCodeResult(500);
       }
     }
 
@@ -41,7 +42,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
         return Ok(new { Return = new PaginatedResponse() { Page = page, Total = count } });
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);
-        return null;
+        return new StatusCodeResult(500);
       }
     }
 
@@ -50,10 +51,10 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
       try {
         var page = _Repo.GetEntityRefs(searchParams.EntityName, searchParams.Filter, searchParams.PagingParams, searchParams.SortingParams);
         int count = _Repo.GetCount(searchParams.EntityName, searchParams.Filter);
-        return Ok(new { Return = new PaginatedResponse<EntityRefById>() { Page = page, Total = count } });
+        return Ok(new { Return = new PaginatedResponse<EntityRef>() { Page = page, Total = count } });
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);
-        return null;
+        return new StatusCodeResult(500);
       }
     }
 
@@ -66,7 +67,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
         return Ok(new { Return = result });
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);
-        return null;
+        return new StatusCodeResult(500);
       }
     }
 
@@ -79,7 +80,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
         return Ok(new { Return = true });
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);
-        return null;
+        return new StatusCodeResult(500);
       }
     }
 
@@ -89,7 +90,7 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
         return Ok(new { Return = tree });
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);
-        return null;
+        return new StatusCodeResult(500);
       }
     }
   }

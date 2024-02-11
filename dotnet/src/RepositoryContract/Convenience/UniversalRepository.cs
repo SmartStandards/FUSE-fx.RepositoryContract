@@ -15,14 +15,6 @@ namespace System.Data.Fuse {
       return _InnerRepos[entityName];
     }
 
-    //protected readonly DbContext _DbContext;
-    //protected readonly Assembly _Assembly;
-
-    //public EfRepository(DbContext dbContext, Assembly assembly) {
-    //  this._DbContext = dbContext;
-    //  this._Assembly = assembly;
-    //}
-
     public object AddOrUpdateEntity(string entityName, Dictionary<string, object> entity) {
       return GetInnerRepo(entityName).AddOrUpdateEntity(entity);
     }
@@ -43,13 +35,13 @@ namespace System.Data.Fuse {
       return GetInnerRepo(entityName).GetEntities(dynamicLinqFilter, pagingParams, sortingParams);
     }
 
-    public IList<EntityRefById> GetEntityRefs(
+    public IList<EntityRef> GetEntityRefs(
       string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams
     ) {
       return GetInnerRepo(entityName).GetEntityRefs(filter, pagingParams, sortingParams);
     }
 
-    public IList<EntityRefById> GetEntityRefs(
+    public IList<EntityRef> GetEntityRefs(
       string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     ) {
       return GetInnerRepo(entityName).GetEntityRefs(dynamicLinqFilter, pagingParams, sortingParams);
@@ -64,18 +56,6 @@ namespace System.Data.Fuse {
     }
 
     protected abstract UniversalRepositoryFacade CreateInnerRepo(string entityName);
-//      {
-//      Type[] allTypes = _Assembly.GetTypes();
-//      Type entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
-//      if (entityType == null) { return null; }
-//#if NETCOREAPP
-//      Type repoType = typeof(EfRepository1<>);
-//#else
-//      Type repoType = typeof(EfRepository1_Alt<>);
-//#endif
-//      repoType = repoType.MakeGenericType(entityType);
-//      return (EfRepositoryBase)Activator.CreateInstance(repoType, _DbContext);
-//    }
 
   }
 

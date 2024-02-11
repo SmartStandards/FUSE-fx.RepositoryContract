@@ -96,13 +96,13 @@ namespace System.Data.Fuse.Convenience {
       return ApplyPaging(ApplySorting(result, sortingParams), pagingParams).ToList();
     }
 
-    public IList<EntityRefById> GetEntityRefs(
+    public IList<EntityRef> GetEntityRefs(
       LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams
     ) {
       throw new NotImplementedException();
     }
 
-    public IList<EntityRefById> GetEntityRefs(
+    public IList<EntityRef> GetEntityRefs(
       string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     ) {
       throw new NotImplementedException();

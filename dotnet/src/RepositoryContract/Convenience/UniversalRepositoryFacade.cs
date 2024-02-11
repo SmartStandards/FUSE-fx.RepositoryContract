@@ -19,11 +19,11 @@ namespace System.Data.Fuse.Convenience {
       string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     );
 
-    public abstract IList<EntityRefById> GetEntityRefs(
+    public abstract IList<EntityRef> GetEntityRefs(
       LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams
     );
 
-    public abstract IList<EntityRefById> GetEntityRefs(
+    public abstract IList<EntityRef> GetEntityRefs(
       string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     );
 
@@ -63,13 +63,13 @@ namespace System.Data.Fuse.Convenience {
       return _InternalRepo.GetEntities(dynamicLinqFilter, pagingParams, sortingParams).ToList();
     }
 
-    public override IList<EntityRefById> GetEntityRefs(
+    public override IList<EntityRef> GetEntityRefs(
       LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams
     ) {      
       return _InternalRepo.GetEntityRefs(filter, pagingParams, sortingParams).ToList();
     }
 
-    public override IList<EntityRefById> GetEntityRefs(
+    public override IList<EntityRef> GetEntityRefs(
       string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     ) {
       return _InternalRepo.GetEntityRefs(dynamicLinqFilter, pagingParams, sortingParams).ToList();
