@@ -136,7 +136,10 @@ namespace System.Data.Fuse.Convenience {
 
       foreach (PropertyInfo pi in type.GetProperties()) {
         if (!pi.CanWrite) { continue; }
-        if (!businessModel.TryGetValue(pi.Name, out object propValue)) { continue; }
+        if (!businessModel.TryGetValue(pi.Name, out object propValue)) {
+          string propNameCap = pi.Name.Substring(0,1).ToLower() + pi.Name.Substring(1);
+          if (!businessModel.TryGetValue(propNameCap, out  propValue)) { continue; }
+        }
         if (propValue == null) { pi.SetValue(result, null); }
         if (pi.PropertyType.IsAssignableFrom(propValue.GetType())) {
           pi.SetValue(result, propValue, null);
