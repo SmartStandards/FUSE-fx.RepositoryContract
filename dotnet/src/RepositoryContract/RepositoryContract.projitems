@@ -9,6 +9,7 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Convenience\UniversalModelVsEntityRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\UniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\UniversalRepositoryFacade.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ModelVsEntityRepository.cs" />

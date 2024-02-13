@@ -19,6 +19,14 @@ namespace System.Data.Fuse.Convenience {
       return entityList.Select(entity => entity.ToBusinessModel(isForeignKey, isNavigation, onAfterConvert)).ToList();
     }
 
+    public static IList<Dictionary<string, object>> ToBusinessModelsDynamic<T1>(
+      this IList<T1> entityList,
+      Func<PropertyInfo, bool> isForeignKey,
+      Func<PropertyInfo, bool> isNavigation
+    ) {
+      return entityList.Select(entity => entity.ConvertToBusinessModelDynamic(isForeignKey, isNavigation)).ToList();
+    }
+
     public static IList<T2> ToEntities<T1, T2>(
       this IList<T1> businessModelList,
       Func<PropertyInfo, bool> isForeignKey,
@@ -26,6 +34,14 @@ namespace System.Data.Fuse.Convenience {
       Action<T1, T2> onAfterConvert = null
     ) {
       return businessModelList.Select(entity => entity.ToEntity(isForeignKey, isNavigation, onAfterConvert)).ToList();
+    }
+
+    public static IList<T1> ToEntitiesDynamic<T1>(
+      this IList<Dictionary<string, object>> businessModelList,
+      Func<PropertyInfo, bool> isForeignKey,
+      Func<PropertyInfo, bool> isNavigation
+    ) {
+      return businessModelList.Select(bm => bm.ConvertToEntityDynamic<T1>(isForeignKey, isNavigation)).ToList();
     }
 
     public static T2 ToBusinessModel<T1, T2>(
