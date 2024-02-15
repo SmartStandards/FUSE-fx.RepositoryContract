@@ -6,8 +6,10 @@ using RepositoryContract.Demo.Persistence;
 using RepositoryContract.Demo.WebApi.Persistence;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data.Fuse;
 using System.Data.Fuse.Logic;
+using System.Linq;
 
 namespace RepositoryConrract.Demo.WebApi.Controllers {
   [ApiController]
@@ -37,9 +39,9 @@ namespace RepositoryConrract.Demo.WebApi.Controllers {
     [HttpPost(Name = "GetEntities")]
     public IActionResult GetEntities([FromBody] GenericListSearchParams searchParams) {
       try {
-        IList page = _Repo.GetEntities(searchParams.EntityName, searchParams.Filter, searchParams.PagingParams, searchParams.SortingParams);
+        IList<Dictionary<string,object>> page = _Repo.GetEntities(searchParams.EntityName, searchParams.Filter, searchParams.PagingParams, searchParams.SortingParams);
         int count = _Repo.GetCount(searchParams.EntityName, searchParams.Filter);
-        return Ok(new { Return = new PaginatedResponse() { Page = page, Total = count } });
+        return Ok(new { Return = new PaginatedResponse() { Page = page.ToList(), Total = count } });
       } catch (Exception ex) {
         _Logger.LogCritical(ex, ex.Message);
         return new StatusCodeResult(500);

@@ -23,13 +23,13 @@ namespace System.Data.Fuse {
       GetInnerRepo(entityName).DeleteEntities(entityIdsToDelete);
     }
   
-    public Collections.IList GetEntities(
+    public IList<Dictionary<string, object>> GetEntities(
       string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams
     ) {
       return GetInnerRepo(entityName).GetEntities(filter, pagingParams, sortingParams);
     }
 
-    public Collections.IList GetEntities(
+    public IList<Dictionary<string, object>> GetEntities(
       string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
     ) {
       return GetInnerRepo(entityName).GetEntities(dynamicLinqFilter, pagingParams, sortingParams);

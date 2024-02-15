@@ -3,7 +3,7 @@ using System.Data.Fuse.Logic;
 using System.Reflection;
 
 namespace System.Data.Fuse.Convenience {
-  public class UniversalModelVsEntityRepository<TEntity>
+  public class KvpModelVsEntityRepository<TEntity>
     : IRepository<Dictionary<string, object>>
     where TEntity : class
     {
@@ -13,7 +13,7 @@ namespace System.Data.Fuse.Convenience {
     private readonly Func<PropertyInfo, bool> _IsForeignKey;
     private readonly Func<PropertyInfo, bool> _IsNavigation;
 
-    public UniversalModelVsEntityRepository(
+    public KvpModelVsEntityRepository(
       IRepository<TEntity> repository,
       Func<PropertyInfo, bool> isForeignKey,
       Func<PropertyInfo, bool> isNavigation

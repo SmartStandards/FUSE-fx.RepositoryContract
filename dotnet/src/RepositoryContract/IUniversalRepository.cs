@@ -6,8 +6,8 @@ namespace System.Data.Fuse {
 
   public interface IUniversalRepository {
 
-    IList GetEntities(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
-    IList GetEntities(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
+    IList<Dictionary<string, object>> GetEntities(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
+    IList<Dictionary<string, object>> GetEntities(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
       
     IList<EntityRef> GetEntityRefs(string entityName, LogicalExpression filter, PagingParams pagingParams, SortingField[] sortingParams);
     IList<EntityRef> GetEntityRefs(string entityName, string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams);
