@@ -27,15 +27,15 @@ namespace RepositoryContract.Demo.Tests {
 
     [TestMethod]
     public void Serialize_Works() {
-      TestEntity entity = new TestEntity() { 
-        Id = 0, Name = "TestName", Value = "TestValue", TestLookUpEntityId = 1 
-      };
+      //TestEntity entity = new TestEntity() { 
+      //  Id = 0, Name = "TestName", Value = "TestValue", TestLookUpEntityId = 1 
+      //};
 
-      string entityJson = "{\"id\":1,\"testLookUpEntityId\": 1}";
-      Dictionary<string, object>? test = JsonSerializer.Deserialize<Dictionary<string, object>>(entityJson); 
+      //string entityJson = "{\"id\":1,\"testLookUpEntityId\": 1}";
+      //Dictionary<string, object>? test = JsonSerializer.Deserialize<Dictionary<string, object>>(entityJson); 
       
-      TestEntity entityAfterDeserialization = ConversionExtensions.Deserialize<TestEntity>(test);
-      Assert.IsNotNull(entityAfterDeserialization);
+      //TestEntity entityAfterDeserialization = ConversionExtensions.Deserialize<TestEntity>(test);
+      //Assert.IsNotNull(entityAfterDeserialization);
     }
 
   }

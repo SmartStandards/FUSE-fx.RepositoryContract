@@ -14,18 +14,21 @@ namespace RepositoryContract.Demo.Persistence {
     }
 
     protected override UniversalRepositoryFacade CreateInnerRepo(string entityName) {
-      Type[] allTypes = _Assembly.GetTypes();
-      Type? entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
-      if (entityType == null) { return null; }
 
-      Type repoFacadeType = typeof(DynamicRepositoryFacade<>);
-      repoFacadeType = repoFacadeType.MakeGenericType(entityType);
+      throw new NotImplementedException();
 
-      Type repoType = typeof(LocalRepository<>);
-      repoType = repoType.MakeGenericType(entityType);
-      object repo = Activator.CreateInstance(repoType);
+      //Type[] allTypes = _Assembly.GetTypes();
+      //Type? entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
+      //if (entityType == null) { return null; }
 
-      return (UniversalRepositoryFacade)Activator.CreateInstance(repoFacadeType, repo);
+      //Type repoFacadeType = typeof(DynamicRepositoryFacade<>);
+      //repoFacadeType = repoFacadeType.MakeGenericType(entityType);
+
+      //Type repoType = typeof(LocalRepository<>);
+      //repoType = repoType.MakeGenericType(entityType);
+      //object repo = Activator.CreateInstance(repoType);
+
+      //return (UniversalRepositoryFacade)Activator.CreateInstance(repoFacadeType, repo);
     }
 
   }

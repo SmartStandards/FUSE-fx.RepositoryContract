@@ -1,7 +1,7 @@
 namespace System.Data.Fuse {
 
-  public interface ICommitableRepository<T>
-    : IRepository<T>, ICommitable
-    where T : class { }
+  public interface ICommitableRepository<TEntity, TKey>
+    : IRepository<TEntity, TKey>, ICommitable
+    where TEntity : class { }
 
 }

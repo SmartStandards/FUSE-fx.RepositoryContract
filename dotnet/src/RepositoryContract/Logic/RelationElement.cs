@@ -1,14 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Runtime.CompilerServices;
+//using System.Text;
 
-namespace System.Data.Fuse.Logic {
-  public class RelationElement {
+//namespace System.Data.Fuse.Logic {
+
+//  public class RelationElement {
    
-    public string Relation { get; set; }
-    public string PropertyName { get; set; }
-    public string PropertyType { get; set; }
-    public object Value { get; set; }
-  }
-}
+//    public string Relation { get; set; }
+
+//    public string PropertyName { get; set; }
+//    public string PropertyType { get; set; }
+
+
+//    public object Value { get; set; }
+
+
+//  }
+//}
 

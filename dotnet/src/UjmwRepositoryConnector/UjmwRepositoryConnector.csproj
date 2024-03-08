@@ -45,10 +45,9 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="EntityAnnotations" Version="2.4.0.551" />
-    <PackageReference Include="EntitySchema" Version="1.0.0.488" />
-    <PackageReference Include="kGEN.Generator" Version="1.5.0.632" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="EntityAnnotations" Version="4.0.1" />
+    <PackageReference Include="kGEN.Generator" Version="1.5.0.853" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>

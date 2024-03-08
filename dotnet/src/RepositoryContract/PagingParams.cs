@@ -1,11 +1,11 @@
-namespace System.Data.Fuse {
+//namespace System.Data.Fuse {
 
-  public class PagingParams {
+//  public class PagingParams {
 
-    public int PageNumber { get; set; }
+//    public int PageNumber { get; set; }
 
-    public int PageSize { get; set; }
+//    public int PageSize { get; set; }
 
-  }
+//  }
 
-}
+//}

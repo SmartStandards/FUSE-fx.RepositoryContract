@@ -1,11 +1,11 @@
-namespace System.Data.Fuse {
+//namespace System.Data.Fuse {
 
-  public class SortingField {
+//  public class SortingField {
 
-    public string FieldName { get; set; } = string.Empty;
+//    public string FieldName { get; set; } = string.Empty;
 
-    public bool Descending { get; set; } = false;
+//    public bool Descending { get; set; } = false;
 
-  }  
+//  }  
 
-}
+//}
