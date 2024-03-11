@@ -30,10 +30,6 @@
 		<file src="dist\bin-net46\FUSE-fx.RepositoryContract.dll" target="lib/net46" />
 		<file src="dist\bin-net46\FUSE-fx.RepositoryContract.xml" target="lib/net46" />
 		<file src="dist\bin-net46\FUSE-fx.RepositoryContract.pdb" target="lib/net46" />
-		<!-- .NET 5.0 -->
-		<file src="dist\bin-net5.0\FUSE-fx.RepositoryContract.dll" target="lib/net5.0" />
-		<file src="dist\bin-net5.0\FUSE-fx.RepositoryContract.xml" target="lib/net5.0" />
-		<file src="dist\bin-net5.0\FUSE-fx.RepositoryContract.pdb" target="lib/net5.0" />
 		<!-- .NET 6.0 -->
 		<file src="dist\bin-net6.0\FUSE-fx.RepositoryContract.dll" target="lib/net6.0" />
 		<file src="dist\bin-net6.0\FUSE-fx.RepositoryContract.xml" target="lib/net6.0" />
