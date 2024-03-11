@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.1.31",
-  "currentVersionWithSuffix": "0.1.31",
+  "currentVersion": "0.2.0",
+  "currentVersionWithSuffix": "0.2.0",
   "releaseType": "official",
-  "previousVersion": "0.1.30",
-  "changeGrade": "patch",
+  "previousVersion": "0.1.31",
+  "changeGrade": "major",
   "currentMajor": 0,
-  "currentMinor": 1,
-  "currentPatch": 31,
-  "versionDateInfo": "2024-02-15",
-  "versionTimeInfo": "15:53:45",
-  "versionNotes": "- new revision without significant changes\n"
+  "currentMinor": 2,
+  "currentPatch": 0,
+  "versionDateInfo": "2024-03-11",
+  "versionTimeInfo": "08:24:49",
+  "versionNotes": "- breaking Change: completely refactored the contract\n"
 }

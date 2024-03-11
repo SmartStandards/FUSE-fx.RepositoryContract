@@ -8,7 +8,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-**breaking Change**: completely refactored the contract
+*(none)*
+
+
+
+## v 0.2.0
+released **2024-03-11**, including:
+ - **breaking Change**: completely refactored the contract
 
 
 
