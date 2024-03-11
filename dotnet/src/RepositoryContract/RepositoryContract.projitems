@@ -21,7 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RepositoryCapabilities.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ILinqRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\..\%28git%29\FUSE-fx.RepositoryContract\dotnet\src\RepositoryContract\IRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\DeletionParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\EntityRef.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\GenericAddOrUpdateParams.cs" />
