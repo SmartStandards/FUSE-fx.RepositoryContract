@@ -360,7 +360,7 @@ namespace System.Data.Fuse.Convenience {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns>An array containing the keys of affeced entities.</returns>
-    public object[] Massupdate(object[] keysToUpdate, Dictionary<string, object> fields) {
+    public object[] MassupdateByKeys(object[] keysToUpdate, Dictionary<string, object> fields) {
       throw new NotImplementedException();
     }
 
@@ -389,7 +389,7 @@ namespace System.Data.Fuse.Convenience {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns></returns>
-    public object[] Massupdate(string searchExpression, Dictionary<string, object> fields) {
+    public object[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields) {
       throw new NotImplementedException();
     }
 

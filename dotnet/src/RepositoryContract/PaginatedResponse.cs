@@ -3,20 +3,20 @@ using System.Collections.Generic;
 
 namespace System.Data.Fuse {
 
-  public class PaginatedResponse {
+  //public class PaginatedResponse {
 
-    public IList Page { get; set; }
+  //  public IList Page { get; set; }
 
-    public int Total { get; set; }
+  //  public int Total { get; set; }
 
-  }
+  //}
 
-  public class PaginatedResponse<T> {
+  //public class PaginatedResponse<T> {
 
-    public IList<T> Page { get; set; }
+  //  public IList<T> Page { get; set; }
 
-    public int Total { get; set; }
+  //  public int Total { get; set; }
 
-  }
+  //}
 
 }

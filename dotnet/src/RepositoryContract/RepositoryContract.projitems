@@ -20,7 +20,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)IDataStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RepositoryCapabilities.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IUniversalRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ILinqRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\DeletionParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\EntityRef.cs" />
@@ -29,8 +28,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\EntitySchemaBasedEfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PaginatedResponse.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\IRepository2.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)SortingField.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)PagingParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ConversionExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\EfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[old]\Persistence\DbContextBasedEfRepository.cs" />
@@ -48,15 +45,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\GenericEntityRepositoryEf2.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityRef[s].cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logic\ExpressionTree.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Logic\ValueMatchBehaviour.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Logic\Relation.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Logic\RelationElement.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Logic\SimpleExpressionTree.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)EntityRefById.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Logic\FieldOperators.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Logic\FieldPredicate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\StringExtensions.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)[old]\%28from keinIch%29\ctory.Build.props" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)[old]\" />

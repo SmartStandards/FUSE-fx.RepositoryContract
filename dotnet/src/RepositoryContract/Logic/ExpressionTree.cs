@@ -1,7 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace System.Data.Fuse {
 
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public class ExpressionTree {
 
     /// <summary>
@@ -9,26 +14,69 @@ namespace System.Data.Fuse {
     /// </summary>
     public bool MatchAll { get; set; } = true;
 
-    public Dictionary<string,object> MatchValues { get; set; } = new Dictionary<string, object>();
+    /// <summary>
+    /// Negates the result
+    /// </summary>
+    public bool Negate { get; set; } = false;
 
     /// <summary>
-    /// For fields, which are NOT present withing 'MatchNull', a null-value will result in a negative match.
-    /// For fields which have 'MatchNull' configured as TRUE, a null-value will result in a positive match
-    /// (this can be combined with having it also within the 'MatchValues' resulting in an OR relation).
-    /// For fields which have configured it as FALSE, the matching will explicitely REQUIRE NULL.
+    /// Can contain ATOMIC predicates (FieldName~Value).
+    /// NOTE: If there is more than one predicate with the same FieldName in combination with
+    /// MatchAll=true, then this will lead to an subordinated OR-Expression dedicated to this field.
     /// </summary>
-    public Dictionary<string, bool> MatchNull { get; set; } = null;
-
-    /// <summary>
-    /// For details see the constants located in the 'ValueMatchBehaviour' constants
-    /// ( NotEqual:0 | Equal:1 | Less:2 | LessOrEqual:3 | More:4 | MoreOrEqual:5 |
-    ///   EndsWith:2 | SubstringOf:3 | StartsWith:4 | Contains:5 | ContainsNot:6).
-    /// All fields, which are part of the 'MatchValues', but not present within 'MatchBehaviour'
-    /// will be processed with the ValueMatchBehaviour 'Equal' (=1)
-    /// </summary>
-    public Dictionary<string, int> MatchBehaviour { get; set; } = null;
+    public List<FieldPredicate> Predicates { get; set; } = new List<FieldPredicate>();
 
     public List<ExpressionTree> SubTree { get; set; } = null;
+
+    #region " ToString() - for DEBUGGING "
+
+    public override string ToString() {
+      var sb = new StringBuilder(500);
+      int count = 0;
+
+      foreach (string fieldName in this.Predicates.Select((p) => p.FieldName).Distinct()) {
+        var pds = this.Predicates.Where((p) => p.FieldName == fieldName).Select((p) => p.ToString()).ToArray();
+        string consolidated;
+        if (pds.Length == 0) {
+          consolidated = pds[0];
+        }
+        else {
+          consolidated = "( " + string.Join(" || ", pds) + " )";
+        }
+        if (count > 1) {
+          if (this.MatchAll) {
+            sb.Append(" && ");
+          }
+          else {
+            sb.Append(" || ");
+          }
+        }
+        sb.Append(consolidated);
+        count++;
+      }
+
+      foreach (ExpressionTree expre in this.SubTree) {
+        if (count > 1) {
+          if (this.MatchAll) {
+            sb.Append(" && ");
+          }
+          else {
+            sb.Append(" || ");
+          }
+        }
+        sb.Append(expre.ToString());
+        count++;
+      }
+
+      if(count > 1) {
+        sb.Append( " )");
+        sb.Insert(0,"( ");
+      }
+
+      return sb.ToString();
+    }
+
+    #endregion
 
   }
 

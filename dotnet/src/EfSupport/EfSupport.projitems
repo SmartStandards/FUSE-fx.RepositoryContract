@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfRepositoryBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\FilterExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)QuerableSupport\RepositoryQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web\EfFuseController.cs" />
   </ItemGroup>

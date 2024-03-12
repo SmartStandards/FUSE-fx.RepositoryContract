@@ -19,7 +19,7 @@
 //        return filterExpressionOrFreetextSearchString;
 //      }
 
-//      //TODO: Escaping!!!
+//      //TODOi: Escaping!!!
 //      string[] escaptedBlocks = filterExpressionOrFreetextSearchString.Split(' ').Select(s => "\"" + s.Trim() + "\"").ToArray();
 
 //      string newQuery = null;

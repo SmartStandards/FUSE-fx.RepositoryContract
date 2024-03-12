@@ -1,16 +1,5 @@
 ﻿using System.Collections.Generic;
 
-/*
-
-EF-wrapp muss umziehen aus Dyndb-EF in   FUSEfx.EfSupport (extra nuget, aber lcation in FUSEfx.RepoContect)
-nachdenen,ob pagenumer oder skiptake besserist
-nachenden, ob paging und sorting als unterklassen oder direkte parameter besser sind
-
-
-//overload extensionemtode für LINQ-expressions mit und ohne select
-
- */
-
 namespace System.Data.Fuse {
 
   /// <summary>
@@ -265,7 +254,7 @@ namespace System.Data.Fuse {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns>An array containing the keys of affeced entities.</returns>
-    TKey[] Massupdate(TKey[] keysToUpdate, Dictionary<string, object> fields);
+    TKey[] MassupdateByKeys(TKey[] keysToUpdate, Dictionary<string, object> fields);
 
     /// <summary>
     /// Updates a dedicated subset of fields for all addressed entites and
@@ -290,7 +279,7 @@ namespace System.Data.Fuse {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns></returns>
-    TKey[] Massupdate(string searchExpression, Dictionary<string, object> fields);
+    TKey[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields);
 
     /// <summary>
     /// Tries to delete entities by the given keys und returns an array containing the keys of only that entities

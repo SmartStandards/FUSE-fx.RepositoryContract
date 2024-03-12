@@ -1,10 +1,16 @@
-﻿namespace System.Data.Fuse {
+﻿
+namespace System.Data.Fuse {
+
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public interface IDataStore : ICommitable{
 
     IRepository<TEntity,TKey> GetRepository<TEntity, TKey>()
       where TEntity : class;
 
-    //TODO: macht ggf. sinn, dass hier auch eine auskumftsfunktion zum abrufen des EntitySchemas angeboten wird
+    //TODO: überlegen, ob hier eine auskumftsfunktionzum abrufen des EntitySchemas sinn macht
 
   }
+
 }
