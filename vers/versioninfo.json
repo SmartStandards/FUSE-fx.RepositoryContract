@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.2.0",
-  "currentVersionWithSuffix": "0.2.0",
+  "currentVersion": "0.2.1",
+  "currentVersionWithSuffix": "0.2.1",
   "releaseType": "official",
-  "previousVersion": "0.1.31",
-  "changeGrade": "major",
+  "previousVersion": "0.2.0",
+  "changeGrade": "patch",
   "currentMajor": 0,
   "currentMinor": 2,
-  "currentPatch": 0,
-  "versionDateInfo": "2024-03-11",
-  "versionTimeInfo": "08:24:49",
-  "versionNotes": "- breaking Change: completely refactored the contract\n"
+  "currentPatch": 1,
+  "versionDateInfo": "2024-03-12",
+  "versionTimeInfo": "16:48:25",
+  "versionNotes": "- adjusted some details for the ExpressionTree\n"
 }
