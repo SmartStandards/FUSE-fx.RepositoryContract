@@ -8,10 +8,16 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
+ - Minor Fixes.
+
+
+ ## v 0.3.0
+released **2024-03-12**, including:
  - **breaking Change**: Refactored contract (js). Implemented convenience + ef layer.
 
 
 
+ 
 ## v 0.2.1
 released **2024-03-12**, including:
  - adjusted some details for the ExpressionTree
