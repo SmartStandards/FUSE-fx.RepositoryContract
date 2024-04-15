@@ -1,47 +1,27 @@
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Data.Fuse.Convenience;
-
-#if !NETCOREAPP
-using System.Data.Entity;
-#else
-using System.Text.Json;
-#endif
 using System.Data.ModelDescription;
 using System.Data.ModelDescription.Convenience;
 using System.Linq;
-using System.Reflection;
 using System.Linq.Dynamic.Core;
-using System.Linq.Expressions;
+using System.Reflection;
 
-namespace System.Data.Fuse.Ef {
 
-  public class EfRepository<TEntity, TKey> : IRepository<TEntity, TKey>
+namespace System.Data.Fuse.Convenience {
+
+  public class LocalRepository<TEntity, TKey> : IRepository<TEntity, TKey>
     where TEntity : class {
 
-    private DbContext _DbContext;
     private static SchemaRoot _SchemaRoot;
+    private static List<TEntity> _Entities = new List<TEntity>();
 
     protected SchemaRoot SchemaRoot {
       get {
-        if (_SchemaRoot == null) {
-#if NETCOREAPP
-          string[] typenames = _DbContext.Model.GetEntityTypes().Select(t => t.Name).ToArray();
-#else
-          string[] typenames = _DbContext.GetManagedTypeNames();
-#endif
-          _SchemaRoot = ModelReader.GetSchema(typeof(TEntity).Assembly, typenames);
-        }
         return _SchemaRoot;
       }
     }
 
-    public EfRepository(DbContext context) {
-      _DbContext = context;
-    }
-
-    public EfRepository(DbContext context, SchemaRoot schemaRoot) {
-      _DbContext = context;
+    public LocalRepository(SchemaRoot schemaRoot) {
       _SchemaRoot = schemaRoot;
     }
 
@@ -77,14 +57,17 @@ namespace System.Data.Fuse.Ef {
     public TEntity AddOrUpdateEntity(TEntity entity) {
 
       object[] keySetValues = entity.GetValues(PrimaryKeySet);
-      TEntity existingEntity = this._DbContext.Set<TEntity>().Find(keySetValues.ToArray());
+      TEntity existingEntity = _Entities.FirstOrDefault(
+        entity.GetSearchExpression(PrimaryKeySet.ToArray()).Compile()
+      );
 
       //AI
       // If no primary key is found, try to find the entity by unique key
       if (existingEntity == null) {
         foreach (var keyset in Keysets) {
-          object[] keysetValues = entity.GetValues(keyset);
-          existingEntity = this._DbContext.Set<TEntity>().Find(keysetValues);
+          existingEntity = _Entities.FirstOrDefault(
+            entity.GetSearchExpression(keyset.ToArray()).Compile()
+          );
           if (existingEntity != null) {
             break;
           }
@@ -92,12 +75,10 @@ namespace System.Data.Fuse.Ef {
       }
 
       if (existingEntity == null) {
-        _DbContext.Set<TEntity>().Add(entity);
-        _DbContext.SaveChanges();
+        _Entities.Add(entity);
         return entity;
       } else {
         CopyFields(entity, existingEntity);
-        _DbContext.SaveChanges();
         return existingEntity;
       }
     }
@@ -118,14 +99,14 @@ namespace System.Data.Fuse.Ef {
       // Check for existing entity by primary key
       object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
       TEntity existingEntity = (primaryKeyValues == null)
-        ? null : _DbContext.Set<TEntity>().Find(primaryKeyValues);
+        ? null : _Entities.FindMatchByValues(primaryKeyValues, PrimaryKeySet.ToArray());
 
       // If not found by primary key, check for existing entity by unique keysets
       if (existingEntity == null) {
         foreach (var keyset in Keysets) {
           object[] keysetValues = fields.GetValues(keyset);
           existingEntity = (keysetValues == null)
-            ? null : _DbContext.Set<TEntity>().Find(keysetValues);
+            ? null : _Entities.FindMatchByValues(keysetValues, keyset.ToArray());
           if (existingEntity != null) {
             break;
           }
@@ -141,10 +122,8 @@ namespace System.Data.Fuse.Ef {
         CopyFields2(fields, entity);
         existingEntity = entity;
         // If no existing entity found, add new entity
-        _DbContext.Set<TEntity>().Add(entity);
+        _Entities.Add(entity);
       }
-
-      _DbContext.SaveChanges();
 
       // Convert the updated entity back to a dictionary and return it
       Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
@@ -165,59 +144,25 @@ namespace System.Data.Fuse.Ef {
       foreach (var field in fields) {
         PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
         if (propertyInfo != null) {
-          object fieldValue = field.Value;
-#if NETCOREAPP
-          if (fieldValue.GetType() == typeof(JsonElement)) {
-            fieldValue = GetValue(propertyInfo, (JsonElement)fieldValue);
-          }
-#endif
-          propertyInfo.SetValue(entity, fieldValue);
+          propertyInfo.SetValue(entity, field.Value);
         }
       }
     }
 
-#if NETCOREAPP
-    private static object GetValue(PropertyInfo prop, JsonElement propertyValue) {
-      if (prop.PropertyType == typeof(string)) {
-        return propertyValue.GetString();
-      } else if (prop.PropertyType == typeof(long)) {
-        return propertyValue.GetInt64();
-      } else if (prop.PropertyType == typeof(bool)) {
-        return propertyValue.GetBoolean();
-      } else if (prop.PropertyType == typeof(DateTime)) {
-        return propertyValue.GetDateTime();
-      } else if (prop.PropertyType == typeof(int)) {
-        return propertyValue.GetInt32();
-      } else if (prop.PropertyType == typeof(Guid)) {
-        return propertyValue.GetGuid();
-      } else if (prop.PropertyType == typeof(decimal)) {
-        return propertyValue.GetDecimal();
-      } else if (prop.PropertyType == typeof(float)) {
-        return propertyValue.GetSingle();
-      } else if (prop.PropertyType == typeof(uint)) {
-        return propertyValue.GetUInt32();
-      } else if (prop.PropertyType == typeof(UInt16)) {
-        return propertyValue.GetUInt16();
-      } else {
-        return null;
-      }
-    }
-#endif
-
     public bool ContainsKey(TKey key) {
-      return _DbContext.Set<TEntity>().Find(key.GetKeyFieldValues()) != null;
+      return _Entities.FindMatchByValues(key.GetKeyFieldValues(), PrimaryKeySet.ToArray()) != null;
     }
 
     public int Count(ExpressionTree filter) {
-      return _DbContext.Set<TEntity>().Count(filter.CompileToDynamicLinq());
+      return _Entities.AsQueryable().Count(filter.CompileToDynamicLinq());
     }
 
     public int CountAll() {
-      return _DbContext.Set<TEntity>().Count();
+      return _Entities.Count();
     }
 
     public int CountBySearchExpression(string searchExpression) {
-      return _DbContext.Set<TEntity>().Count(searchExpression);
+      return _Entities.AsQueryable().Count(searchExpression);
     }
 
     public RepositoryCapabilities GetCapabilities() {
@@ -227,12 +172,7 @@ namespace System.Data.Fuse.Ef {
     public TEntity[] GetEntities(
       ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      IQueryable<TEntity> entities;
-      if (filter == null) {
-        entities = _DbContext.Set<TEntity>();
-      } else {
-        entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq());
-      }
+      var entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq());
 
       entities = ApplySorting(sortedBy, entities);
 
@@ -240,18 +180,16 @@ namespace System.Data.Fuse.Ef {
     }
 
     public TEntity[] GetEntitiesByKey(TKey[] keysToLoad) {
-      var lambda = keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray());
-      return _DbContext.Set<TEntity>().Where(lambda).ToArray();
+      return _Entities.Where(
+        keysToLoad.BuildFilterForKeyValuesExpression<TEntity,TKey>(PrimaryKeySet.ToArray()).Compile()
+      ).ToArray();
     }
-
 
     public TEntity[] GetEntitiesBySearchExpression(
       string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      var entities = _DbContext.Set<TEntity>().Where(searchExpression);
-
+      var entities = _Entities.AsQueryable().Where(searchExpression);
       entities = ApplySorting(sortedBy, entities);
-
       return entities.Skip(skip).Take(limit).ToArray();
 
     }
@@ -261,7 +199,7 @@ namespace System.Data.Fuse.Ef {
       ExpressionTree filter,
       string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      var entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq());
+      var entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq());
 
       entities = ApplySorting(sortedBy, entities);
 
@@ -284,9 +222,6 @@ namespace System.Data.Fuse.Ef {
     }
 
     private static IQueryable<TEntity> ApplySorting(string[] sortedBy, IQueryable<TEntity> entities) {
-      if (sortedBy == null) {
-        return entities;
-      }
       foreach (var sortField in sortedBy) {
         if (sortField.StartsWith("^")) {
           string descSortField = sortField.Substring(1); // remove the "^" prefix
@@ -302,23 +237,22 @@ namespace System.Data.Fuse.Ef {
     public Dictionary<string, object>[] GetEntityFieldsByKey(
       TKey[] keysToLoad, string[] includedFieldNames
     ) {
-      return _DbContext.Set<TEntity>().Where(
-        keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
-      )
-        .Select(
-          e => new {
-            e, //TODO is e correct? remove e?
-            includedFieldNames
+      return _Entities.Where(
+        keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
+      ).Select(
+        e => new {
+          e, //TODO is e correct? remove e?
+          includedFieldNames
+        }
+      ).ToDynamicArray().Select(
+        e => {
+          var dict = new Dictionary<string, object>();
+          foreach (var fieldName in includedFieldNames) {
+            dict[fieldName] = e.e.GetType().GetProperty(fieldName).GetValue(e.e);
           }
-        ).ToDynamicArray().Select(
-          e => {
-            var dict = new Dictionary<string, object>();
-            foreach (var fieldName in includedFieldNames) {
-              dict[fieldName] = e.e.GetType().GetProperty(fieldName).GetValue(e.e);
-            }
-            return dict;
-          }
-        ).ToArray();
+          return dict;
+        }
+      ).ToArray();
     }
 
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
@@ -385,8 +319,8 @@ namespace System.Data.Fuse.Ef {
       }
 
       // Get the entities that match the provided keys
-      var entitiesToUpdate = _DbContext.Set<TEntity>().Where(
-        keysToUpdate.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
+      var entitiesToUpdate = _Entities.Where(
+        keysToUpdate.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
       );
 
       // Update the fields of the entities
@@ -398,9 +332,6 @@ namespace System.Data.Fuse.Ef {
           }
         }
       }
-
-      // Save the changes to the database
-      _DbContext.SaveChanges();
 
       // Return the keys of the updated entities
       return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
@@ -414,7 +345,7 @@ namespace System.Data.Fuse.Ef {
       }
 
       // Get the entities that match the search expression
-      var entitiesToUpdate = _DbContext.Set<TEntity>().Where(searchExpression);
+      var entitiesToUpdate = _Entities.AsQueryable().Where(searchExpression);
 
       // Update the fields of the entities
       foreach (var entity in entitiesToUpdate) {
@@ -425,9 +356,6 @@ namespace System.Data.Fuse.Ef {
           }
         }
       }
-
-      // Save the changes to the database
-      _DbContext.SaveChanges();
 
       // Return the keys of the updated entities
       return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
@@ -445,12 +373,11 @@ namespace System.Data.Fuse.Ef {
       try {
         // Check if the entity already exists
         object[] keySetValues = entity.GetValues(PrimaryKeySet);
-        TEntity existingEntity = this._DbContext.Set<TEntity>().Find(keySetValues);
+        TEntity existingEntity = _Entities.FindMatch(entity, PrimaryKeySet.ToArray());
 
         // If the entity does not exist, add it
         if (existingEntity == null) {
-          _DbContext.Set<TEntity>().Add(entity);
-          _DbContext.SaveChanges();
+          _Entities.Add(entity);
           return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
         }
       } catch (Exception) {
@@ -476,12 +403,11 @@ namespace System.Data.Fuse.Ef {
         try {
           // Find the entity by its key
           object[] keySetValues = key.GetKeyFieldValues();
-          TEntity entityToDelete = _DbContext.Set<TEntity>().Find(keySetValues);
+          TEntity entityToDelete = _Entities.FindMatchByValues(keySetValues, PrimaryKeySet.ToArray());
 
           // If the entity exists, delete it
           if (entityToDelete != null) {
-            _DbContext.Set<TEntity>().Remove(entityToDelete);
-            _DbContext.SaveChanges();
+            _Entities.Remove(entityToDelete);
             deletedKeys.Add(key);
           }
         } catch (Exception) {
@@ -511,12 +437,11 @@ namespace System.Data.Fuse.Ef {
       try {
         // Check if the entity exists
         object[] keySetValues = entity.GetValues(PrimaryKeySet);
-        TEntity existingEntity = this._DbContext.Set<TEntity>().Find(keySetValues);
+        TEntity existingEntity = _Entities.FindMatchByValues(keySetValues, PrimaryKeySet.ToArray());
 
         // If the entity exists, update it
         if (existingEntity != null) {
           CopyFields(entity, existingEntity);
-          _DbContext.SaveChanges();
           return existingEntity;
         }
       } catch (Exception) {
@@ -550,12 +475,11 @@ namespace System.Data.Fuse.Ef {
       try {
         // Check if the entity exists
         object[] keySetValues = fields.TryGetValuesByFields(PrimaryKeySet);
-        TEntity existingEntity = this._DbContext.Set<TEntity>().Find(keySetValues);
+        TEntity existingEntity = _Entities.FindMatchByValues(keySetValues, PrimaryKeySet.ToArray());
 
         // If the entity exists, update its fields
         if (existingEntity != null) {
           CopyFields2(fields, existingEntity);
-          _DbContext.SaveChanges();
 
           // Build a dictionary of the fields that are different from the given values
           Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
@@ -591,13 +515,13 @@ namespace System.Data.Fuse.Ef {
       try {
         // Check if the entity with the current key exists
         object[] currentKeyValues = currentKey.GetKeyFieldValues();
-        TEntity existingEntity = this._DbContext.Set<TEntity>().Find(currentKeyValues);
+        TEntity existingEntity = _Entities.FindMatchByValues(currentKeyValues, PrimaryKeySet.ToArray());
 
         // If the entity exists, update its key
         if (existingEntity != null) {
           // Check if the entity with the new key already exists
           object[] newKeyValues = newKey.GetKeyFieldValues();
-          TEntity newEntity = this._DbContext.Set<TEntity>().Find(newKeyValues);
+          TEntity newEntity = _Entities.FindMatchByValues(newKeyValues, PrimaryKeySet.ToArray());
 
           // If the entity with the new key does not exist, update the key
           if (newEntity == null) {
@@ -606,7 +530,6 @@ namespace System.Data.Fuse.Ef {
               propertyInfo.SetValue(existingEntity, newKeyValue);
             }
 
-            _DbContext.SaveChanges();
             return true;
           }
         }

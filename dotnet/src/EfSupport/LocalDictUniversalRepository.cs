@@ -12,33 +12,16 @@ using System.Data.ModelDescription.Convenience;
 
 namespace System.Data.Fuse.Ef {
 
-  /// <summary>
-  /// 
-  /// </summary>
-  public class EfUniversalRepository : UniversalRepository {
+  public class LocalDictUniversalRepository : UniversalRepository {
 
-    protected readonly DbContext _DbContext;
-    protected readonly Assembly _Assembly;
+    protected readonly Func<PropertyInfo, Dictionary<string, object>, object, bool> _HandlePropertyModelToEntity;
+    protected readonly Func<PropertyInfo, object, Dictionary<string, object>, bool> _HandlePropertyEntityToModel;
+    SchemaRoot _SchemaRoot;
+    Assembly _Assembly;
 
-    private static Dictionary<string, SchemaRoot> _SchemaRootByAssemblyName;
-
-    protected static SchemaRoot GetSchemaRoot(Type entityType, DbContext dbContext) {
-
-      if (_SchemaRootByAssemblyName == null) {
-        _SchemaRootByAssemblyName = new Dictionary<string, SchemaRoot>();
-      }
-      if (_SchemaRootByAssemblyName.ContainsKey(entityType.Assembly.FullName)) {
-        return _SchemaRootByAssemblyName[entityType.Assembly.FullName];
-      }
-#if NETCOREAPP
-        string[] typenames = dbContext.Model.GetEntityTypes().Select(t => t.Name).ToArray();
-#else
-          string[] typenames = dbContext.GetManagedTypeNames();
-#endif
-      SchemaRoot schemaRoot = ModelReader.GetSchema(entityType.Assembly, typenames);
-      _SchemaRootByAssemblyName[entityType.Assembly.FullName] = schemaRoot;
-      return schemaRoot;
-
+    public LocalDictUniversalRepository(SchemaRoot schemaRoot, Assembly assembly) {
+      _SchemaRoot = schemaRoot;
+      _Assembly = assembly;
     }
 
     // gets the key type of the entity. 
@@ -46,9 +29,8 @@ namespace System.Data.Fuse.Ef {
     // if there is only one key property, returns the type of that property.
     // if there are multiple key properties, returns the type of the ComposityKey-class with the matching
     // number of fields.
-    private static Type GetKeyType(Type entityType, DbContext dbContext) {
-      SchemaRoot schemaRoot = GetSchemaRoot(entityType, dbContext);
-      List<PropertyInfo> keyProperties = schemaRoot.GetPrimaryKeyProperties(entityType);
+    private Type GetKeyType(Type entityType) {
+      List<PropertyInfo> keyProperties = _SchemaRoot.GetPrimaryKeyProperties(entityType);
 
       // If there is only one key property, return its type
       if (keyProperties.Count == 1) {
@@ -71,26 +53,38 @@ namespace System.Data.Fuse.Ef {
       }
     }
 
-    public EfUniversalRepository(DbContext dbContext, Assembly assembly) {
-      this._DbContext = dbContext;
-      this._Assembly = assembly;
-    }
-
     protected override UniversalRepositoryFacade CreateInnerRepo(string entityName) {
       Type[] allTypes = _Assembly.GetTypes();
       Type entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
       if (entityType == null) { return null; }
+      Type modelType = typeof(Dictionary<string, object>);
 
-      Type keyType = GetKeyType(entityType, _DbContext);
+      Type keyType = GetKeyType(entityType);
 
       Type repoFacadeType = typeof(DynamicRepositoryFacade<,>);
-      repoFacadeType = repoFacadeType.MakeGenericType(entityType, keyType);
+      repoFacadeType = repoFacadeType.MakeGenericType(modelType, typeof(object));
 
-      Type repoType = typeof(EfRepository<,>);
+      Type repoType = typeof(LocalRepository<,>);
       repoType = repoType.MakeGenericType(entityType, keyType);
-      object repo = Activator.CreateInstance(repoType, _DbContext, GetSchemaRoot(entityType, _DbContext));
+      object localRepo = Activator.CreateInstance(repoType, _SchemaRoot);
 
-      return (UniversalRepositoryFacade)Activator.CreateInstance(repoFacadeType, repo);
+      object universalModelVsEntityRepo;
+      if (_HandlePropertyModelToEntity == null && _HandlePropertyEntityToModel == null) {
+        MethodInfo factoryMethod = typeof(ConversionHelper).GetMethod(nameof(ConversionHelper.CreateDictVsEntityRepositry));
+        factoryMethod = factoryMethod.MakeGenericMethod(entityType, keyType);
+        universalModelVsEntityRepo = factoryMethod.Invoke(
+          null, 
+          new object[] { _SchemaRoot, this, localRepo, NavigationRole.Lookup | NavigationRole.Dependent, true }
+        );
+      } else {
+        Type universalModelVsEntityRepoType = typeof(DictVsEntityRepository<,>);
+        universalModelVsEntityRepoType = universalModelVsEntityRepoType.MakeGenericType(entityType, keyType);
+        universalModelVsEntityRepo = Activator.CreateInstance(
+          universalModelVsEntityRepoType, localRepo, _HandlePropertyModelToEntity, _HandlePropertyEntityToModel
+        );
+      }
+
+      return (UniversalRepositoryFacade)Activator.CreateInstance(repoFacadeType, universalModelVsEntityRepo);
     }
 
   }

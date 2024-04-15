@@ -39,8 +39,9 @@
   <Import Project="..\EfSupport\EfSupport.projitems" Label="Shared" />
 
   <ItemGroup>
-    <PackageReference Include="FUSE-fx.EntityAnnotations" Version="4.0.1" />
-    <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.9" />
+    <PackageReference Include="FUSE-fx.EntityAnnotations" Version="4.0.3" />
+    <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.10" />
+    <PackageReference Include="FUSE-fx.ModelReader" Version="0.1.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.16" />
   </ItemGroup>
 

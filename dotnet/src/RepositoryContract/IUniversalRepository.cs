@@ -270,7 +270,7 @@ namespace System.Data.Fuse {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns>An array containing the keys of affeced entities.</returns>
-    object[] Massupdate(string entityName, object[] keysToUpdate, Dictionary<string, object> fields);
+    object[] MassupdateByKeys(string entityName, object[] keysToUpdate, Dictionary<string, object> fields);
 
     /// <summary>
     /// Updates a dedicated subset of fields for all addressed entites and
@@ -297,7 +297,7 @@ namespace System.Data.Fuse {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns></returns>
-    object[] Massupdate(string entityName, string searchExpression, Dictionary<string, object> fields);
+    object[] MassupdateBySearchExpression(string entityName, string searchExpression, Dictionary<string, object> fields);
 
     /// <summary>
     /// Tries to delete entities by the given keys und returns an array containing the keys of only that entities

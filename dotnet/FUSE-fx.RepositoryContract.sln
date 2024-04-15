@@ -46,6 +46,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfSupport.net6.0", "src\EfS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EfSupport.net461", "src\EfSupport.net461\EfSupport.net461.csproj", "{B0BA06FE-6437-4B9E-8C76-3ADFC8D191D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepositoryContract.Tests.Net4", "test\RepositoryContract.Tests.Net4\RepositoryContract.Tests.Net4.csproj", "{F2F17019-9184-46DC-A950-E2210692BC39}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NewFolder1", "NewFolder1", "{F12617E3-E6F9-44C8-B154-6A7B3741594C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NewFolder2", "NewFolder2", "{893B227D-8E75-4F17-A995-5C38CC753C94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,6 +90,10 @@ Global
 		{B0BA06FE-6437-4B9E-8C76-3ADFC8D191D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B0BA06FE-6437-4B9E-8C76-3ADFC8D191D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B0BA06FE-6437-4B9E-8C76-3ADFC8D191D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2F17019-9184-46DC-A950-E2210692BC39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2F17019-9184-46DC-A950-E2210692BC39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2F17019-9184-46DC-A950-E2210692BC39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2F17019-9184-46DC-A950-E2210692BC39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -102,6 +112,7 @@ Global
 		{CF0A161A-99BA-4F01-AF5E-16C6FCBC85AF} = {EFB5135D-039A-4D92-8FDD-9EA5D070F991}
 		{F80F0165-972E-49E4-A6EC-0F3C06C108E8} = {B9C01000-4A72-4ADD-8569-9AA76495C23C}
 		{B0BA06FE-6437-4B9E-8C76-3ADFC8D191D3} = {B9C01000-4A72-4ADD-8569-9AA76495C23C}
+		{F2F17019-9184-46DC-A950-E2210692BC39} = {CD3C708D-7B37-40E1-8808-68DA9E2AD789}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D2F37C1D-32F0-4BF2-AAEB-46B9D8C07D23}

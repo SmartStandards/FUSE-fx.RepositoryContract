@@ -16,7 +16,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\EfSupport.net6.0\EfSupport.net6.0.csproj" />
     <ProjectReference Include="..\..\src\RepositoryContract.net6.0\RepositoryContract.net6.0.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="FUSE-fx.EntityAnnotations">
+      <HintPath>..\..\..\..\FUSE-fx.EntityAnnotations\dotnet\dist\bin-net6.0\FUSE-fx.EntityAnnotations.dll</HintPath>
+    </Reference>
+    <Reference Include="FUSE-fx.ModelDescription">
+      <HintPath>..\..\..\..\FUSE-fx.ModelDescription\dotnet\dist\bin-net6.0\FUSE-fx.ModelDescription.dll</HintPath>
+    </Reference>
+    <Reference Include="FUSE-fx.ModelReader">
+      <HintPath>..\..\..\..\FUSE-fx.ModelReader\dotnet\dist\bin-net6.0\FUSE-fx.ModelReader.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

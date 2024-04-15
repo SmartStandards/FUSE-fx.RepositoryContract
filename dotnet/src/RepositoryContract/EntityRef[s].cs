@@ -50,7 +50,7 @@ namespace System.Data.Fuse {
   [DebuggerDisplay("EntityRef {Label}")]
   public class EntityRef<TKey> : EntityRef {
 
-    public EntityRef(){
+    public EntityRef() {
     }
 
     public EntityRef(TKey key, string label) {
@@ -58,9 +58,14 @@ namespace System.Data.Fuse {
       this.Label = label;
     }
 
+    private TKey _Key = default(TKey);
+
     //NOTE: the 'new' keyword is used to do a socalled 'SHADOWING'
     //which is an override with typechange!
-    public new TKey Key { get; set; }
+    public new TKey Key {
+      get { return _Key; }
+      set { _Key = value; base.Key = value; }
+    }
 
     /// <summary>
     /// Creates an generic EntityRef[TKey] from an untyped EntityRef.
@@ -68,7 +73,7 @@ namespace System.Data.Fuse {
     /// and the given declarative type will cause an conversion exception!
     /// </summary>
     public static EntityRef<TKey> From(EntityRef entityRef) {
-      return new EntityRef<TKey>(((TKey) entityRef.Key), entityRef.Label);
+      return new EntityRef<TKey>(((TKey)entityRef.Key), entityRef.Label);
     }
 
     /// <summary> Based ONLY ON THE KEY (the label is not relevant) </summary>

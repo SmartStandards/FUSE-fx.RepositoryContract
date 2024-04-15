@@ -9,14 +9,26 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfDynamicRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfRepository1_Alt.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfRepositoryBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LocalDictUniversalRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LocalDataStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LocalModelVsEntityDataStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LocalRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LocalUniversalRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\DbContextExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\EfDataStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\EfDictUniversalRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\EfDynamicRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\EfRepositoryOld.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\EfRepository1_Alt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\EfRepositoryBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\EfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfUniversalRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Persistence\FilterExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\FilterExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QuerableSupport\RepositoryQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web\EfFuseController.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)persistence\[old]\" />
   </ItemGroup>
 </Project>

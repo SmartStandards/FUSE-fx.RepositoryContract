@@ -30,7 +30,7 @@
 //      _Logger = logger;
 //      _ModelAssembly = modelAssembly;
 //      _ModelNamespace = modelNamespace;
-//      _Repo = new  EfUniversalRepository(demoDbContext, modelAssembly);
+//      _Repo = new EfUniversalRepository(demoDbContext, modelAssembly);
 //    }
 
 //    [HttpPost]
@@ -54,7 +54,7 @@
 //        _Logger.LogCritical(ex, ex.Message);
 //        return null;
 //      }
-//    }   
+//    }
 
 //    //[HttpPost]
 //    //public IActionResult GetEntityRefs([FromBody] GenericListSearchParams searchParams) {

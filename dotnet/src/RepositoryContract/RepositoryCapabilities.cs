@@ -8,6 +8,21 @@ namespace System.Data.Fuse {
   /// </summary>
   public class RepositoryCapabilities {
 
+    public static RepositoryCapabilities All {
+      get {
+        return new RepositoryCapabilities() {
+          CanReadContent = true,
+          CanUpdateContent = true,
+          CanAddNewEntities = true,
+          CanDeleteEntities = true,
+          SupportsMassupdate = true,
+          SupportsKeyUpdate = true,
+          SupportsStringBasedSearchExpressions = true,
+          RequiresExternalKeys = false
+        };
+      }
+    }
+
     /// <summary> 
     /// Indicates, that this repository offers access to load entities(classes) or some their entity fields
     /// (if this is false, then only EntityRefs are accessable)

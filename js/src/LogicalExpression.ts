@@ -1,7 +1,8 @@
-import { RelationElement } from './RelationElement'
+import { FieldPredicate } from './FieldPredicate'
 
 export class LogicalExpression {
-  operator: 'or' | 'and' | 'not' | 'atom' | '' = 'atom'
-  expressionArguments: LogicalExpression[] = []
-  atomArguments: RelationElement[] = []
+  matchAll: boolean = true
+  negate: boolean = false
+  predicates: FieldPredicate[] = []
+  subTree: LogicalExpression[] = []
 }

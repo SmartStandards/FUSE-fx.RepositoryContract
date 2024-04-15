@@ -2,13 +2,17 @@
 
 namespace System.Data.Fuse {
 
+  public interface ICompositeKey {
+    object[] GetFields();
+  }
+
   /// <summary>
   /// (from 'FUSE-fx.RepositoryContract')
   /// Helper-TUMPLE to represent a composite key
   /// represented by 2 fields.
   /// </summary>
   [DebuggerDisplay("{Field1}|{Field2}")]
-  public class CompositeKey2<TKey1,TKey2> {
+  public class CompositeKey2<TKey1,TKey2> : ICompositeKey {
 
     public CompositeKey2() {
     }
@@ -32,6 +36,9 @@ namespace System.Data.Fuse {
       return this.GetHashCode().Equals(obj?.GetHashCode());
     }
 
+    public object[] GetFields() {
+      return new object[] { Field1, Field2 };
+    }
   }
 
   /// <summary>
@@ -40,7 +47,7 @@ namespace System.Data.Fuse {
   /// represented by 3 fields.
   /// </summary>
   [DebuggerDisplay("{Field1}|{Field2}|{Field3}")]
-  public class CompositeKey3<TKey1, TKey2, TKey3> {
+  public class CompositeKey3<TKey1, TKey2, TKey3> : ICompositeKey {
 
     public CompositeKey3() {
     }
@@ -66,6 +73,10 @@ namespace System.Data.Fuse {
       return this.GetHashCode().Equals(obj?.GetHashCode());
     }
 
+    public object[] GetFields() {
+      return new object[] { Field1, Field2, Field3 };
+    }
+
   }
 
   /// <summary>
@@ -74,7 +85,7 @@ namespace System.Data.Fuse {
   /// represented by 4 fields.
   /// </summary>
   [DebuggerDisplay("{Field1}|{Field2}|{Field3}|{Field4}")]
-  public class CompositeKey4<TKey1, TKey2, TKey3, TKey4> {
+  public class CompositeKey4<TKey1, TKey2, TKey3, TKey4> : ICompositeKey {
 
     public CompositeKey4() {
     }
@@ -102,6 +113,10 @@ namespace System.Data.Fuse {
       return this.GetHashCode().Equals(obj?.GetHashCode());
     }
 
+    public object[] GetFields() {
+      return new object[] { Field1, Field2, Field3, Field4 };
+    }
+
   }
 
   /// <summary>
@@ -110,7 +125,7 @@ namespace System.Data.Fuse {
   /// represented by 5 fields.
   /// </summary>
   [DebuggerDisplay("{Field1}|{Field2}|{Field3}|{Field4}|{Field5}")]
-  public class CompositeKey5<TKey1, TKey2, TKey3, TKey4, TKey5> {
+  public class CompositeKey5<TKey1, TKey2, TKey3, TKey4, TKey5> : ICompositeKey {
 
     public CompositeKey5() {
     }
@@ -138,6 +153,10 @@ namespace System.Data.Fuse {
 
     public override bool Equals(object obj) {
       return this.GetHashCode().Equals(obj?.GetHashCode());
+    }
+
+    public object[] GetFields() {
+      return new object[] { Field1, Field2, Field3, Field4, Field5 };
     }
 
   }

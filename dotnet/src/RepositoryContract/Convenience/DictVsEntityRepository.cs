@@ -1,78 +1,28 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace System.Data.Fuse.Convenience {
 
-  public class KvpModelVsEntityRepository<TEntity, TKey>
+  //AI
+  public class DictVsEntityRepository<TEntity, TKey>
     : IRepository<Dictionary<string, object>, object>
-    where TEntity : class
-    {
+    where TEntity : class {
 
     IRepository<TEntity, TKey> _Repository;
 
-    private readonly Func<PropertyInfo, bool> _IsForeignKey;
-    private readonly Func<PropertyInfo, bool> _IsNavigation;
+    private readonly Func<PropertyInfo, Dictionary<string, object>, TEntity, bool> _HandlePropertyModelToEntity;
+    private readonly Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> _HandlePropertyEntityToModel;
 
-    public KvpModelVsEntityRepository(
+    public DictVsEntityRepository(
       IRepository<TEntity, TKey> repository,
-      Func<PropertyInfo, bool> isForeignKey,
-      Func<PropertyInfo, bool> isNavigation
+      Func<PropertyInfo, Dictionary<string, object>, TEntity, bool> handlePropertyModelToEntity,
+      Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> handlePropertyEntityToModel
     ) {
       _Repository = repository;
-      _IsForeignKey = isForeignKey;
-      _IsNavigation = isNavigation;
+      _HandlePropertyModelToEntity = handlePropertyModelToEntity;
+      _HandlePropertyEntityToModel = handlePropertyEntityToModel;
     }
-
-    //public Dictionary<string, object> AddOrUpdateEntity(Dictionary<string, object> model) {
-    //  return _Repository.AddOrUpdateEntity(
-    //    model.ConvertToEntityDynamic<TEntity>(this._IsForeignKey, this._IsNavigation)
-    //  ).ConvertToBusinessModelDynamic(this._IsForeignKey, this._IsNavigation);
-    //}
-
-    //public void DeleteEntities(object[][] entityIdsToDelete) {
-    //  _Repository.DeleteEntities(entityIdsToDelete);
-    //}
-
-    //public int GetCount(ExpressionTree filter) {
-    //  return _Repository.GetCount(filter);
-    //}
-
-    //public int GetCount(string dynamicLinqFilter) {
-    //  return _Repository.GetCount(dynamicLinqFilter);
-    //}
-
-    //public IList<Dictionary<string, object>> GetEntities(
-    //  ExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams
-    //) {
-    //  return _Repository.GetEntities(
-    //    filter, pagingParams, sortingParams
-    //  ).ToBusinessModelsDynamic(this._IsForeignKey, this._IsNavigation);
-    //}
-
-    //public IList<Dictionary<string, object>> GetEntities(
-    //  string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
-    //) {
-    //  return _Repository.GetEntities(
-    //    dynamicLinqFilter, pagingParams, sortingParams
-    //  ).ToBusinessModelsDynamic(this._IsForeignKey, this._IsNavigation);
-    //}
-
-    //public IList<EntityRef> GetEntityRefs(
-    //  ExpressionTree filter, PagingParams pagingParams, SortingField[] sortingParams
-    //) {
-    //  return _Repository.GetEntityRefs(
-    //    filter, pagingParams, sortingParams
-    //  );
-    //}
-
-    //public IList<EntityRef> GetEntityRefs(
-    //  string dynamicLinqFilter, PagingParams pagingParams, SortingField[] sortingParams
-    //) {
-    //  return _Repository.GetEntityRefs(
-    //     dynamicLinqFilter, pagingParams, sortingParams
-    //   );
-    //}
-
 
     /// <summary>
     /// Returns an string, representing the "Identity" of the current origin.
@@ -82,7 +32,7 @@ namespace System.Data.Fuse.Convenience {
     /// "frieldly-name". It can just be an Hash or Uid, so its NOT RECOMMENDED to use it as display label!
     /// </summary>
     public string GetOriginIdentity() {
-      throw new NotImplementedException();
+      return _Repository.GetOriginIdentity();
     }
 
     /// <summary>
@@ -90,7 +40,7 @@ namespace System.Data.Fuse.Convenience {
     /// </summary>
     /// <returns></returns>
     public RepositoryCapabilities GetCapabilities() {
-      throw new NotImplementedException();
+      return _Repository.GetCapabilities();
     }
 
     /// <summary> </summary>
@@ -105,7 +55,8 @@ namespace System.Data.Fuse.Convenience {
     public EntityRef<object>[] GetEntityRefs(
       ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetEntityRefs(filter, sortedBy, limit, skip)
+        .Select((e) => new EntityRef<object>() { Key = e.Key, Label = e.Label }).ToArray();
     }
 
     /// <summary>
@@ -122,13 +73,18 @@ namespace System.Data.Fuse.Convenience {
     public EntityRef<object>[] GetEntityRefsBySearchExpression(
       string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
+        ? _Repository.GetEntityRefsBySearchExpression(searchExpression, sortedBy, limit, skip)
+        .Select((e) => new EntityRef<object>() { Key = e.Key, Label = e.Label }).ToArray()
+        : throw new NotSupportedException("SearchExpressions are not supported by the repository");
+
     }
 
     public EntityRef<object>[] GetEntityRefsByKey(
       object[] keysToLoad
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetEntityRefsByKey(keysToLoad.Cast<TKey>().ToArray())
+        .Select((e) => new EntityRef<object>() { Key = e.Key, Label = e.Label }).ToArray();
     }
 
     /// <summary> </summary>
@@ -143,7 +99,8 @@ namespace System.Data.Fuse.Convenience {
     public Dictionary<string, object>[] GetEntities(
       ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetEntities(filter, sortedBy, limit, skip)
+        .Select((e) => e.ConvertToBusinessModelDynamic(_HandlePropertyEntityToModel)).ToArray();
     }
 
     /// <summary>
@@ -160,7 +117,10 @@ namespace System.Data.Fuse.Convenience {
     public Dictionary<string, object>[] GetEntitiesBySearchExpression(
       string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
+        ? _Repository.GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip)
+        .Select((e) => e.ConvertToBusinessModelDynamic(_HandlePropertyEntityToModel)).ToArray()
+        : throw new NotSupportedException("SearchExpressions are not supported by the repository");
     }
 
     /// <summary> </summary>
@@ -169,7 +129,8 @@ namespace System.Data.Fuse.Convenience {
     public Dictionary<string, object>[] GetEntitiesByKey(
       object[] keysToLoad
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetEntitiesByKey(keysToLoad.Cast<TKey>().ToArray())
+        .Select((e) => e.ConvertToBusinessModelDynamic(_HandlePropertyEntityToModel)).ToArray();
     }
 
     /// <summary> </summary>
@@ -187,7 +148,7 @@ namespace System.Data.Fuse.Convenience {
     public Dictionary<string, object>[] GetEntityFields(
       ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetEntityFields(filter, includedFieldNames, sortedBy, limit, skip);
     }
 
     /// <summary>
@@ -207,21 +168,25 @@ namespace System.Data.Fuse.Convenience {
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
       string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
+        ? _Repository.GetEntityFieldsBySearchExpression(
+          searchExpression, includedFieldNames, sortedBy, limit, skip
+        )
+        : throw new NotSupportedException("SearchExpressions are not supported by the repository");
     }
 
     public Dictionary<string, object>[] GetEntityFieldsByKey(
         object[] keysToLoad, string[] includedFieldNames
     ) {
-      throw new NotImplementedException();
+      return _Repository.GetEntityFieldsByKey(keysToLoad.Cast<TKey>().ToArray(), includedFieldNames);
     }
 
     public int CountAll() {
-      throw new NotImplementedException();
+      return _Repository.CountAll();
     }
 
     public int Count(ExpressionTree filter) {
-      throw new NotImplementedException();
+      return _Repository.Count(filter);
     }
 
     /// <summary>
@@ -230,11 +195,13 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="searchExpression"></param>
     /// <returns></returns>
     public int CountBySearchExpression(string searchExpression) {
-      throw new NotImplementedException();
+      return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
+        ? _Repository.CountBySearchExpression(searchExpression)
+        : throw new NotSupportedException("SearchExpressions are not supported by the repository");
     }
 
     public bool ContainsKey(object key) {
-      throw new NotImplementedException();
+      return _Repository.ContainsKey((TKey)key);
     }
 
     /// <summary>
@@ -267,7 +234,7 @@ namespace System.Data.Fuse.Convenience {
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> AddOrUpdateEntityFields(Dictionary<string, object> fields) {
-      throw new NotImplementedException();
+      return _Repository.AddOrUpdateEntityFields(fields);
     }
 
     /// <summary>
@@ -300,7 +267,12 @@ namespace System.Data.Fuse.Convenience {
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> AddOrUpdateEntity(Dictionary<string, object> entity) {
-      throw new NotImplementedException();
+
+      ConversionHelper.SanitizeDict(ref entity);
+
+      return _Repository.AddOrUpdateEntity(
+        entity.ConvertToEntityDynamic(_HandlePropertyModelToEntity) 
+      ).ConvertToBusinessModelDynamic(_HandlePropertyEntityToModel);
     }
 
     /// <summary>
@@ -317,7 +289,7 @@ namespace System.Data.Fuse.Convenience {
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> TryUpdateEntityFields(Dictionary<string, object> fields) {
-      throw new NotImplementedException();
+      return _Repository.TryUpdateEntityFields(fields);
     }
 
     /// <summary>
@@ -335,7 +307,9 @@ namespace System.Data.Fuse.Convenience {
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     /// </returns>
     public Dictionary<string, object> TryUpdateEntity(Dictionary<string, object> entity) {
-      throw new NotImplementedException();
+      return _Repository.TryUpdateEntity(
+        entity.ConvertToEntityDynamic(_HandlePropertyModelToEntity)
+      ).ConvertToBusinessModelDynamic(_HandlePropertyEntityToModel);
     }
 
     /// <summary>
@@ -347,7 +321,9 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="entity"></param>
     /// <returns>The entity key on success, otherwise null</returns>
     public object TryAddEntity(Dictionary<string, object> entity) {
-      throw new NotImplementedException();
+      return _Repository.TryAddEntity(
+        entity.ConvertToEntityDynamic(_HandlePropertyModelToEntity)
+      );
     }
 
     /// <summary>
@@ -361,7 +337,9 @@ namespace System.Data.Fuse.Convenience {
     /// </param>
     /// <returns>An array containing the keys of affeced entities.</returns>
     public object[] MassupdateByKeys(object[] keysToUpdate, Dictionary<string, object> fields) {
-      throw new NotImplementedException();
+      return _Repository.MassupdateByKeys(
+        keysToUpdate.Cast<TKey>().ToArray(), fields
+      ).Cast<object>().ToArray();
     }
 
     /// <summary>
@@ -375,7 +353,7 @@ namespace System.Data.Fuse.Convenience {
     /// </param>
     /// <returns></returns>
     public object[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
-      throw new NotImplementedException();
+      return _Repository.Massupdate(filter, fields).Cast<object>().ToArray();
     }
 
     /// <summary>
@@ -390,7 +368,9 @@ namespace System.Data.Fuse.Convenience {
     /// </param>
     /// <returns></returns>
     public object[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields) {
-      throw new NotImplementedException();
+      return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
+        ? _Repository.MassupdateBySearchExpression(searchExpression, fields).Cast<object>().ToArray()
+        : throw new NotSupportedException("SearchExpressions are not supported by the repository");
     }
 
     /// <summary>
@@ -401,7 +381,7 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="keysToDelete"></param>
     /// <returns>keys of deleted entities</returns>
     public object[] TryDeleteEntities(object[] keysToDelete) {
-      throw new NotImplementedException();
+      return _Repository.TryDeleteEntities(keysToDelete.Cast<TKey>().ToArray()).Cast<object>().ToArray();
     }
 
     /// <summary>
@@ -412,7 +392,7 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="newKey"></param>
     /// <returns></returns>
     public bool TryUpdateKey(object currentKey, object newKey) {
-      throw new NotImplementedException();
+      return _Repository.TryUpdateKey((TKey)currentKey, (TKey)newKey);
     }
 
   }
