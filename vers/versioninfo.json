@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.2.1",
-  "currentVersionWithSuffix": "0.2.1",
+  "currentVersion": "0.3.1",
+  "currentVersionWithSuffix": "0.3.1",
   "releaseType": "official",
-  "previousVersion": "0.2.0",
+  "previousVersion": "0.3.0",
   "changeGrade": "patch",
   "currentMajor": 0,
-  "currentMinor": 2,
+  "currentMinor": 3,
   "currentPatch": 1,
-  "versionDateInfo": "2024-03-12",
-  "versionTimeInfo": "16:48:25",
-  "versionNotes": "- adjusted some details for the ExpressionTree\n"
+  "versionDateInfo": "2024-04-15",
+  "versionTimeInfo": "19:33:46",
+  "versionNotes": "- Minor Fixes.\n"
 }
