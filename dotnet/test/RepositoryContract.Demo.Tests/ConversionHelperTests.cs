@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RepositoryContract.Tests._Models_;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Data.Fuse;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef;
@@ -282,6 +282,73 @@ namespace RepositoryContract.Tests {
       EntityRef<object> addressRef = addressesRef[0];
       Assert.IsNotNull(addressRef);
       Assert.AreEqual(1, addressRef.Key);
+
+    }
+
+    [TestMethod]
+    public void LoadNavigations_PreventsCircularLoading() {
+      // Arrange
+
+      SchemaRoot entitySchemaRoot = ModelReader.GetSchema(
+        typeof(PrincipalEntity).Assembly,
+        new string[] {
+          nameof(PrincipalEntity), nameof(StudentEntity)
+        }
+      );
+      SchemaRoot modelSchemaRoot = ModelReader.GetSchema(
+        typeof(Principal).Assembly,
+        new string[] {
+            nameof(Principal), nameof(Student)
+        }
+      );
+
+      IUniversalRepository universalEntityRepository = new LocalUniversalRepository(
+        typeof(PrincipalEntity).Assembly, entitySchemaRoot
+      );
+      IDataStore localEntityDataStore = new LocalDataStore(entitySchemaRoot);
+      IRepository<StudentEntity, int> studentRepo = localEntityDataStore.GetRepository<StudentEntity, int>();
+      IRepository<PrincipalEntity, int> princinpalRepo = localEntityDataStore.GetRepository<PrincipalEntity, int>();
+
+      RepositoryCollection modelDataStore = new RepositoryCollection();
+      ModelVsEntityRepository<Principal, PrincipalEntity, int> principalModelVsEntityRepo = ConversionHelper.CreateModelVsEntityRepositry<
+        Principal, PrincipalEntity, int
+      >(
+        localEntityDataStore, modelDataStore,
+        NavigationRole.Lookup | NavigationRole.Dependent | NavigationRole.Principal,
+        true
+      );
+      ModelVsEntityRepository<Student, StudentEntity, int> studentModelVsEntityRepo = ConversionHelper.CreateModelVsEntityRepositry<
+       Student, StudentEntity, int
+     >(
+       localEntityDataStore, modelDataStore,
+       NavigationRole.Lookup | NavigationRole.Dependent | NavigationRole.Principal,
+       true
+     );
+
+      modelDataStore.RegisterRepository(principalModelVsEntityRepo);
+      modelDataStore.RegisterRepository(studentModelVsEntityRepo);
+
+      PrincipalEntity principal = new PrincipalEntity() { Id = 1, Name = "Principal1" };
+      universalEntityRepository.AddOrUpdateEntity(
+       nameof(PrincipalEntity),
+       principal
+     );
+      universalEntityRepository.AddOrUpdateEntity(
+        nameof(StudentEntity),
+        new StudentEntity() { Id = 1, Name = "Student1", PrincipalId = principal.Id }
+      );
+
+      // Act
+
+      try {
+        Principal[] principals = principalModelVsEntityRepo.GetEntities(new ExpressionTree(), new string[] { });
+        // Assert
+        Assert.IsNotNull(principals);
+        Assert.IsTrue(principals.Length > 0);
+      } catch (Exception ex) {
+        throw;
+      }
+
 
     }
   }

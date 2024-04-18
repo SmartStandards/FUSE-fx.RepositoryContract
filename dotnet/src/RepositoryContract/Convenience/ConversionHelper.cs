@@ -4,8 +4,10 @@ using System.Data.ModelDescription;
 using System.Data.ModelDescription.Convenience;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 #if NETCOREAPP
 using System.Text.Json;
+using System.Threading;
 #endif
 
 namespace System.Data.Fuse.Convenience {
@@ -14,7 +16,7 @@ namespace System.Data.Fuse.Convenience {
 
     public static ModelVsEntityRepository<TModel, TEntity, TKey> CreateModelVsEntityRepositry<TModel, TEntity, TKey>(
       IDataStore entityDataStore, IDataStore modelDataStore,
-      NavigationRole navigationRoleFlags = NavigationRole.Dependent | NavigationRole.Lookup,
+      NavigationRole navigationRoleFlags = NavigationRole.Dependent | NavigationRole.Lookup | NavigationRole.Principal,
       bool loadMultipleNavigations = true
     )
       where TEntity : class
@@ -28,11 +30,11 @@ namespace System.Data.Fuse.Convenience {
         return GetEntities(modelType, keys, modelDataStore, modelDataStore.GetSchemaRoot());
       };
 
-      Func<string, string, EntityRef[]> getEntityRefsBySearchExpression = (string entityName, string searchExpression) => {
+      Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression = (string entityName, ExpressionTree searchExpression) => {
         return GetEntityRefsBySearchExpression(entityName, searchExpression, typeof(TEntity), entityDataStore, entityDataStore.GetSchemaRoot());
       };
 
-      Func<Type, string, object[]> getModelsBySearchExpression = (Type modelType, string searchExpression) => {
+      Func<Type, ExpressionTree, object[]> getModelsBySearchExpression = (Type modelType, ExpressionTree searchExpression) => {
         return GetEntitiesBySearchExpression(modelType, searchExpression, modelDataStore, modelDataStore.GetSchemaRoot());
       };
 
@@ -63,8 +65,8 @@ namespace System.Data.Fuse.Convenience {
         return universalRepo.GetEntityRefsByKey(entityName, keys);
       };
 
-      Func<string, string, EntityRef[]> getEntityRefsBySearchExpression = (string entityName, string searchExpression) => {
-        return universalRepo.GetEntityRefsBySearchExpression(entityName, searchExpression, new string[] { });
+      Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression = (string entityName, ExpressionTree searchExpression) => {
+        return universalRepo.GetEntityRefs(entityName, searchExpression, new string[] { });
       };
 
       return new DictVsEntityRepository<TEntity, TKey>(
@@ -89,8 +91,8 @@ namespace System.Data.Fuse.Convenience {
       SchemaRoot schema,
       Func<string, object[], EntityRef[]> getEntityRefsByKey,
       Func<Type, object[], object[]> getModelsByKey,
-      Func<string, string, EntityRef[]> getEntityRefsBySearchExpression,
-      Func<Type, string, object[]> getModelsBySearchExpression,
+      Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression,
+      Func<Type, ExpressionTree, object[]> getModelsBySearchExpression,
       NavigationRole navigationRoleFlags,
       bool loadMultipleNavigations
     ) {
@@ -106,12 +108,14 @@ namespace System.Data.Fuse.Convenience {
       );
     }
 
+    private static AsyncLocal<List<string>> _VisitedTypeNames;
+
     public static Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> LoadNavigations<TEntity>(
       SchemaRoot schema,
       Func<string, object[], EntityRef[]> getEntityRefsByKey,
       Func<Type, object[], object[]> getModelsByKey,
-      Func<string, string, EntityRef[]> getEntityRefsBySearchExpression,
-      Func<Type, string, object[]> getModelsBySearchExpression,
+      Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression,
+      Func<Type, ExpressionTree, object[]> getModelsBySearchExpression,
       NavigationRole navigationRoleFlags,
       bool loadMultipleNavigations,
       Type targetType = null
@@ -125,8 +129,21 @@ namespace System.Data.Fuse.Convenience {
       bool includeReferrers = (navigationRoleFlags & NavigationRole.Referrer) == NavigationRole.Referrer;
 
       bool checkedPrimaryNavigatoinsWithoutProperties = false;
+
+      //List<string> visitedTypeNames = new List<string>();
+      //AsyncLocal<List<string>> visitedTypeNames = new AsyncLocal<List<string>>();
+      if (_VisitedTypeNames == null) {
+        _VisitedTypeNames = new AsyncLocal<List<string>>();
+      }
+      if (_VisitedTypeNames.Value == null) {
+        _VisitedTypeNames.Value = new List<string>();
+      }
+
       return (PropertyInfo pi, TEntity entity, Dictionary<string, object> dict) => {
 
+        if (!_VisitedTypeNames.Value.Contains(entity.GetType().Name)) {
+          _VisitedTypeNames.Value.Add(entity.GetType().Name);
+        }
         // TODO support multiple key fields
 
         if (!checkedPrimaryNavigatoinsWithoutProperties) {
@@ -146,6 +163,9 @@ namespace System.Data.Fuse.Convenience {
           )
         );
         if (foreignNavigationPropertyRelation != null) {
+          if (_VisitedTypeNames.Value.Contains(foreignNavigationPropertyRelation.PrimaryEntityName)) {
+            return true;
+          }
           return HandleForeignNavigationProperty(
             getEntityRefsByKey, getModelsByKey, targetType,
             pi, entity, dict, includeLookups, includePrincipals, foreignNavigationPropertyRelation
@@ -161,6 +181,9 @@ namespace System.Data.Fuse.Convenience {
         );
 
         if (foreignKeyRelation != null) {
+          if (_VisitedTypeNames.Value.Contains(foreignKeyRelation.PrimaryEntityName)) {
+            return false;
+          }
           return HandleForeigKeyProperty(
             getEntityRefsByKey, getModelsByKey, targetType,
             pi, entity, dict, includeLookups, includePrincipals, foreignKeyRelation
@@ -175,6 +198,9 @@ namespace System.Data.Fuse.Convenience {
           )
         );
         if (primaryNavigationPropertyRelation != null) {
+          if (_VisitedTypeNames.Value.Contains(primaryNavigationPropertyRelation.ForeignEntityName)) {
+            return true;
+          }
           return HandlePrimaryNavigationProperty(
             getEntityRefsBySearchExpression, getModelsBySearchExpression,
             targetType,
@@ -190,8 +216,8 @@ namespace System.Data.Fuse.Convenience {
     private static void CheckPrimaryNavigatoinsWithoutProperties(
       SchemaRoot schema,
       object entity,
-      Func<string, string, EntityRef[]> getEntityRefsBySearchExpression,
-      Func<Type, string, object[]> getModelsBySearchExpression,
+      Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression,
+      Func<Type, ExpressionTree, object[]> getModelsBySearchExpression,
       bool includeDependents,
       bool includeReferrers,
       bool loadMultipleNavigations,
@@ -203,6 +229,9 @@ namespace System.Data.Fuse.Convenience {
         string.IsNullOrEmpty(r.PrimaryNavigationName)
       );
       foreach (var primaryRelation in primaryRelations) {
+        if (_VisitedTypeNames.Value.Contains(primaryRelation.ForeignEntityName)) {
+          continue;
+        }
         string targetPropertyName = string.Empty;
         if (targetType != null) {
           if (primaryRelation.ForeignEntityIsMultiple) {
@@ -242,8 +271,8 @@ namespace System.Data.Fuse.Convenience {
     }
 
     private static bool HandlePrimaryNavigationProperty(
-      Func<string, string, EntityRef[]> getEntityRefsBySearchExpression,
-      Func<Type, string, object[]> getModelsBySearchExpression,
+      Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression,
+      Func<Type, ExpressionTree, object[]> getModelsBySearchExpression,
       Type targetType,
       string propertyName,
       object entity,
@@ -311,10 +340,10 @@ namespace System.Data.Fuse.Convenience {
     ) {
       // check if Navigation should be loaded
       if (foreignKeyRelation.IsLookupRelation && !includeLookups) {
-        return true;
+        return false;
       }
       if (!foreignKeyRelation.IsLookupRelation && !includePrincipals) {
-        return true;
+        return false;
       }
 
       // find out corresponding navigation property name
@@ -470,7 +499,13 @@ namespace System.Data.Fuse.Convenience {
           object navPropValue = dict[navigationName];
           if (typeof(EntityRef).IsAssignableFrom(navPropValue.GetType())) {
             EntityRef entityRef = (EntityRef)dict[navigationName];
-            pi.SetValue(entity, entityRef.Key);
+            object entityRefKey = entityRef.Key;
+#if NETCOREAPP
+            if (typeof(JsonElement).IsAssignableFrom(entityRefKey.GetType())) {
+              entityRefKey = GetValueFromJsonElement((JsonElement)entityRefKey);
+            }
+#endif
+            pi.SetValue(entity, entityRefKey);
             return true;
           } else {
             string primaryEntityName = foreignKeyRelation.PrimaryEntityName;
@@ -529,16 +564,16 @@ namespace System.Data.Fuse.Convenience {
       string foreignKeyName,
       string entityTypeName,
       Type modelType,
-      Func<string, string, EntityRef[]> getEntityRefsBySearchExpression,
-      Func<Type, string, object[]> getModelsBySearchExpression
+      Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression,
+      Func<Type, ExpressionTree, object[]> getModelsBySearchExpression
     ) {
       if (typeof(EntityRef).IsAssignableFrom(modelType)) {
         return getEntityRefsBySearchExpression(
-          entityTypeName, $"{foreignKeyName} = {foreignKey}"
+          entityTypeName, ExpressionTree.And(FieldPredicate.Equal(foreignKeyName, foreignKey))
         );
       }
       return getModelsBySearchExpression(
-        modelType, $"{foreignKeyName} = {foreignKey}"
+        modelType, ExpressionTree.And(FieldPredicate.Equal(foreignKeyName, foreignKey))
       );
     }
 
@@ -636,7 +671,7 @@ namespace System.Data.Fuse.Convenience {
 
     public static EntityRef[] GetEntityRefsBySearchExpression(
       string entityName,
-      string searchExpression,
+      ExpressionTree searchExpression,
       Type entryType, IDataStore dataStore,
       SchemaRoot schemaRoot
     ) {
@@ -650,7 +685,7 @@ namespace System.Data.Fuse.Convenience {
       getRepositoryMethod = getRepositoryMethod.MakeGenericMethod(entityType, keyType);
       object repository = getRepositoryMethod.Invoke(dataStore, new object[] { });
       MethodInfo getEntityRefsBySearchExpressionMethod = repository.GetType().GetMethod(
-        nameof(IRepository<object, object>.GetEntityRefsBySearchExpression)
+        nameof(IRepository<object, object>.GetEntityRefs)
       );
 
       return (EntityRef[])getEntityRefsBySearchExpressionMethod.Invoke(
@@ -680,7 +715,7 @@ namespace System.Data.Fuse.Convenience {
 
     public static object[] GetEntitiesBySearchExpression(
       Type entityType,
-      string searchExpression,
+      ExpressionTree searchExpression,
       IDataStore dataStore,
       SchemaRoot schemaRoot
     ) {
@@ -689,7 +724,7 @@ namespace System.Data.Fuse.Convenience {
       getRepositoryMethod = getRepositoryMethod.MakeGenericMethod(entityType, keyType);
       object repository = getRepositoryMethod.Invoke(dataStore, new object[] { });
       MethodInfo getEntitiesBySearchExpressionMethod = repository.GetType().GetMethod(
-        nameof(IRepository<object, object>.GetEntitiesBySearchExpression)
+        nameof(IRepository<object, object>.GetEntities)
       );
       return (object[])getEntitiesBySearchExpressionMethod.Invoke(
         repository, new object[] {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.ModelDescription;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -15,28 +16,33 @@ namespace System.Data.Fuse.Convenience {
 
   public static class QueryExtensions {
 
-    public static string CompileToDynamicLinq(this ExpressionTree tree) {
+    public static string CompileToDynamicLinq(this ExpressionTree tree, EntitySchema entitySchema) {
       if (tree == null) return null;
-      return tree.CompileToWhereStatement("dynamic linq", "");
+      return tree.CompileToWhereStatement(entitySchema, "dynamic linq", "");
     }
 
-    public static string CompileToSqlWhere(this ExpressionTree tree, string prefix = "") {
+    public static string CompileToSqlWhere(this ExpressionTree tree, EntitySchema entitySchema, string prefix = "") {
       if (tree == null) return null;
-      return tree.CompileToWhereStatement("sql", prefix);
+      return tree.CompileToWhereStatement(entitySchema, "sql", prefix);
     }
 
-    internal static string CompileToWhereStatement(this ExpressionTree expression, string mode, string prefix) {
+    internal static string CompileToWhereStatement(
+      this ExpressionTree expression,
+      EntitySchema entitySchema,
+      string mode,
+      string prefix
+    ) {
 
       if (expression == null) { return "1=1"; }
 
       List<string> childResults = new List<string>();
       foreach (FieldPredicate fieldPredicate in expression.Predicates) {
-        childResults.Add(CompileFieldPredicateToWhereStatement(fieldPredicate, mode, prefix));
+        childResults.Add(CompileFieldPredicateToWhereStatement(entitySchema, fieldPredicate, mode, prefix));
       }
 
       if (expression.SubTree != null) {
         foreach (ExpressionTree ex in expression.SubTree) {
-          childResults.Add(CompileToWhereStatement(ex, mode, prefix));
+          childResults.Add(CompileToWhereStatement(ex, entitySchema, mode, prefix));
         }
       }
 
@@ -70,7 +76,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     internal static string CompileFieldPredicateToWhereStatement(
-      FieldPredicate relationElement, string mode, string prefix
+      EntitySchema entitySchema, FieldPredicate relationElement, string mode, string prefix
     ) {
 
       string[] inRels = new string[] { FieldOperators.In };
@@ -88,7 +94,7 @@ namespace System.Data.Fuse.Convenience {
               Operator = "=",
               Value = value
             };
-            result1.Append(CompileFieldPredicateToWhereStatement(innerRelationElement, mode, prefix));
+            result1.Append(CompileFieldPredicateToWhereStatement(entitySchema, innerRelationElement, mode, prefix));
             result1.Append(" or ");
           }
           if (values.Count() > 0) {
@@ -105,7 +111,7 @@ namespace System.Data.Fuse.Convenience {
               Operator = "=",
               Value = value
             };
-            result1.Append(CompileFieldPredicateToWhereStatement(innerRelationElement, mode, prefix));
+            result1.Append(CompileFieldPredicateToWhereStatement(entitySchema, innerRelationElement, mode, prefix));
             result1.Append(" or ");
           }
           if (count > 0) {
@@ -198,12 +204,19 @@ namespace System.Data.Fuse.Convenience {
         }
         checkNull = true;
       }
-
+      string fieldType = "string";
+      
+      FieldSchema fieldSchema = entitySchema.Fields.FirstOrDefault((f) => f.Name == relationElement.FieldName);
+      if (fieldSchema != null) {
+        fieldType = fieldSchema.Type;
+      }
       if (checkNull) {
         serializedValue = "";
-      } else {
-
-        if (DateTime.TryParse(relationElement.Value.ToString(), out DateTime dateTime)) {
+      } else {   
+        if (
+          (fieldType == "DateTime" || fieldType == "Date") &&
+          DateTime.TryParse(relationElement.Value.ToString(), out DateTime dateTime)
+        ) {
           DateTime date = DateTime.Parse(relationElement.Value.ToString());
           if (mode == "sql") {
             if (date.Hour > 9) {
@@ -214,11 +227,11 @@ namespace System.Data.Fuse.Convenience {
           } else {
             serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
           }
+        } else if (fieldType == "String" || fieldType == "Guid") {
+          serializedValue = ResolveStringField(relationElement, mode, prefix, ref fieldName, ref @operator);
         } else {
           serializedValue = relationElement.Value.ToString();
         }
-
-
 
         //switch (relationElement.PropertyType) {
         //  case "string":
@@ -294,11 +307,45 @@ namespace System.Data.Fuse.Convenience {
       result.Append(serializedValue);
       result.Append(")");
 
-      //if (mode == "sql" && relationElement.PropertyType != "string" && relationElement.PropertyType != "String") {
+      if (mode == "sql" && fieldType != "string" && fieldType != "String") {
       result.Replace("\"", "'");
-      //}
+      }
 
       return result.ToString();
+    }
+
+    private static string ResolveStringField(FieldPredicate fieldPredicate, string mode, string prefix, ref string fieldName, ref string @operator) {
+      string serializedValue;
+      if (mode == "sql") {
+        serializedValue = $"'{fieldPredicate.Value}'";
+      } else {
+        serializedValue = $"\"{fieldPredicate.Value}\"";
+      }
+      string[] containsRelations = new string[] { ">", ">=", "contains", "Contains", "includes", "Includes" };
+      string[] reversContainsRelations = new string[] { "<", "<=", "is substring of", "substring", "substringOf" };
+      if (containsRelations.Contains(@operator)) {
+        fieldName = prefix + fieldPredicate.FieldName;
+        if (mode == "sql") {
+          @operator = " like ";
+          serializedValue = $"'%{fieldPredicate.Value}%'";
+        } else {
+          @operator = ".Contains";
+          serializedValue = $"(\"{fieldPredicate.Value}\")";
+        }
+      }
+      if (reversContainsRelations.Contains(@operator)) {
+        if (mode == "sql") {
+          fieldName = $"'{fieldPredicate.Value}'";
+          @operator = " like ";
+          serializedValue = $"'%'+{prefix + fieldPredicate.FieldName}+'%'";
+        } else {
+          fieldName = $"\"{fieldPredicate.Value}\"";
+          @operator = ".Contains";
+          serializedValue = $"({prefix + fieldPredicate.FieldName})";
+        }
+      }
+
+      return serializedValue;
     }
 
     public static void DeleteEntities(
@@ -354,7 +401,7 @@ namespace System.Data.Fuse.Convenience {
       var parameter = Expression.Parameter(typeof(TEntity), "e");
       Expression body = null;
 
-      foreach (PropertyInfo propertyInfo in properties) {      
+      foreach (PropertyInfo propertyInfo in properties) {
         var entityValue = propertyInfo.GetValue(entity);
         var equality = Expression.Equal(
             Expression.Property(parameter, propertyInfo.Name),

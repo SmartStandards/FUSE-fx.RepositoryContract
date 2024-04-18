@@ -40,7 +40,7 @@
 
   <ItemGroup>
     <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.10" />
-    <PackageReference Include="FUSE-fx.ModelReader" Version="0.1.13" />
+    <PackageReference Include="FUSE-fx.ModelReader" Version="0.1.14" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.10" />
   </ItemGroup>
 

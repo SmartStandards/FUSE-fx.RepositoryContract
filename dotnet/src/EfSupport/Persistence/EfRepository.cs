@@ -209,7 +209,7 @@ namespace System.Data.Fuse.Ef {
     }
 
     public int Count(ExpressionTree filter) {
-      return _DbContext.Set<TEntity>().Count(filter.CompileToDynamicLinq());
+      return _DbContext.Set<TEntity>().Count(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
     }
 
     public int CountAll() {
@@ -231,7 +231,7 @@ namespace System.Data.Fuse.Ef {
       if (filter == null) {
         entities = _DbContext.Set<TEntity>();
       } else {
-        entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq());
+        entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
       }
 
       entities = ApplySorting(sortedBy, entities);
@@ -261,7 +261,7 @@ namespace System.Data.Fuse.Ef {
       ExpressionTree filter,
       string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      var entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq());
+      var entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
 
       entities = ApplySorting(sortedBy, entities);
 
@@ -373,7 +373,7 @@ namespace System.Data.Fuse.Ef {
     /// </param>
     /// <returns></returns>
     public TKey[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
-      return MassupdateBySearchExpression(filter.CompileToDynamicLinq(), fields);
+      return MassupdateBySearchExpression(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)), fields);
     }
 
 

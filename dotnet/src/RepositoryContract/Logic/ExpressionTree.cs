@@ -78,6 +78,14 @@ namespace System.Data.Fuse {
 
     #endregion
 
+    //AI after typing "public static ExpressionTree"
+    public static ExpressionTree And(params FieldPredicate[] predicates) {
+      return new ExpressionTree() {
+        MatchAll = true,
+        Predicates = predicates.ToList()
+      };
+    }
+
   }
 
 }

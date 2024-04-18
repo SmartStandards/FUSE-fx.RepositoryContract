@@ -154,7 +154,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public int Count(ExpressionTree filter) {
-      return _Entities.AsQueryable().Count(filter.CompileToDynamicLinq());
+      return _Entities.AsQueryable().Count(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
     }
 
     public int CountAll() {
@@ -172,7 +172,7 @@ namespace System.Data.Fuse.Convenience {
     public TEntity[] GetEntities(
       ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      var entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq());
+      var entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
 
       entities = ApplySorting(sortedBy, entities);
 
@@ -181,7 +181,7 @@ namespace System.Data.Fuse.Convenience {
 
     public TEntity[] GetEntitiesByKey(TKey[] keysToLoad) {
       return _Entities.Where(
-        keysToLoad.BuildFilterForKeyValuesExpression<TEntity,TKey>(PrimaryKeySet.ToArray()).Compile()
+        keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
       ).ToArray();
     }
 
@@ -199,7 +199,7 @@ namespace System.Data.Fuse.Convenience {
       ExpressionTree filter,
       string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      var entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq());
+      var entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
 
       entities = ApplySorting(sortedBy, entities);
 
@@ -307,7 +307,7 @@ namespace System.Data.Fuse.Convenience {
     /// </param>
     /// <returns></returns>
     public TKey[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
-      return MassupdateBySearchExpression(filter.CompileToDynamicLinq(), fields);
+      return MassupdateBySearchExpression(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)), fields);
     }
 
 

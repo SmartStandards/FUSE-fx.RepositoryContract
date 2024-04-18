@@ -35,6 +35,14 @@ namespace System.Data.Fuse {
       return $"{FieldName} {Operator} {Value}";
     }
 
+    public static FieldPredicate Equal(string fieldName,  object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.Equal,
+        Value = value
+      };
+    }
+
   }
 
 }
