@@ -108,7 +108,7 @@ namespace System.Data.Fuse.Convenience {
       );
     }
 
-    private static AsyncLocal<List<string>> _VisitedTypeNames;
+    internal static AsyncLocal<List<string>> _VisitedTypeNames;
 
     public static Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> LoadNavigations<TEntity>(
       SchemaRoot schema,
@@ -124,35 +124,45 @@ namespace System.Data.Fuse.Convenience {
       // TODO prevent circular references (Dependent -> Principal -> Dependent)
 
       bool includeLookups = (navigationRoleFlags & NavigationRole.Lookup) == NavigationRole.Lookup;
-      bool includePrincipals = (navigationRoleFlags & NavigationRole.Principal) == NavigationRole.Principal;
-      bool includeDependents = (navigationRoleFlags & NavigationRole.Dependent) == NavigationRole.Dependent;
+      bool  includePrincipals = (navigationRoleFlags & NavigationRole.Principal) == NavigationRole.Principal;
+      bool  includeDependents = (navigationRoleFlags & NavigationRole.Dependent) == NavigationRole.Dependent;
       bool includeReferrers = (navigationRoleFlags & NavigationRole.Referrer) == NavigationRole.Referrer;
 
-      bool checkedPrimaryNavigatoinsWithoutProperties = false;
+      //bool checkedPrimaryNavigatoinsWithoutProperties = false;
 
       //List<string> visitedTypeNames = new List<string>();
       //AsyncLocal<List<string>> visitedTypeNames = new AsyncLocal<List<string>>();
-      if (_VisitedTypeNames == null) {
-        _VisitedTypeNames = new AsyncLocal<List<string>>();
-      }
-      if (_VisitedTypeNames.Value == null) {
-        _VisitedTypeNames.Value = new List<string>();
-      }
+      //if (_VisitedTypeNames == null) {
+      //  _VisitedTypeNames = new AsyncLocal<List<string>>();
+      //}
+      //if (_VisitedTypeNames.Value == null) {
+      //  _VisitedTypeNames.Value = new List<string>();
+      //}
 
       return (PropertyInfo pi, TEntity entity, Dictionary<string, object> dict) => {
 
-        if (!_VisitedTypeNames.Value.Contains(entity.GetType().Name)) {
-          _VisitedTypeNames.Value.Add(entity.GetType().Name);
-        }
         // TODO support multiple key fields
 
-        if (!checkedPrimaryNavigatoinsWithoutProperties) {
+        if (
+          _VisitedTypeNames != null &&
+          _VisitedTypeNames.Value != null &&
+          _VisitedTypeNames.Value.Count == 0
+        ) {
+          //_VisitedTypeNames = new AsyncLocal<List<string>>(); // Reset since we are at first property
+          //_VisitedTypeNames.Value = new List<string>();
           CheckPrimaryNavigatoinsWithoutProperties(
             schema, entity,
             getEntityRefsBySearchExpression, getModelsBySearchExpression,
             includeDependents, includeReferrers, loadMultipleNavigations, targetType, dict
           );
-          checkedPrimaryNavigatoinsWithoutProperties = true;
+          //checkedPrimaryNavigatoinsWithoutProperties = true;
+        }
+
+        if (
+            _VisitedTypeNames != null &&
+            _VisitedTypeNames.Value != null &&
+            !_VisitedTypeNames.Value.Contains(entity.GetType().Name)) {
+          _VisitedTypeNames.Value.Add(entity.GetType().Name);
         }
 
         // Foreign navigation property
@@ -163,9 +173,16 @@ namespace System.Data.Fuse.Convenience {
           )
         );
         if (foreignNavigationPropertyRelation != null) {
-          if (_VisitedTypeNames.Value.Contains(foreignNavigationPropertyRelation.PrimaryEntityName)) {
+          if (
+            _VisitedTypeNames != null && 
+            _VisitedTypeNames.Value != null && 
+            _VisitedTypeNames.Value.Contains(foreignNavigationPropertyRelation.PrimaryEntityName)
+          ) {
             return true;
           }
+          bool isCircularReference = dict.Values.Any(
+            v => v != null && v.GetType().Name == foreignNavigationPropertyRelation.PrimaryEntityName
+          );
           return HandleForeignNavigationProperty(
             getEntityRefsByKey, getModelsByKey, targetType,
             pi, entity, dict, includeLookups, includePrincipals, foreignNavigationPropertyRelation
@@ -181,7 +198,10 @@ namespace System.Data.Fuse.Convenience {
         );
 
         if (foreignKeyRelation != null) {
-          if (_VisitedTypeNames.Value.Contains(foreignKeyRelation.PrimaryEntityName)) {
+          if (
+            _VisitedTypeNames != null &&
+            _VisitedTypeNames.Value != null &&
+            _VisitedTypeNames.Value.Contains(foreignKeyRelation.PrimaryEntityName)) {
             return false;
           }
           return HandleForeigKeyProperty(
@@ -198,7 +218,10 @@ namespace System.Data.Fuse.Convenience {
           )
         );
         if (primaryNavigationPropertyRelation != null) {
-          if (_VisitedTypeNames.Value.Contains(primaryNavigationPropertyRelation.ForeignEntityName)) {
+          if (
+            _VisitedTypeNames != null &&
+            _VisitedTypeNames.Value != null &&
+            _VisitedTypeNames.Value.Contains(primaryNavigationPropertyRelation.ForeignEntityName)) {
             return true;
           }
           return HandlePrimaryNavigationProperty(
@@ -229,9 +252,9 @@ namespace System.Data.Fuse.Convenience {
         string.IsNullOrEmpty(r.PrimaryNavigationName)
       );
       foreach (var primaryRelation in primaryRelations) {
-        if (_VisitedTypeNames.Value.Contains(primaryRelation.ForeignEntityName)) {
-          continue;
-        }
+        //if (_VisitedTypeNames.Value.Contains(primaryRelation.ForeignEntityName)) {
+        //  continue;
+        //}
         string targetPropertyName = string.Empty;
         if (targetType != null) {
           if (primaryRelation.ForeignEntityIsMultiple) {
@@ -360,7 +383,7 @@ namespace System.Data.Fuse.Convenience {
       Type targetPropertyType = (targetType == null)
         ? typeof(EntityRef) : targetType.GetProperty(navigationName)?.PropertyType;
       if (targetPropertyType == null) {
-        return true;
+        return false;
       }
 
       // navigation could already be loaded by finding the navigation property first
@@ -376,7 +399,7 @@ namespace System.Data.Fuse.Convenience {
       object navigationValueOnModel = models.FirstOrDefault();
       dict.Add(navigationName, navigationValueOnModel);
 
-      return true;
+      return false; // still set the foreign key property in default behavior
     }
 
     private static bool HandleForeignNavigationProperty<TEntity>(
