@@ -878,7 +878,15 @@ namespace System.Data.Fuse.Convenience {
       if (targetType.IsAssignableFrom(value.GetType())) {
         return value;
       }
-      string valueAsString = value.ToString();
+      string valueAsString;
+      if (value.GetType() == typeof(string)) {
+        valueAsString = (string)value;
+      } else if (value.GetType() == typeof(char)) {
+        valueAsString = value.ToString();
+      } else {
+        return value;
+      }
+
       if (targetType == typeof(Guid)) {
         return Guid.Parse(valueAsString);
       } else if (targetType == typeof(DateTime)) {
@@ -907,7 +915,7 @@ namespace System.Data.Fuse.Convenience {
       if (typeof(JsonElement).IsAssignableFrom(obj.GetType())) {
         return ((JsonElement)obj).Deserialize(targetType);
       }
-#endif      
+#endif
 
       return obj;
 
