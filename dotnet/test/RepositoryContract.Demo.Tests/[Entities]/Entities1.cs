@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace RepositoryContract.Tests {
 
-  [HasLookup("", nameof(NationId), "", null, nameof(NationEntity))]
-  [HasLookup("", nameof(ReligionId), "", null, nameof(ReligionEntity))]
+  [HasLookup(nameof(Nation), nameof(NationId), "", null, nameof(NationEntity))]
+  [HasLookup(nameof(Religion), nameof(ReligionId), "", null, nameof(ReligionEntity))]
   [HasDependent(nameof(Addresses), nameof(AddressEntity.PersonId), "")]
   [HasDependent("", nameof(PetEntity.PersonId), "", "", nameof(PetEntity))]
   public class PersonEntity {
@@ -18,6 +18,8 @@ namespace RepositoryContract.Tests {
     public string Value { get; set; } = string.Empty;
     public int NationId { get; set; }
     public int ReligionId { get; set; }
+    public ReligionEntity Religion { get; set; } = null!;
+    public NationEntity Nation { get; set; } = null!;
     public ICollection<AddressEntity> Addresses { get; set; } = new ObservableCollection<AddressEntity>();
   }
 

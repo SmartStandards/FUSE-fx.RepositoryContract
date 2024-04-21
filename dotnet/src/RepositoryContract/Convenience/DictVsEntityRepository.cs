@@ -267,9 +267,6 @@ namespace System.Data.Fuse.Convenience {
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> AddOrUpdateEntity(Dictionary<string, object> entity) {
-
-      ConversionHelper.SanitizeDict(ref entity);
-
       return _Repository.AddOrUpdateEntity(
         entity.ConvertToEntityDynamic(_HandlePropertyModelToEntity) 
       ).ConvertToBusinessModelDynamic(_HandlePropertyEntityToModel);

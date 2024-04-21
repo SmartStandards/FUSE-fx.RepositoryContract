@@ -105,12 +105,12 @@ namespace System.Data.Fuse.Ef {
         MethodInfo factoryMethod = typeof(ConversionHelper).GetMethod(nameof(ConversionHelper.CreateDictVsEntityRepositry));
         factoryMethod = factoryMethod.MakeGenericMethod(entityType, keyType);
         universalModelVsEntityRepo = factoryMethod.Invoke(
-          null, new object[] { 
+          null, new object[] {
             GetSchemaRoot(),
             this,
             efRepo,
-            NavigationRole.Lookup | NavigationRole.Dependent | NavigationRole.Principal, 
-            true 
+            NavigationRole.Lookup | NavigationRole.Dependent | NavigationRole.Principal,
+            false
           }
         );
       } else {

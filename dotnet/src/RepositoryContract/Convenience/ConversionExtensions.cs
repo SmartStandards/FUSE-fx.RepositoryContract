@@ -43,6 +43,15 @@ namespace System.Data.Fuse.Convenience {
       return businessModelList.Select(bm => bm.ConvertToEntityDynamic<T1>(handleProperty)).ToList();
     }
 
+    public static object ToBusinessModel(
+     this object entity,
+     Type sourceType, Type targetType,
+     Func<PropertyInfo, object, Dictionary<string, object>, bool> handleProperty
+   ) {
+      object result = entity.ConvertToBusinessModelDynamic(handleProperty).Deserialize(targetType);
+      return result;
+    }
+
     public static T2 ToBusinessModel<T1, T2>(
       this T1 entity,
       Func<PropertyInfo, T1, Dictionary<string, object>, bool> handleProperty,
@@ -98,6 +107,11 @@ namespace System.Data.Fuse.Convenience {
         if (handleProperty(pi, businessModel, result)) continue;
 
         if (!businessModel.TryGetValue(pi.Name, out object propValue)) { continue; }
+#if NETCOREAPP
+        if (typeof(JsonElement).IsAssignableFrom(propValue.GetType())) {
+          propValue = ConversionHelper.GetValueFromJsonElementByType((JsonElement)propValue, pi.PropertyType);
+        }
+#endif
         if (propValue == null) { pi.SetValue(result, null); continue; }
         if (pi.PropertyType.IsAssignableFrom(propValue.GetType())) {
           pi.SetValue(result, propValue);
@@ -143,9 +157,13 @@ namespace System.Data.Fuse.Convenience {
     //  result.Add(pi.Name, entityRef);
     //}
 
-    public static T Deserialize<T>(this Dictionary<string, object> businessModel) {
+    public static T Deserialize<T>(this Dictionary<string, object> businessModel ) {
       Type type = typeof(T);
-      T result = (T)Activator.CreateInstance(type);
+      return (T)Deserialize(businessModel, type);      
+    }
+
+    public static object Deserialize(this Dictionary<string, object> businessModel, Type type) {
+      object result = Activator.CreateInstance(type);
 
       foreach (PropertyInfo pi in type.GetProperties()) {
         if (!pi.CanWrite) { continue; }
@@ -158,7 +176,7 @@ namespace System.Data.Fuse.Convenience {
           pi.SetValue(result, propValue, null);
         }
         if (
-          typeof(IEnumerable).IsAssignableFrom(propValue.GetType()) && 
+          typeof(IEnumerable).IsAssignableFrom(propValue.GetType()) &&
           !(propValue.GetType() == typeof(string))
         ) {
           if (typeof(IEnumerable).IsAssignableFrom(pi.PropertyType)) {
@@ -241,14 +259,14 @@ namespace System.Data.Fuse.Convenience {
           }
         } else {
 #endif
-        if (propertyValue.GetType().IsClass) {
-          PropertyInfo otherIdProperty = propertyValue.GetType().GetProperty("Id");
-          if (otherIdProperty == null) { continue; }
-          string foreignKeyPropertyName = sourceProperty.Key + "Id";
-          PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
-          if (foreignKeyPropertyTarget == null) { continue; }
-          object idValue = otherIdProperty.GetValue(propertyValue);
-          foreignKeyPropertyTarget.SetValue(target, idValue);
+          if (propertyValue.GetType().IsClass) {
+            PropertyInfo otherIdProperty = propertyValue.GetType().GetProperty("Id");
+            if (otherIdProperty == null) { continue; }
+            string foreignKeyPropertyName = sourceProperty.Key + "Id";
+            PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
+            if (foreignKeyPropertyTarget == null) { continue; }
+            object idValue = otherIdProperty.GetValue(propertyValue);
+            foreignKeyPropertyTarget.SetValue(target, idValue);
 #if NETCOREAPP
           }
 #endif

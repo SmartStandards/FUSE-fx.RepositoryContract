@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace System.Data.Fuse.Convenience {
 
-  public class ConversionHelper {
+  public static class ConversionHelper {
 
     public static ModelVsEntityRepository<TModel, TEntity, TKey> CreateModelVsEntityRepositry<TModel, TEntity, TKey>(
       IDataStore entityDataStore, IDataStore modelDataStore,
@@ -110,6 +110,12 @@ namespace System.Data.Fuse.Convenience {
 
     internal static AsyncLocal<List<string>> _VisitedTypeNames;
 
+    public static Func<PropertyInfo, object, Dictionary<string, object>, bool> DismissNavigations(SchemaRoot schema) {
+      return (pi, entity, dict) => {
+        return schema.Relations.Any((r) => r.PrimaryNavigationName == pi.Name || r.ForeignNavigationName == pi.Name);
+      };
+    }
+
     public static Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> LoadNavigations<TEntity>(
       SchemaRoot schema,
       Func<string, object[], EntityRef[]> getEntityRefsByKey,
@@ -124,8 +130,8 @@ namespace System.Data.Fuse.Convenience {
       // TODO prevent circular references (Dependent -> Principal -> Dependent)
 
       bool includeLookups = (navigationRoleFlags & NavigationRole.Lookup) == NavigationRole.Lookup;
-      bool  includePrincipals = (navigationRoleFlags & NavigationRole.Principal) == NavigationRole.Principal;
-      bool  includeDependents = (navigationRoleFlags & NavigationRole.Dependent) == NavigationRole.Dependent;
+      bool includePrincipals = (navigationRoleFlags & NavigationRole.Principal) == NavigationRole.Principal;
+      bool includeDependents = (navigationRoleFlags & NavigationRole.Dependent) == NavigationRole.Dependent;
       bool includeReferrers = (navigationRoleFlags & NavigationRole.Referrer) == NavigationRole.Referrer;
 
       //bool checkedPrimaryNavigatoinsWithoutProperties = false;
@@ -174,8 +180,8 @@ namespace System.Data.Fuse.Convenience {
         );
         if (foreignNavigationPropertyRelation != null) {
           if (
-            _VisitedTypeNames != null && 
-            _VisitedTypeNames.Value != null && 
+            _VisitedTypeNames != null &&
+            _VisitedTypeNames.Value != null &&
             _VisitedTypeNames.Value.Contains(foreignNavigationPropertyRelation.PrimaryEntityName)
           ) {
             return true;
@@ -184,6 +190,7 @@ namespace System.Data.Fuse.Convenience {
             v => v != null && v.GetType().Name == foreignNavigationPropertyRelation.PrimaryEntityName
           );
           return HandleForeignNavigationProperty(
+            schema,
             getEntityRefsByKey, getModelsByKey, targetType,
             pi, entity, dict, includeLookups, includePrincipals, foreignNavigationPropertyRelation
           );
@@ -205,6 +212,7 @@ namespace System.Data.Fuse.Convenience {
             return false;
           }
           return HandleForeigKeyProperty(
+            schema,
             getEntityRefsByKey, getModelsByKey, targetType,
             pi, entity, dict, includeLookups, includePrincipals, foreignKeyRelation
           );
@@ -331,6 +339,9 @@ namespace System.Data.Fuse.Convenience {
 
       string entityName = primaryNavigationPropertyRelation.ForeignEntityName;
       Type modelType = (isMultiple) ? targetPropertyType.GenericTypeArguments[0] : targetPropertyType;
+      if (string.IsNullOrEmpty(primaryNavigationPropertyRelation.ForeignKeyIndexName)) {
+        return true;
+      }
       IEnumerable<object> models = GetModelsBySearchExpression(
         GetKey(entity, entitySchemaRoot),
         primaryNavigationPropertyRelation.ForeignKeyIndexName,
@@ -351,6 +362,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     private static bool HandleForeigKeyProperty<TEntity>(
+      SchemaRoot schemaRoot,
       Func<string, object[], EntityRef[]> getEntityRefsByKey,
       Func<Type, object[], object[]> getModelsByKey,
       Type targetType,
@@ -389,20 +401,41 @@ namespace System.Data.Fuse.Convenience {
       // navigation could already be loaded by finding the navigation property first
       if (dict.ContainsKey(navigationName)) { return true; }
 
-      IEnumerable<object> models = GetModels(
-        pi.GetValue(entity),
-        foreignKeyRelation.PrimaryEntityName,
-        targetPropertyType,
-        getEntityRefsByKey,
-        getModelsByKey
-      );
-      object navigationValueOnModel = models.FirstOrDefault();
+      object navigationValueOnModel = null;
+
+      PropertyInfo sourceProperty = entity.GetType().GetProperty(navigationName);
+      object navigationValueOnEntity = null;
+      if (sourceProperty != null) {
+        navigationValueOnEntity = sourceProperty.GetValue(entity, null);
+      } else {
+        return false;
+      }
+      if (navigationValueOnEntity != null) {
+        if (typeof(EntityRef).IsAssignableFrom(targetPropertyType)) {
+          navigationValueOnModel = new EntityRef() { Key = pi.GetValue(entity, null), Label = navigationValueOnEntity.ToString() };
+        } else {
+          Type sourceType = navigationValueOnEntity.GetNonDynamicType();
+          navigationValueOnModel = navigationValueOnEntity.ToBusinessModel(
+            sourceType, targetType, ConversionHelper.DismissNavigations(schemaRoot)
+          );
+        }
+      } else {
+        IEnumerable<object> models = GetModels(
+          pi.GetValue(entity),
+          foreignKeyRelation.PrimaryEntityName,
+          targetPropertyType,
+          getEntityRefsByKey,
+          getModelsByKey
+        );
+        navigationValueOnModel = models.FirstOrDefault();
+      }
       dict.Add(navigationName, navigationValueOnModel);
 
       return false; // still set the foreign key property in default behavior
     }
 
     private static bool HandleForeignNavigationProperty<TEntity>(
+      SchemaRoot schemaRoot,
       Func<string, object[], EntityRef[]> getEntityRefsByKey,
       Func<Type, object[], object[]> getModelsByKey,
       Type targetType,
@@ -447,6 +480,21 @@ namespace System.Data.Fuse.Convenience {
         return true;
       }
 
+      if (navigationValueOnEntity != null) {
+        if (typeof(EntityRef).IsAssignableFrom(targetPropertyType)) {
+          dict.Add(pi.Name, new EntityRef() { Key = foreignKeyProperty.GetValue(entity), Label = navigationValueOnEntity.ToString() });
+          return true;
+        } else {
+          Type sourceType = navigationValueOnEntity.GetNonDynamicType();
+          dict.Add(
+            pi.Name, navigationValueOnEntity.ToBusinessModel(
+              sourceType, targetPropertyType, ConversionHelper.DismissNavigations(schemaRoot)
+            )
+          );
+          return true;
+        }
+      }
+
       IEnumerable<object> models = GetModels(
         foreignKeyProperty.GetValue(entity),
         foreignNavigationPropertyRelation.PrimaryEntityName,
@@ -470,6 +518,7 @@ namespace System.Data.Fuse.Convenience {
       Func<string, object[], EntityRef[]> getEntityRefsByKey,
       Func<Type, object[], object[]> getModelsByKey
     ) {
+      if (key == null) { return new List<object>(); }
       if (typeof(EntityRef).IsAssignableFrom(modelType)) {
         return getEntityRefsByKey(
           entityTypeName, new object[] { key }
@@ -601,9 +650,18 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public static object GetKey(object o, SchemaRoot schemaRoot) {
-      List<PropertyInfo> keyProperties = schemaRoot.GetPrimaryKeyProperties(o.GetType());
+      List<PropertyInfo> keyProperties = schemaRoot.GetPrimaryKeyProperties(o.GetNonDynamicType());
       object[] keyValues = o.GetValues(keyProperties);
       return GetKey(keyProperties, keyValues);
+    }
+
+    public static Type GetNonDynamicType(this object o) {
+      if (o == null) return null;
+      Type result = o.GetType();
+      if (result.Assembly.IsDynamic && result.BaseType != null) {
+        result = result.BaseType;
+      }
+      return result;
     }
 
     private static object GetKey(List<PropertyInfo> keyProperties, object[] keyValues) {
@@ -813,6 +871,33 @@ namespace System.Data.Fuse.Convenience {
       }
 
       throw new JsonException($"Unable to parse JSON element: {jsonElement}");
+    }
+
+    public static object GetValueFromJsonElementByType(JsonElement jsonElement, Type targetType) {
+      object value = GetValueFromJsonElement(jsonElement);
+      if (targetType.IsAssignableFrom(value.GetType())) {
+        return value;
+      }
+      string valueAsString = value.ToString();
+      if (targetType == typeof(Guid)) {
+        return Guid.Parse(valueAsString);
+      } else if (targetType == typeof(DateTime)) {
+        return DateTime.Parse(valueAsString);
+      } else if (targetType == typeof(int)) {
+        return int.Parse(valueAsString);
+      } else if (targetType == typeof(long)) {
+        return long.Parse(valueAsString);
+      } else if (targetType == typeof(double)) {
+        return double.Parse(valueAsString);
+      } else if (targetType == typeof(decimal)) {
+        return decimal.Parse(valueAsString);
+      } else if (targetType == typeof(bool)) {
+        return bool.Parse(valueAsString);
+      } else if (targetType == typeof(char)) {
+        return char.Parse(valueAsString);
+      } else {
+        return valueAsString;
+      }
     }
 
 #endif
