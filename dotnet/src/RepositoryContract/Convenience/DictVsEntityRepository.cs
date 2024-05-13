@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+#if NETCOREAPP
+using System.Text.Json;
+#endif
 
 namespace System.Data.Fuse.Convenience {
 
@@ -268,7 +271,7 @@ namespace System.Data.Fuse.Convenience {
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> AddOrUpdateEntity(Dictionary<string, object> entity) {
       return _Repository.AddOrUpdateEntity(
-        entity.ConvertToEntityDynamic(_HandlePropertyModelToEntity) 
+        entity.ConvertToEntityDynamic(_HandlePropertyModelToEntity)
       ).ConvertToBusinessModelDynamic(_HandlePropertyEntityToModel);
     }
 
@@ -378,7 +381,16 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="keysToDelete"></param>
     /// <returns>keys of deleted entities</returns>
     public object[] TryDeleteEntities(object[] keysToDelete) {
-      return _Repository.TryDeleteEntities(keysToDelete.Cast<TKey>().ToArray()).Cast<object>().ToArray();
+      TKey[] keys = keysToDelete.Select((o) => {
+#if NETCOREAPP
+        if (o.GetType() == typeof(JsonElement)) {
+          JsonElement je = (JsonElement)o;
+          return je.Deserialize<TKey>();
+        }
+#endif
+        return (TKey)o;
+      }).ToArray();
+      return _Repository.TryDeleteEntities(keys).Cast<object>().ToArray();
     }
 
     /// <summary>

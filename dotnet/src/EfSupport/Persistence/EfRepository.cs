@@ -235,8 +235,9 @@ namespace System.Data.Fuse.Ef {
       }
 
       entities = ApplySorting(sortedBy, entities);
-
-      return entities.Skip(skip).Take(limit).ToArray();
+      entities = ApplyPaging(limit,skip, entities);
+     
+      return entities.ToArray();
     }
 
     public TEntity[] GetEntitiesByKey(TKey[] keysToLoad) {
@@ -251,8 +252,9 @@ namespace System.Data.Fuse.Ef {
       var entities = _DbContext.Set<TEntity>().Where(searchExpression);
 
       entities = ApplySorting(sortedBy, entities);
+      entities = ApplyPaging(limit, skip, entities);
 
-      return entities.Skip(skip).Take(limit).ToArray();
+      return entities.ToArray();
 
     }
 
@@ -261,15 +263,16 @@ namespace System.Data.Fuse.Ef {
       ExpressionTree filter,
       string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      var entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+      IQueryable<TEntity> entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
 
       entities = ApplySorting(sortedBy, entities);
+      entities = ApplyPaging(limit, skip, entities);
 
       // Build the select expression
       string selectExpression = "new(" + string.Join(", ", includedFieldNames) + ")";
 
       // Use the select expression to select the fields
-      var selectedFields = entities.Select(selectExpression).Skip(skip).Take(limit).ToDynamicArray();
+      dynamic[] selectedFields = entities.Select(selectExpression).ToDynamicArray();
 
       // Convert the selected fields to dictionaries
       Dictionary<string, object>[] result = selectedFields.Select(sf => {
@@ -297,6 +300,18 @@ namespace System.Data.Fuse.Ef {
       }
 
       return entities;
+    }
+
+    private static IQueryable<TEntity> ApplyPaging(int limit, int skip, IQueryable<TEntity> entities) {
+      if (skip == 0 && limit == 0) {
+        return entities;
+      } else if (limit == 0) {
+        return entities.Skip(skip);
+      } else if (skip == 0) {
+        return entities.Take(limit);
+      } else {
+        return entities.Skip(skip).Take(limit);
+      }
     }
 
     public Dictionary<string, object>[] GetEntityFieldsByKey(
