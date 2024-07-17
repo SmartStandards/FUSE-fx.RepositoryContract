@@ -1,112 +1,112 @@
 ﻿using System.Collections.Generic;
 
 namespace System.Data.Fuse.WcfSupport {
-  public class WcfRepositoryWrapper<TEntity, TKey> : IRepository<TEntity, TKey>
+  public class WcfRepositoryWrapper<TEntity, TKey> : IWcfRepository<TEntity, TKey>
      where TEntity : class {
-    private readonly IWcfRepository<TEntity, TKey> wcfRepository;
+    private readonly IRepository<TEntity, TKey> innerRepository;
 
-    public WcfRepositoryWrapper(IWcfRepository<TEntity, TKey> wcfRepository) {
-      this.wcfRepository = wcfRepository;
+    public WcfRepositoryWrapper(IRepository<TEntity, TKey> innerRepository) {
+      this.innerRepository = innerRepository;
     }
 
     public TEntity AddOrUpdateEntity(TEntity entity) {
-      return wcfRepository.AddOrUpdateEntity(entity);
+      return innerRepository.AddOrUpdateEntity(entity);
     }
 
     public Dictionary<string, object> AddOrUpdateEntityFields(Dictionary<string, object> fields) {
-      return wcfRepository.AddOrUpdateEntityFields(fields);
+      return innerRepository.AddOrUpdateEntityFields(fields);
     }
 
     public bool ContainsKey(TKey key) {
-      return wcfRepository.ContainsKey(key);
+      return innerRepository.ContainsKey(key);
     }
 
     public int Count(ExpressionTree filter) {
-      return wcfRepository.Count(filter);
+      return innerRepository.Count(filter);
     }
 
     public int CountAll() {
-      return wcfRepository.CountAll();
+      return innerRepository.CountAll();
     }
 
     public int CountBySearchExpression(string searchExpression) {
-      return wcfRepository.CountBySearchExpression(searchExpression);
+      return innerRepository.CountBySearchExpression(searchExpression);
     }
 
     public RepositoryCapabilities GetCapabilities() {
-      return wcfRepository.GetCapabilities();
+      return innerRepository.GetCapabilities();
     }
 
     public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
-      return wcfRepository.GetEntities(filter, sortedBy, limit, skip);
+      return innerRepository.GetEntities(filter, sortedBy, limit, skip);
     }
 
     public TEntity[] GetEntitiesByKey(TKey[] keysToLoad) {
-      return wcfRepository.GetEntitiesByKey(keysToLoad);
+      return innerRepository.GetEntitiesByKey(keysToLoad);
     }
 
     public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
-      return wcfRepository.GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip);
+      return innerRepository.GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip);
     }
 
     public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
-      return wcfRepository.GetEntityFields(filter, includedFieldNames, sortedBy, limit, skip);
+      return innerRepository.GetEntityFields(filter, includedFieldNames, sortedBy, limit, skip);
     }
 
     public Dictionary<string, object>[] GetEntityFieldsByKey(TKey[] keysToLoad, string[] includedFieldNames) {
-      return wcfRepository.GetEntityFieldsByKey(keysToLoad, includedFieldNames);
+      return innerRepository.GetEntityFieldsByKey(keysToLoad, includedFieldNames);
     }
 
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
-      return wcfRepository.GetEntityFieldsBySearchExpression(searchExpression, includedFieldNames, sortedBy, limit, skip);
+      return innerRepository.GetEntityFieldsBySearchExpression(searchExpression, includedFieldNames, sortedBy, limit, skip);
     }
 
     public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
-      return wcfRepository.GetEntityRefs(filter, sortedBy, limit, skip);
+      return innerRepository.GetEntityRefs(filter, sortedBy, limit, skip);
     }
 
     public EntityRef<TKey>[] GetEntityRefsByKey(TKey[] keysToLoad) {
-      return wcfRepository.GetEntityRefsByKey(keysToLoad);
+      return innerRepository.GetEntityRefsByKey(keysToLoad);
     }
 
     public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
-      return wcfRepository.GetEntityRefsBySearchExpression(searchExpression, sortedBy, limit, skip);
+      return innerRepository.GetEntityRefsBySearchExpression(searchExpression, sortedBy, limit, skip);
     }
 
     public string GetOriginIdentity() {
-      return wcfRepository.GetOriginIdentity();
+      return innerRepository.GetOriginIdentity();
     }
 
     public TKey[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
-      return wcfRepository.Massupdate(filter, fields);
+      return innerRepository.Massupdate(filter, fields);
     }
 
     public TKey[] MassupdateByKeys(TKey[] keysToUpdate, Dictionary<string, object> fields) {
-      return wcfRepository.MassupdateByKeys(keysToUpdate, fields);
+      return innerRepository.MassupdateByKeys(keysToUpdate, fields);
     }
 
     public TKey[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields) {
-      return wcfRepository.MassupdateBySearchExpression(searchExpression, fields);
+      return innerRepository.MassupdateBySearchExpression(searchExpression, fields);
     }
 
     public TKey TryAddEntity(TEntity entity) {
-      return wcfRepository.TryAddEntity(entity);
+      return innerRepository.TryAddEntity(entity);
     }
 
     public TKey[] TryDeleteEntities(TKey[] keysToDelete) {
-      return wcfRepository.TryDeleteEntities(keysToDelete);
+      return innerRepository.TryDeleteEntities(keysToDelete);
     }
 
     public TEntity TryUpdateEntity(TEntity entity) {
-      return wcfRepository.TryUpdateEntity(entity);
+      return innerRepository.TryUpdateEntity(entity);
     }
 
     public Dictionary<string, object> TryUpdateEntityFields(Dictionary<string, object> fields) {
-      return wcfRepository.TryUpdateEntityFields(fields);
+      return innerRepository.TryUpdateEntityFields(fields);
     }
 
     public bool TryUpdateKey(TKey currentKey, TKey newKey) {
-      return wcfRepository.TryUpdateKey(currentKey, newKey);
+      return innerRepository.TryUpdateKey(currentKey, newKey);
     }
   }
 }
