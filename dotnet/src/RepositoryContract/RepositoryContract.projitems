@@ -11,7 +11,10 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ConversionHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\RepoFactoryDataStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileSupport\FileRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FileSupport\SimpleJsonFileRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISchemaProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)playground\IReportService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[Move2EntityAnnotations]\NavigationRole.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\RepositoryCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\DictVsEntityRepository.cs" />
@@ -55,6 +58,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\StringExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Playground\" />
     <Folder Include="$(MSBuildThisFileDirectory)[Move2EntityAnnotations]\" />
     <Folder Include="$(MSBuildThisFileDirectory)[old]\" />
   </ItemGroup>

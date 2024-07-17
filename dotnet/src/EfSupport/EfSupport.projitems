@@ -24,11 +24,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)persistence\EfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\FilterExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)playground\SqlReportService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QuerableSupport\RepositoryQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web\EfFuseController.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Playground\" />
     <Folder Include="$(MSBuildThisFileDirectory)persistence\[old]\" />
   </ItemGroup>
 </Project>

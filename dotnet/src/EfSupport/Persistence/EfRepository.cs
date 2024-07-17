@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Data.Fuse.Convenience;
 
 #if !NETCOREAPP
 using System.Data.Entity;
 #else
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 #endif
 using System.Data.ModelDescription;
