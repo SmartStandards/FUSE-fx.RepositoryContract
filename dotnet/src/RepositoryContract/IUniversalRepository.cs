@@ -1,4 +1,8 @@
 ﻿using System.Collections.Generic;
+#if NET46
+using System.ServiceModel;
+using System.ServiceModel.Web;
+#endif
 
 namespace System.Data.Fuse {
 
@@ -6,6 +10,9 @@ namespace System.Data.Fuse {
   /// (from 'FUSE-fx.RepositoryContract')
   /// A generic repository interface to decouple BL from persistence layers.
   /// </summary>
+#if NET46
+  [ServiceContract]
+#endif
   public interface IUniversalRepository {
 
     /// <summary>
@@ -15,14 +22,23 @@ namespace System.Data.Fuse {
     /// NOTE: This is an technical disciminator and it is not required, that it is an human-readable
     /// "frieldly-name". It can just be an Hash or Uid, so its NOT RECOMMENDED to use it as display label!
     /// </summary>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     string GetOriginIdentity();
 
     /// <summary>
     /// Returns an property bag which holds information about the implemented/supported capabilities of this IRepository.
     /// </summary>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     RepositoryCapabilities GetCapabilities();
 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     string[] GetEntityNames();
 
     /// <summary> </summary>
@@ -35,6 +51,9 @@ namespace System.Data.Fuse {
     /// <param name="limit"></param>
     /// <param name="skip"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     EntityRef[] GetEntityRefs(
       string entityName, ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     );
@@ -51,10 +70,16 @@ namespace System.Data.Fuse {
     /// <param name="limit"></param>
     /// <param name="skip"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     EntityRef[] GetEntityRefsBySearchExpression(
       string entityName, string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
     );
 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     EntityRef[] GetEntityRefsByKey(
       string entityName, object[] keysToLoad
     );
@@ -69,6 +94,9 @@ namespace System.Data.Fuse {
     /// <param name="limit"></param>
     /// <param name="skip"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object[] GetEntities(
       string entityName, ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     );
@@ -85,6 +113,9 @@ namespace System.Data.Fuse {
     /// <param name="limit"></param>
     /// <param name="skip"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object[] GetEntitiesBySearchExpression(
       string entityName, string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
     );
@@ -93,6 +124,9 @@ namespace System.Data.Fuse {
     /// <param name="entityName"> The name of the Entity-CLASS (selects the concrete store, to work on) </param>
     /// <param name="keysToLoad"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object[] GetEntitiesByKey(
       string entityName, object[] keysToLoad
     );
@@ -110,6 +144,9 @@ namespace System.Data.Fuse {
     /// <param name="limit"></param>
     /// <param name="skip"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     Dictionary<string, object>[] GetEntityFields(
       string entityName, ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     );
@@ -129,16 +166,28 @@ namespace System.Data.Fuse {
     /// <param name="limit"></param>
     /// <param name="skip"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
       string entityName, string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     );
 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     Dictionary<string, object>[] GetEntityFieldsByKey(
       string entityName, object[] keysToLoad, string[] includedFieldNames
     );
 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     int CountAll(string entityName);
 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     int Count(string entityName, ExpressionTree filter);
 
     /// <summary>
@@ -147,8 +196,14 @@ namespace System.Data.Fuse {
     /// <param name="entityName"> The name of the Entity-CLASS (selects the concrete store, to work on) </param>
     /// <param name="searchExpression"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     int CountBySearchExpression(string entityName, string searchExpression);
 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     bool ContainsKey(string entityName, object key);
 
     /// <summary>
@@ -181,6 +236,9 @@ namespace System.Data.Fuse {
     /// (1) was not updated,
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     Dictionary<string, object> AddOrUpdateEntityFields(string entityName, Dictionary<string, object> fields);
 
     /// <summary>
@@ -213,6 +271,9 @@ namespace System.Data.Fuse {
     /// (1) was not updated,
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object AddOrUpdateEntity(string entityName, object entity);
 
     /// <summary>
@@ -229,6 +290,9 @@ namespace System.Data.Fuse {
     /// (1) was not updated,
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     Dictionary<string, object> TryUpdateEntityFields(string entityName, Dictionary<string, object> fields);
 
     /// <summary>
@@ -246,6 +310,9 @@ namespace System.Data.Fuse {
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     /// </returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object TryUpdateEntity(string entityName, object entity);
 
     /// <summary>
@@ -257,6 +324,9 @@ namespace System.Data.Fuse {
     /// <param name="entityName"> The name of the Entity-CLASS (selects the concrete store, to work on) </param>
     /// <param name="entity"></param>
     /// <returns>The entity key on success, otherwise null</returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object TryAddEntity(string entityName, object entity);
 
     /// <summary>
@@ -270,6 +340,9 @@ namespace System.Data.Fuse {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns>An array containing the keys of affeced entities.</returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object[] MassupdateByKeys(string entityName, object[] keysToUpdate, Dictionary<string, object> fields);
 
     /// <summary>
@@ -283,6 +356,9 @@ namespace System.Data.Fuse {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object[] Massupdate(string entityName, ExpressionTree filter, Dictionary<string, object> fields);
 
     /// <summary>
@@ -297,6 +373,9 @@ namespace System.Data.Fuse {
     /// It MUST NOT contain fields which are part of the Key, otherwise an exception will be thrown!
     /// </param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object[] MassupdateBySearchExpression(string entityName, string searchExpression, Dictionary<string, object> fields);
 
     /// <summary>
@@ -307,6 +386,9 @@ namespace System.Data.Fuse {
     /// <param name="entityName"> The name of the Entity-CLASS (selects the concrete store, to work on) </param>
     /// <param name="keysToDelete"></param>
     /// <returns>keys of deleted entities</returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     object[] TryDeleteEntities(string entityName, object[] keysToDelete);
 
     /// <summary>
@@ -317,6 +399,9 @@ namespace System.Data.Fuse {
     /// <param name="currentKey"></param>
     /// <param name="newKey"></param>
     /// <returns></returns>
+#if NET46
+    [WebInvoke(Method = "POST")]
+#endif
     bool TryUpdateKey(string entityName, object currentKey, object newKey);
 
   }
