@@ -102,21 +102,23 @@ namespace System.Data.Fuse.Convenience {
           }
         } else {
 #endif
-          IEnumerable values = (IEnumerable)rawValues;
-          int count = 0;
-          foreach (object value in values) {
-            count++;
-            FieldPredicate innerRelationElement = new FieldPredicate() {
-              FieldName = relationElement.FieldName,
-              Operator = "=",
-              Value = value
-            };
-            result1.Append(CompileFieldPredicateToWhereStatement(entitySchema, innerRelationElement, mode, prefix));
-            result1.Append(" or ");
-          }
-          if (count > 0) {
-            result1.Length -= 4;
-          }
+        IEnumerable values = (IEnumerable)rawValues;
+        int count = 0;
+        foreach (object value in values) {
+          count++;
+          FieldPredicate innerRelationElement = new FieldPredicate() {
+            FieldName = relationElement.FieldName,
+            Operator = "=",
+            Value = value
+          };
+          result1.Append(
+            CompileFieldPredicateToWhereStatement(entitySchema, innerRelationElement, mode, prefix)
+          );
+          result1.Append(" or ");
+        }
+        if (count > 0) {
+          result1.Length -= 4;
+        }
 #if NETCOREAPP
         }
 #endif
@@ -172,7 +174,12 @@ namespace System.Data.Fuse.Convenience {
       //      }
 
       string serializedValue;
-      string fieldName = prefix + relationElement.FieldName;
+      string fieldName = prefix;
+      if (mode == "sql") {
+        fieldName += "[" + relationElement.FieldName + "]";
+      } else {
+        fieldName += relationElement.FieldName;
+      }
       string @operator = relationElement.Operator;
 
       string[] ineqRels = new string[] { FieldOperators.NotEqual, "!=", "<>", "isnot", "is not", "!==", "Isnot", "IsNot", "Is not", "Is Not" };
@@ -205,14 +212,14 @@ namespace System.Data.Fuse.Convenience {
         checkNull = true;
       }
       string fieldType = "string";
-      
+
       FieldSchema fieldSchema = entitySchema.Fields.FirstOrDefault((f) => f.Name == relationElement.FieldName);
       if (fieldSchema != null) {
         fieldType = fieldSchema.Type;
       }
       if (checkNull) {
         serializedValue = "";
-      } else {   
+      } else {
         if (
           (fieldType == "DateTime" || fieldType == "Date") &&
           DateTime.TryParse(relationElement.Value.ToString(), out DateTime dateTime)
@@ -308,7 +315,7 @@ namespace System.Data.Fuse.Convenience {
       result.Append(")");
 
       if (mode == "sql" && fieldType != "string" && fieldType != "String") {
-      result.Replace("\"", "'");
+        result.Replace("\"", "'");
       }
 
       return result.ToString();
