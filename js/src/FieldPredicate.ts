@@ -1,5 +1,5 @@
 export class FieldPredicate {
-  fieldName: string = ""
-  operator: string = ""
-  value: string = ""
+  fieldName: string = '';
+  operator: string = '';
+  value: any = '';
 }
