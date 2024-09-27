@@ -19,8 +19,14 @@
 //      this.entityName = entityName;
 //    }
 
-//    public Dictionary<string, object>[] GenerateReport(
-//      ExpressionTree filter, string[]? groupBy = null, string[]? stackBy = null, string[]? reportValues = null
+//    public ReportResponse GenerateReport(
+//      ExpressionTree filter,
+//      string[]? groupBy = null,
+//      string[]? stackBy = null,
+//      string[]? reportValues = null,
+//      string[]? sortedBy = null,
+//      int limit = 100,
+//      int skip = 0
 //    ) {
 
 //      string[]? groupByUnion = groupBy == null ? stackBy : stackBy == null ? groupBy : groupBy.Union(stackBy).ToArray();
@@ -74,11 +80,11 @@
 //        }
 //        result.Add(row);
 //      }
-
+//      int totalCount = result.Count();
 //      result = ApplyStackBy(result, groupBy, stackBy, reportValues);
 
 //      connection.Close();
-//      return result.ToArray();
+//      return new ReportResponse { Page = result.ToArray(), TotalCount = totalCount };
 //    }
 
 //    private List<Dictionary<string, object>> ApplyStackBy(

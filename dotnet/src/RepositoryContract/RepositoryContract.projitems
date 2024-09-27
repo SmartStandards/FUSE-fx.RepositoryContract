@@ -15,6 +15,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)FileSupport\SimpleJsonFileRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISchemaProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)playground\IReportService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)playground\ReportResponse.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[Move2EntityAnnotations]\NavigationRole.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\RepositoryCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\DictVsEntityRepository.cs" />
