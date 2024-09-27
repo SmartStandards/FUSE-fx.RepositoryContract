@@ -41,8 +41,8 @@
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
-    <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.11" />
-    <PackageReference Include="FUSE-fx.ModelReader" Version="0.1.14" />
+    <PackageReference Include="FUSE-fx.ModelDescription" Version="2.0.12" />
+    <PackageReference Include="FUSE-fx.ModelReader" Version="0.1.15" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.3" />
   </ItemGroup>
 
