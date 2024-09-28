@@ -16,13 +16,13 @@
 		<projectUrl>https://github.com/SmartStandards/FUSE-fx.RepositoryContract</projectUrl>
 		<dependencies>
 			<group targetFramework=".NETFramework4.6">
-        <dependency id="FUSE-fx.ModelReader" version="[0.1.16,9.9999]" />
+        <dependency id="FUSE-fx.ModelReader" version="[0.1.17,9.9999]" />
         <dependency id="System.Linq.Dynamic.Core" version="[1.4.3,9.9999]" />
 			</group>
 			<group targetFramework="net5.0">
 			</group>
 			<group targetFramework="net6.0">
-        <dependency id="FUSE-fx.ModelReader" version="[0.1.16,9.9999]" />
+        <dependency id="FUSE-fx.ModelReader" version="[0.1.17,9.9999]" />
         <dependency id="System.Linq.Dynamic.Core" version="[1.4.3,9.9999]" />
 			</group>
 		</dependencies>
