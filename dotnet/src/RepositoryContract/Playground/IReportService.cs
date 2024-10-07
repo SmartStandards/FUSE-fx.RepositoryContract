@@ -1,17 +1,25 @@
-//using System.Collections.Generic;
-//using System.Data.ModelDescription;
+#if NETCOREAPP
+using System.Collections.Generic;
+using System.Data.ModelDescription;
 
-//namespace System.Data.Fuse {
+namespace System.Data.Fuse {
 
-//  public interface IReportService {
-    
-//    Dictionary<string, object>[] GenerateReport(
-//      ExpressionTree filter, string[]? groupBy = null, string[]? stackBy = null, string[]? reportValues = null
-//    );
+  public interface IReportService {
 
-//    EntitySchema GetEntitySchema();
-//  }
+    ReportResponse GenerateReport(
+      ExpressionTree filter, 
+      string[]? groupBy = null,
+      string[]? stackBy = null,
+      string[]? reportValues = null,
+      string[]? sortedBy = null,
+      int limit = 100,
+      int skip = 0
+    );
 
-//  public interface IReportService<TEntity> : IReportService {
-//  }
-//}
+    EntitySchema GetEntitySchema();
+  }
+
+  public interface IReportService<TEntity> : IReportService {
+  }
+}
+#endif
