@@ -12,6 +12,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 0.4.1
+released **2024-10-08**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.4.0
 released **2024-10-08**, including:
  - **breaking Change**: Renamed Local... to InMemeory... Artefacts

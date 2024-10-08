@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.4.0",
-  "currentVersionWithSuffix": "0.4.0",
+  "currentVersion": "0.4.1",
+  "currentVersionWithSuffix": "0.4.1",
   "releaseType": "official",
-  "previousVersion": "0.3.18",
-  "changeGrade": "major",
+  "previousVersion": "0.4.0",
+  "changeGrade": "patch",
   "currentMajor": 0,
   "currentMinor": 4,
-  "currentPatch": 0,
+  "currentPatch": 1,
   "versionDateInfo": "2024-10-08",
-  "versionTimeInfo": "13:57:51",
-  "versionNotes": "- breaking Change: Renamed Local... to InMemeory... Artefacts\n- new Feature: added 'IDbContextInstanceProvider' (+common implementations) to get IoC for DbContext lifetime handling\n- new Feature: added 'IEntityResolver' (+common implementations)  to get IoC for Resolving Entity-Types\n"
+  "versionTimeInfo": "15:12:13",
+  "versionNotes": "- new revision without significant changes\n"
 }
