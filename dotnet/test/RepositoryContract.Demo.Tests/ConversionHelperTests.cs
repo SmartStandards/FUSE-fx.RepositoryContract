@@ -5,13 +5,19 @@ using System.Collections.Generic;
 using System.Data.Fuse;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef;
+using System.Data.Fuse.SchemaResolving;
 using System.Data.ModelDescription;
 using System.Linq;
+using System.Reflection;
 
 namespace RepositoryContract.Tests {
 
   [TestClass]
   public class ConversionHelperTests {
+
+    private static IEntityResolver _Resolver = new AssemblySearchEntityResolver(
+      typeof(PersonEntity).Assembly, typeof(PersonEntity).Namespace
+    );
 
     [TestMethod]
     public void LoadNavigations_Works() {
@@ -31,13 +37,13 @@ namespace RepositoryContract.Tests {
         }
       );
 
-      IUniversalRepository universalEntityRepository = new LocalUniversalRepository(
-        typeof(PersonEntity).Assembly, entitySchemaRoot
+      IUniversalRepository universalEntityRepository = new InMemoryUniversalRepository(
+        entitySchemaRoot, _Resolver
       );
-      IDataStore localEntityDataStore = new LocalDataStore(entitySchemaRoot);
+      IDataStore localEntityDataStore = new InMemoryDataStore(entitySchemaRoot);
       IRepository<ReligionEntity, int> religionRepo = localEntityDataStore.GetRepository<ReligionEntity, int>();
 
-      RepositoryCollection modelDataStore = new RepositoryCollection();
+      RepositoryCollection modelDataStore = new RepositoryCollection(_Resolver);
       modelDataStore.RegisterRepository(
         new ModelVsEntityRepository<Religion, ReligionEntity, int>(
           religionRepo,
@@ -106,15 +112,16 @@ namespace RepositoryContract.Tests {
         }
       );
 
-      IUniversalRepository universalEntityRepository = new LocalUniversalRepository(
-        typeof(PersonEntity).Assembly, entitySchemaRoot
+      IUniversalRepository universalEntityRepository = new InMemoryUniversalRepository(
+        entitySchemaRoot, _Resolver
       );
-      IDataStore localEntityDataStore = new LocalDataStore(entitySchemaRoot);
+      IDataStore localEntityDataStore = new InMemoryDataStore(entitySchemaRoot);
       IRepository<ReligionEntity, int> religionRepo = localEntityDataStore.GetRepository<ReligionEntity, int>();
       IRepository<AddressEntity, int> addressRepo = localEntityDataStore.GetRepository<AddressEntity, int>();
       IRepository<PetEntity, int> petRepo = localEntityDataStore.GetRepository<PetEntity, int>();
 
-      RepositoryCollection modelDataStore = new RepositoryCollection();
+      RepositoryCollection modelDataStore = new RepositoryCollection(_Resolver);
+
       modelDataStore.RegisterRepository(
         new ModelVsEntityRepository<Religion, ReligionEntity, int>(
           religionRepo,
@@ -210,19 +217,18 @@ namespace RepositoryContract.Tests {
 
       // Arrange
 
-      SchemaRoot entitySchemaRoot = ModelReader.GetSchema(
-        typeof(PersonEntity).Assembly,
-        new string[] {
-          nameof(PersonEntity),
-          nameof(NationEntity),
-          nameof(ReligionEntity),
-          nameof(AddressEntity),
-          nameof(PetEntity)
-        }
+      var resolver = new ListBasedEntityResolver(
+          typeof(PersonEntity),
+          typeof(NationEntity),
+          typeof(ReligionEntity),
+          typeof(AddressEntity),
+          typeof(PetEntity)
       );
 
-      IUniversalRepository universalDictVsEntityRepository = new LocalDictUniversalRepository(
-        entitySchemaRoot, typeof(PersonEntity).Assembly
+      SchemaRoot entitySchemaRoot = ModelReader.GetSchema(resolver.GetWellknownTypes(), true);
+
+      IUniversalRepository universalDictVsEntityRepository = new InMemoryDictUniversalRepository(
+        entitySchemaRoot, _Resolver
       );
       Dictionary<string, object> nationValues = new Dictionary<string, object>();
       nationValues["Id"] = 1;
@@ -302,14 +308,15 @@ namespace RepositoryContract.Tests {
         }
       );
 
-      IUniversalRepository universalEntityRepository = new LocalUniversalRepository(
-        typeof(PrincipalEntity).Assembly, entitySchemaRoot
+
+      IUniversalRepository universalEntityRepository = new InMemoryUniversalRepository(
+        entitySchemaRoot, _Resolver
       );
-      IDataStore localEntityDataStore = new LocalDataStore(entitySchemaRoot);
+      IDataStore localEntityDataStore = new InMemoryDataStore(entitySchemaRoot);
       IRepository<StudentEntity, int> studentRepo = localEntityDataStore.GetRepository<StudentEntity, int>();
       IRepository<PrincipalEntity, int> princinpalRepo = localEntityDataStore.GetRepository<PrincipalEntity, int>();
 
-      RepositoryCollection modelDataStore = new RepositoryCollection();
+      RepositoryCollection modelDataStore = new RepositoryCollection(_Resolver);
       ModelVsEntityRepository<Principal, PrincipalEntity, int> principalModelVsEntityRepo = ConversionHelper.CreateModelVsEntityRepositry<
         Principal, PrincipalEntity, int
       >(
@@ -349,7 +356,8 @@ namespace RepositoryContract.Tests {
         throw;
       }
 
-
     }
+
   }
+
 }

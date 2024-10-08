@@ -14,6 +14,9 @@ using static System.Text.Json.JsonElement;
 
 namespace System.Data.Fuse.Convenience {
 
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public static class QueryExtensions {
 
     public static string CompileToDynamicLinq(this ExpressionTree tree, EntitySchema entitySchema) {

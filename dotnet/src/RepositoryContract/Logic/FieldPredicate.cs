@@ -18,7 +18,7 @@ namespace System.Data.Fuse {
 
     /// <summary>
     /// Wellknown operators like '==' '!='
-    /// (see 'FieldOperators'-Contants) 
+    /// (see 'FieldOperators'-Contants).
     /// </summary>
     public string Operator { get; set; }
 

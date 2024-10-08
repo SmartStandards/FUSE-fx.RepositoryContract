@@ -2,12 +2,16 @@
 
 namespace System.Data.Fuse {
 
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public interface ICompositeKey {
     object[] GetFields();
   }
 
   /// <summary>
   /// (from 'FUSE-fx.RepositoryContract')
+  /// 
   /// Helper-TUMPLE to represent a composite key
   /// represented by 2 fields.
   /// </summary>

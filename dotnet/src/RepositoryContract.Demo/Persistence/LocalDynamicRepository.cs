@@ -1,35 +1,37 @@
-﻿using System;
-using System.Data.Fuse;
-using System.Data.Fuse.Convenience;
-using System.Linq;
-using System.Reflection;
+﻿//using System;
+//using System.Data.Fuse;
+//using System.Data.Fuse.Convenience;
+//using System.Data.Fuse.Ef;
+//using System.Linq;
+//using System.Reflection;
 
-namespace RepositoryContract.Demo.Persistence {
-  public class LocalDynamicRepository : UniversalRepository {
+//namespace RepositoryContract.Demo.Persistence {
 
-    protected readonly Assembly _Assembly;
+//  public class LocalDynamicRepository : EfUniversalRepository {
 
-    public LocalDynamicRepository(Assembly assembly) {
-      this._Assembly = assembly;
-    }
+//    protected readonly Assembly _Assembly;
 
-    protected override UniversalRepositoryFacade CreateInnerRepo(string entityName) {
+//    public LocalDynamicRepository(Assembly assembly) {
+//      this._Assembly = assembly;
+//    }
 
-      throw new NotImplementedException();
+//    protected override UniversalRepositoryFacade CreateInnerRepo(string entityName) {
 
-      //Type[] allTypes = _Assembly.GetTypes();
-      //Type? entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
-      //if (entityType == null) { return null; }
+//      throw new NotImplementedException();
 
-      //Type repoFacadeType = typeof(DynamicRepositoryFacade<>);
-      //repoFacadeType = repoFacadeType.MakeGenericType(entityType);
+//      //Type[] allTypes = _Assembly.GetTypes();
+//      //Type? entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
+//      //if (entityType == null) { return null; }
 
-      //Type repoType = typeof(LocalRepository<>);
-      //repoType = repoType.MakeGenericType(entityType);
-      //object repo = Activator.CreateInstance(repoType);
+//      //Type repoFacadeType = typeof(DynamicRepositoryFacade<>);
+//      //repoFacadeType = repoFacadeType.MakeGenericType(entityType);
 
-      //return (UniversalRepositoryFacade)Activator.CreateInstance(repoFacadeType, repo);
-    }
+//      //Type repoType = typeof(LocalRepository<>);
+//      //repoType = repoType.MakeGenericType(entityType);
+//      //object repo = Activator.CreateInstance(repoType);
 
-  }
-}
+//      //return (UniversalRepositoryFacade)Activator.CreateInstance(repoFacadeType, repo);
+//    }
+
+//  }
+//}

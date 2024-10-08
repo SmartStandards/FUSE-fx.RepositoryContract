@@ -1,5 +1,6 @@
 ﻿#if NETCOREAPP
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 #else
 using System.Data.Entity;
 #endif
@@ -9,36 +10,49 @@ using System.Data.Fuse.Convenience;
 using System.Data.ModelDescription;
 using System.Collections.Generic;
 using System.Data.ModelDescription.Convenience;
+using System.Data.Fuse.Convenience.Internal;
+using System.Data.Fuse.Ef.InstanceManagement;
+using System.Data.Fuse.SchemaResolving;
 
 namespace System.Data.Fuse.Ef {
 
   /// <summary>
-  /// 
+  /// (from 'FUSE-fx.RepositoryContract')
   /// </summary>
-  public class EfUniversalRepository : UniversalRepository {
+  public class EfUniversalRepository : UniversalRepositoryBase {
 
-    protected readonly DbContext _DbContext;
-    protected readonly Assembly _Assembly;
+    #region " SchemaRoot/Metadata Caching "
 
-    private static Dictionary<string, SchemaRoot> _SchemaRootByAssemblyName;
-
-    protected static SchemaRoot GetSchemaRoot(Type entityType, DbContext dbContext) {
-
-      if (_SchemaRootByAssemblyName == null) {
-        _SchemaRootByAssemblyName = new Dictionary<string, SchemaRoot>();
+    private static SchemaRoot _SchemaRoot = null;
+    public SchemaRoot GetSchemaRoot() {
+      //TODO: wollen wir so eine funktionalität überhaupt hier,
+      //oder verzichten wir lifer auf den konstruktor ohne schema
+      if (_SchemaRoot == null) {
+        Type dbContextType = null;
+        _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => dbContextType = dbContext.GetType());
+        _SchemaRoot = SchemaCache.GetSchemaRootForContext(dbContextType);
       }
-      if (_SchemaRootByAssemblyName.ContainsKey(entityType.Assembly.FullName)) {
-        return _SchemaRootByAssemblyName[entityType.Assembly.FullName];
-      }
-#if NETCOREAPP
-        string[] typenames = dbContext.Model.GetEntityTypes().Select(t => t.Name).ToArray();
-#else
-          string[] typenames = dbContext.GetManagedTypeNames();
-#endif
-      SchemaRoot schemaRoot = ModelReader.GetSchema(entityType.Assembly, typenames);
-      _SchemaRootByAssemblyName[entityType.Assembly.FullName] = schemaRoot;
-      return schemaRoot;
+      return _SchemaRoot;
+    }
 
+    #endregion
+
+    private IDbContextInstanceProvider _ContextInstanceProvider;
+    public IDbContextInstanceProvider ContextInstanceProvider {
+      get {
+        return _ContextInstanceProvider;
+      }
+    }
+
+    public EfUniversalRepository(IDbContextInstanceProvider contextInstanceProvider, IEntityResolver entityResolver) :
+    base(entityResolver) {
+      _ContextInstanceProvider = contextInstanceProvider;
+    }
+
+    [Obsolete("This overload is unsave, because it doesnt care about lifetime management of the dbcontext!")]
+    public EfUniversalRepository(DbContext dbContext, IEntityResolver entityResolver) :
+    base(entityResolver) {
+      _ContextInstanceProvider = new LongLivingDbContextInstanceProvider(dbContext);
     }
 
     // gets the key type of the entity. 
@@ -46,8 +60,7 @@ namespace System.Data.Fuse.Ef {
     // if there is only one key property, returns the type of that property.
     // if there are multiple key properties, returns the type of the ComposityKey-class with the matching
     // number of fields.
-    private static Type GetKeyType(Type entityType, DbContext dbContext) {
-      SchemaRoot schemaRoot = GetSchemaRoot(entityType, dbContext);
+    private static Type GetKeyType(Type entityType, SchemaRoot schemaRoot) {
       List<PropertyInfo> keyProperties = schemaRoot.GetPrimaryKeyProperties(entityType);
 
       // If there is only one key property, return its type
@@ -71,26 +84,35 @@ namespace System.Data.Fuse.Ef {
       }
     }
 
-    public EfUniversalRepository(DbContext dbContext, Assembly assembly) {
-      this._DbContext = dbContext;
-      this._Assembly = assembly;
-    }
+    protected override RepositoryUntypingFacade CreateInnerRepo(Type entityType) {
 
-    protected override UniversalRepositoryFacade CreateInnerRepo(string entityName) {
-      Type[] allTypes = _Assembly.GetTypes();
-      Type entityType = allTypes.Where((Type t) => t.Name == entityName).FirstOrDefault();
-      if (entityType == null) { return null; }
-
-      Type keyType = GetKeyType(entityType, _DbContext);
+      Type keyType = GetKeyType(entityType, this.GetSchemaRoot());
 
       Type repoFacadeType = typeof(DynamicRepositoryFacade<,>);
       repoFacadeType = repoFacadeType.MakeGenericType(entityType, keyType);
 
       Type repoType = typeof(EfRepository<,>);
       repoType = repoType.MakeGenericType(entityType, keyType);
-      object repo = Activator.CreateInstance(repoType, _DbContext, GetSchemaRoot(entityType, _DbContext));
 
-      return (UniversalRepositoryFacade)Activator.CreateInstance(repoFacadeType, repo);
+      object repo = Activator.CreateInstance(
+        repoType, _ContextInstanceProvider, this.GetSchemaRoot()
+      );
+
+      return (RepositoryUntypingFacade)Activator.CreateInstance(repoFacadeType, repo);
+    }
+
+    private string _GeneratedOriginIdentity = null;
+    public override string GetOriginIdentity() {
+      if (string.IsNullOrWhiteSpace(_GeneratedOriginIdentity)) {
+        _GeneratedOriginIdentity = _ContextInstanceProvider.VisitCurrentDbContext(
+          (dbContext) => dbContext.GetGeneratedOriginName()
+        );
+      }
+      return _GeneratedOriginIdentity;
+    }
+
+    public override RepositoryCapabilities GetCapabilities() {
+      return new RepositoryCapabilities();
     }
 
   }

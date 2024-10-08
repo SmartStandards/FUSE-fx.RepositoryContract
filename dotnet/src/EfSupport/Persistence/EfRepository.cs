@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Data.Fuse.Convenience;
-
 #if !NETCOREAPP
 using System.Data.Entity;
 #else
@@ -13,35 +12,58 @@ using System.Linq;
 using System.Reflection;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
+using System.Data.Fuse.Ef.InstanceManagement;
 
 namespace System.Data.Fuse.Ef {
 
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public class EfRepository<TEntity, TKey> : IRepository<TEntity, TKey>
     where TEntity : class {
 
-    private DbContext _DbContext;
-    private static SchemaRoot _SchemaRoot;
+    #region " SchemaRoot/Metadata Caching "
 
-    protected SchemaRoot SchemaRoot {
+    private static SchemaRoot _SchemaRoot = null;
+    public SchemaRoot GetSchemaRoot() {
+      //TODO: wollen wir so eine funktionalität überhaupt hier,
+      //oder verzichten wir lifer auf den konstruktor ohne schema
+      if (_SchemaRoot == null) {
+        Type dbContextType = null;
+        _ContextInstanceProvider.VisitCurrentDbContext(
+            (dbContext) => dbContextType = dbContext.GetType()
+         );
+        _SchemaRoot = SchemaCache.GetSchemaRootForContext(dbContextType);
+      }
+      return _SchemaRoot;
+    }
+
+    #endregion
+
+    private IDbContextInstanceProvider _ContextInstanceProvider;
+    public IDbContextInstanceProvider ContextInstanceProvider {
       get {
-        if (_SchemaRoot == null) {
-#if NETCOREAPP
-          string[] typenames = _DbContext.Model.GetEntityTypes().Select(t => t.Name).ToArray();
-#else
-          string[] typenames = _DbContext.GetManagedTypeNames();
-#endif
-          _SchemaRoot = ModelReader.GetSchema(typeof(TEntity).Assembly, typenames);
-        }
-        return _SchemaRoot;
+        return _ContextInstanceProvider;
       }
     }
 
-    public EfRepository(DbContext context) {
-      _DbContext = context;
+    public EfRepository(IDbContextInstanceProvider contextInstanceProvider) {
+      _ContextInstanceProvider = contextInstanceProvider;
     }
 
-    public EfRepository(DbContext context, SchemaRoot schemaRoot) {
-      _DbContext = context;
+    [Obsolete("This overload is unsave, because it doesnt care about lifetime management of the dbcontext!")]
+    public EfRepository(DbContext dbContext) {
+      _ContextInstanceProvider = new LongLivingDbContextInstanceProvider(dbContext);
+    }
+
+    public EfRepository(IDbContextInstanceProvider contextInstanceProvider, SchemaRoot schemaRoot) {
+      _ContextInstanceProvider = contextInstanceProvider;
+      _SchemaRoot = schemaRoot;
+    }
+
+    [Obsolete("This overload is unsave, because it doesnt care about lifetime management of the dbcontext!")]
+    public EfRepository(DbContext dbContext, SchemaRoot schemaRoot) {
+      _ContextInstanceProvider = new LongLivingDbContextInstanceProvider(dbContext);
       _SchemaRoot = schemaRoot;
     }
 
@@ -67,102 +89,108 @@ namespace System.Data.Fuse.Ef {
     }
 
     protected List<List<PropertyInfo>> InitUniqueKeySets() {
-      return SchemaRoot.GetUniqueKeysetsProperties(typeof(TEntity));
+      return GetSchemaRoot().GetUniqueKeysetsProperties(typeof(TEntity));
     }
 
     protected List<PropertyInfo> InitPrimaeyKeySet() {
-      return SchemaRoot.GetPrimaryKeyProperties(typeof(TEntity)).ToList();
+      return GetSchemaRoot().GetPrimaryKeyProperties(typeof(TEntity)).ToList();
     }
 
     public TEntity AddOrUpdateEntity(TEntity entity) {
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
-      object[] keySetValues = entity.GetValues(PrimaryKeySet);
-      TEntity existingEntity = this._DbContext.Set<TEntity>().Find(keySetValues.ToArray());
+        object[] keySetValues = entity.GetValues(PrimaryKeySet);
+        TEntity existingEntity = dbContext.Set<TEntity>().Find(keySetValues.ToArray());
 
-      //AI
-      // If no primary key is found, try to find the entity by unique key
-      if (existingEntity == null) {
-        foreach (var keyset in Keysets) {
-          object[] keysetValues = entity.GetValues(keyset);
-          existingEntity = this._DbContext.Set<TEntity>().Find(keysetValues);
-          if (existingEntity != null) {
-            break;
+        //AI
+        // If no primary key is found, try to find the entity by unique key
+        if (existingEntity == null) {
+          foreach (var keyset in Keysets) {
+            object[] keysetValues = entity.GetValues(keyset);
+            existingEntity = dbContext.Set<TEntity>().Find(keysetValues);
+            if (existingEntity != null) {
+              break;
+            }
           }
         }
-      }
 
-      if (existingEntity == null) {
-        _DbContext.Set<TEntity>().Add(entity);
-        _DbContext.SaveChanges();
-        return entity;
-      } else {
-        CopyFields(entity, existingEntity);
-        _DbContext.SaveChanges();
-        return existingEntity;
-      }
-    }
+        if (existingEntity == null) {
+          dbContext.Set<TEntity>().Add(entity);
+          dbContext.SaveChanges();
+          return entity;
+        } else {
+          CopyFields(entity, existingEntity);
+          dbContext.SaveChanges();
+          return existingEntity;
+        }
 
-    private void CopyFields(TEntity from, TEntity to) {
-      EntitySchema schema = SchemaRoot.GetSchema(typeof(TEntity).Name);
-      foreach (PropertyInfo propertyInfo in typeof(TEntity).GetProperties()) {
-        if (!schema.Fields.Any((f) => f.Name == propertyInfo.Name)) continue;
-        propertyInfo.SetValue(to, propertyInfo.GetValue(from, null), null);
-      }
+      });
     }
 
     //AI - minor adjustments
     public Dictionary<string, object> AddOrUpdateEntityFields(
       Dictionary<string, object> fields
     ) {
+      return _ContextInstanceProvider.VisitCurrentDbContext<Dictionary<string, object>>((dbContext) => {
 
-      // Check for existing entity by primary key
-      object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
-      TEntity existingEntity = (primaryKeyValues == null)
-        ? null : _DbContext.Set<TEntity>().Find(primaryKeyValues);
+        // Check for existing entity by primary key
+        object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
+        TEntity existingEntity = (primaryKeyValues == null)
+          ? null : dbContext.Set<TEntity>().Find(primaryKeyValues);
 
-      // If not found by primary key, check for existing entity by unique keysets
-      if (existingEntity == null) {
-        foreach (var keyset in Keysets) {
-          object[] keysetValues = fields.GetValues(keyset);
-          existingEntity = (keysetValues == null)
-            ? null : _DbContext.Set<TEntity>().Find(keysetValues);
-          if (existingEntity != null) {
-            break;
+        // If not found by primary key, check for existing entity by unique keysets
+        if (existingEntity == null) {
+          foreach (var keyset in Keysets) {
+            object[] keysetValues = fields.GetValues(keyset);
+            existingEntity = (keysetValues == null)
+              ? null : dbContext.Set<TEntity>().Find(keysetValues);
+            if (existingEntity != null) {
+              break;
+            }
           }
         }
-      }
 
-      if (existingEntity != null) {
-        // If existing entity found, update it
-        CopyFields2(fields, existingEntity);
-      } else {
-        // Create a new instance of TEntity
-        TEntity entity = Activator.CreateInstance<TEntity>();
-        CopyFields2(fields, entity);
-        existingEntity = entity;
-        // If no existing entity found, add new entity
-        _DbContext.Set<TEntity>().Add(entity);
-      }
-
-      _DbContext.SaveChanges();
-
-      // Convert the updated entity back to a dictionary and return it
-      Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
-      foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
-        var updatedValue = propertyInfo.GetValue(existingEntity);
-        if (
-          !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
-          !Equals(updatedValue, originalValue)
-        ) {
-          conflictingFields[propertyInfo.Name] = updatedValue;
+        if (existingEntity != null) {
+          // If existing entity found, update it
+          CopyFields2(fields, existingEntity);
         }
-      }
+        else {
+          // Create a new instance of TEntity
+          TEntity entity = Activator.CreateInstance<TEntity>();
+          CopyFields2(fields, entity);
+          existingEntity = entity;
+          // If no existing entity found, add new entity
+          dbContext.Set<TEntity>().Add(entity);
+        }
 
-      return conflictingFields;
+        dbContext.SaveChanges();
+
+        // Convert the updated entity back to a dictionary and return it
+        Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
+        foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
+          var updatedValue = propertyInfo.GetValue(existingEntity);
+          if (
+            !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
+            !Equals(updatedValue, originalValue)
+          ) {
+            conflictingFields[propertyInfo.Name] = updatedValue;
+          }
+        }
+
+        return conflictingFields;
+      });
     }
-
+    private void CopyFields(TEntity from, TEntity to) {
+      EntitySchema schema = GetSchemaRoot().GetSchema(typeof(TEntity).Name);
+      //HACK: viel zu teuer, immerwieder die properties zu laden
+      foreach (PropertyInfo propertyInfo in typeof(TEntity).GetProperties()) {
+        if (!schema.Fields.Any((f) => f.Name == propertyInfo.Name)) continue;
+        propertyInfo.SetValue(to, propertyInfo.GetValue(from, null), null);
+      }
+    }
     private static void CopyFields2(Dictionary<string, object> fields, TEntity entity) {
       foreach (var field in fields) {
+        //HACK: viel zu teuer, immerwieder die properties zu laden
         PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
         if (propertyInfo != null) {
           object fieldValue = field.Value;
@@ -205,19 +233,27 @@ namespace System.Data.Fuse.Ef {
 #endif
 
     public bool ContainsKey(TKey key) {
-      return _DbContext.Set<TEntity>().Find(key.GetKeyFieldValues()) != null;
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        return (dbContext.Set<TEntity>().Find(key.GetKeyFieldValues()) != null);
+      });
     }
 
     public int Count(ExpressionTree filter) {
-      return _DbContext.Set<TEntity>().Count(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        return dbContext.Set<TEntity>().Count(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
+      });
     }
 
     public int CountAll() {
-      return _DbContext.Set<TEntity>().Count();
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        return dbContext.Set<TEntity>().Count();
+      });
     }
 
     public int CountBySearchExpression(string searchExpression) {
-      return _DbContext.Set<TEntity>().Count(searchExpression);
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        return dbContext.Set<TEntity>().Count(searchExpression);
+      });
     }
 
     public RepositoryCapabilities GetCapabilities() {
@@ -227,35 +263,42 @@ namespace System.Data.Fuse.Ef {
     public TEntity[] GetEntities(
       ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      IQueryable<TEntity> entities;
-      if (filter == null) {
-        entities = _DbContext.Set<TEntity>();
-      } else {
-        entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
-      }
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
-      entities = ApplySorting(sortedBy, entities);
-      entities = ApplyPaging(limit,skip, entities);
-     
-      return entities.ToArray();
+        IQueryable<TEntity> entities;
+        if (filter == null) {
+          entities = dbContext.Set<TEntity>();
+        }
+        else {
+          entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
+        }
+
+        entities = ApplySorting(sortedBy, entities);
+        entities = ApplyPaging(limit, skip, entities);
+
+        return entities.ToArray();
+      });
     }
 
     public TEntity[] GetEntitiesByKey(TKey[] keysToLoad) {
-      var lambda = keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray());
-      return _DbContext.Set<TEntity>().Where(lambda).ToArray();
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        var lambda = keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray());
+        return dbContext.Set<TEntity>().Where(lambda).ToArray();
+      });
     }
 
 
     public TEntity[] GetEntitiesBySearchExpression(
       string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      var entities = _DbContext.Set<TEntity>().Where(searchExpression);
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        var entities = dbContext.Set<TEntity>().Where(searchExpression);
 
-      entities = ApplySorting(sortedBy, entities);
-      entities = ApplyPaging(limit, skip, entities);
+        entities = ApplySorting(sortedBy, entities);
+        entities = ApplyPaging(limit, skip, entities);
 
-      return entities.ToArray();
-
+        return entities.ToArray();
+      });
     }
 
     //AI
@@ -263,27 +306,29 @@ namespace System.Data.Fuse.Ef {
       ExpressionTree filter,
       string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      IQueryable<TEntity> entities = _DbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        IQueryable<TEntity> entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
 
-      entities = ApplySorting(sortedBy, entities);
-      entities = ApplyPaging(limit, skip, entities);
+        entities = ApplySorting(sortedBy, entities);
+        entities = ApplyPaging(limit, skip, entities);
 
-      // Build the select expression
-      string selectExpression = "new(" + string.Join(", ", includedFieldNames) + ")";
+        // Build the select expression
+        string selectExpression = "new(" + string.Join(", ", includedFieldNames) + ")";
 
-      // Use the select expression to select the fields
-      dynamic[] selectedFields = entities.Select(selectExpression).ToDynamicArray();
+        // Use the select expression to select the fields
+        dynamic[] selectedFields = entities.Select(selectExpression).ToDynamicArray();
 
-      // Convert the selected fields to dictionaries
-      Dictionary<string, object>[] result = selectedFields.Select(sf => {
-        var dict = new Dictionary<string, object>();
-        foreach (var fieldName in includedFieldNames) {
-          dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
-        }
-        return dict;
-      }).ToArray();
+        // Convert the selected fields to dictionaries
+        Dictionary<string, object>[] result = selectedFields.Select(sf => {
+          var dict = new Dictionary<string, object>();
+          foreach (var fieldName in includedFieldNames) {
+            dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
+          }
+          return dict;
+        }).ToArray();
 
-      return result;
+        return result;
+      });
     }
 
     private static IQueryable<TEntity> ApplySorting(string[] sortedBy, IQueryable<TEntity> entities) {
@@ -317,7 +362,8 @@ namespace System.Data.Fuse.Ef {
     public Dictionary<string, object>[] GetEntityFieldsByKey(
       TKey[] keysToLoad, string[] includedFieldNames
     ) {
-      return _DbContext.Set<TEntity>().Where(
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        return dbContext.Set<TEntity>().Where(
         keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
       )
         .Select(
@@ -334,6 +380,7 @@ namespace System.Data.Fuse.Ef {
             return dict;
           }
         ).ToArray();
+      });
     }
 
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
@@ -388,64 +435,69 @@ namespace System.Data.Fuse.Ef {
     /// </param>
     /// <returns></returns>
     public TKey[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
-      return MassupdateBySearchExpression(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)), fields);
+      return MassupdateBySearchExpression(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)), fields);
     }
 
-
     public TKey[] MassupdateByKeys(TKey[] keysToUpdate, Dictionary<string, object> fields) {
-      // Ensure that the fields to be updated do not include any key fields
-      var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
-      if (fields.Keys.Intersect(keyFieldNames).Any()) {
-        throw new ArgumentException("Update fields must not contain key fields.");
-      }
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
-      // Get the entities that match the provided keys
-      var entitiesToUpdate = _DbContext.Set<TEntity>().Where(
-        keysToUpdate.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
-      );
+        // Ensure that the fields to be updated do not include any key fields
+        var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
+        if (fields.Keys.Intersect(keyFieldNames).Any()) {
+          throw new ArgumentException("Update fields must not contain key fields.");
+        }
 
-      // Update the fields of the entities
-      foreach (var entity in entitiesToUpdate) {
-        foreach (var field in fields) {
-          var propertyInfo = typeof(TEntity).GetProperty(field.Key);
-          if (propertyInfo != null) {
-            propertyInfo.SetValue(entity, field.Value);
+        // Get the entities that match the provided keys
+        var entitiesToUpdate = dbContext.Set<TEntity>().Where(
+          keysToUpdate.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
+        );
+
+        // Update the fields of the entities
+        foreach (var entity in entitiesToUpdate) {
+          foreach (var field in fields) {
+            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
+            if (propertyInfo != null) {
+              propertyInfo.SetValue(entity, field.Value);
+            }
           }
         }
-      }
 
-      // Save the changes to the database
-      _DbContext.SaveChanges();
+        // Save the changes to the database
+        dbContext.SaveChanges();
 
-      // Return the keys of the updated entities
-      return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+        // Return the keys of the updated entities
+        return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+      });
     }
 
     public TKey[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields) {
-      // Ensure that the fields to be updated do not include any key fields
-      var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
-      if (fields.Keys.Intersect(keyFieldNames).Any()) {
-        throw new ArgumentException("Update fields must not contain key fields.");
-      }
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
-      // Get the entities that match the search expression
-      var entitiesToUpdate = _DbContext.Set<TEntity>().Where(searchExpression);
+        // Ensure that the fields to be updated do not include any key fields
+        var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
+        if (fields.Keys.Intersect(keyFieldNames).Any()) {
+          throw new ArgumentException("Update fields must not contain key fields.");
+        }
 
-      // Update the fields of the entities
-      foreach (var entity in entitiesToUpdate) {
-        foreach (var field in fields) {
-          var propertyInfo = typeof(TEntity).GetProperty(field.Key);
-          if (propertyInfo != null) {
-            propertyInfo.SetValue(entity, field.Value);
+        // Get the entities that match the search expression
+        var entitiesToUpdate = dbContext.Set<TEntity>().Where(searchExpression);
+
+        // Update the fields of the entities
+        foreach (var entity in entitiesToUpdate) {
+          foreach (var field in fields) {
+            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
+            if (propertyInfo != null) {
+              propertyInfo.SetValue(entity, field.Value);
+            }
           }
         }
-      }
 
-      // Save the changes to the database
-      _DbContext.SaveChanges();
+        // Save the changes to the database
+        dbContext.SaveChanges();
 
-      // Return the keys of the updated entities
-      return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+        // Return the keys of the updated entities
+        return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+      });
     }
 
     /// <summary>
@@ -457,23 +509,26 @@ namespace System.Data.Fuse.Ef {
     /// <param name="entity"></param>
     /// <returns>The entity key on success, otherwise null</returns>
     public TKey TryAddEntity(TEntity entity) {
-      try {
-        // Check if the entity already exists
-        object[] keySetValues = entity.GetValues(PrimaryKeySet);
-        TEntity existingEntity = this._DbContext.Set<TEntity>().Find(keySetValues);
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        try {
+          // Check if the entity already exists
+          object[] keySetValues = entity.GetValues(PrimaryKeySet);
+          TEntity existingEntity = dbContext.Set<TEntity>().Find(keySetValues);
 
-        // If the entity does not exist, add it
-        if (existingEntity == null) {
-          _DbContext.Set<TEntity>().Add(entity);
-          _DbContext.SaveChanges();
-          return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
+          // If the entity does not exist, add it
+          if (existingEntity == null) {
+            dbContext.Set<TEntity>().Add(entity);
+            dbContext.SaveChanges();
+            return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
+          }
         }
-      } catch (Exception) {
-        // Ignore exceptions and return default(TKey)
-      }
+        catch (Exception) {
+          // Ignore exceptions and return default(TKey)
+        }
 
-      // If the entity already exists or if an error occurs, return default(TKey)
-      return default(TKey);
+        // If the entity already exists or if an error occurs, return default(TKey)
+        return default(TKey);
+      });
     }
 
 
@@ -485,27 +540,31 @@ namespace System.Data.Fuse.Ef {
     /// <param name="keysToDelete"></param>
     /// <returns>keys of deleted entities</returns>
     public TKey[] TryDeleteEntities(TKey[] keysToDelete) {
-      List<TKey> deletedKeys = new List<TKey>();
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
-      foreach (var key in keysToDelete) {
-        try {
-          // Find the entity by its key
-          object[] keySetValues = key.GetKeyFieldValues();
-          TEntity entityToDelete = _DbContext.Set<TEntity>().Find(keySetValues);
+        List<TKey> deletedKeys = new List<TKey>();
 
-          // If the entity exists, delete it
-          if (entityToDelete != null) {
-            _DbContext.Set<TEntity>().Remove(entityToDelete);
-            _DbContext.SaveChanges();
-            deletedKeys.Add(key);
+        foreach (var key in keysToDelete) {
+          try {
+            // Find the entity by its key
+            object[] keySetValues = key.GetKeyFieldValues();
+            TEntity entityToDelete = dbContext.Set<TEntity>().Find(keySetValues);
+
+            // If the entity exists, delete it
+            if (entityToDelete != null) {
+              dbContext.Set<TEntity>().Remove(entityToDelete);
+              dbContext.SaveChanges();
+              deletedKeys.Add(key);
+            }
           }
-        } catch (Exception) {
-          // Ignore exceptions and continue with the next key
+          catch (Exception) {
+            // Ignore exceptions and continue with the next key
+          }
         }
-      }
 
-      // Return the keys of the entities that were successfully deleted
-      return deletedKeys.ToArray();
+        // Return the keys of the entities that were successfully deleted
+        return deletedKeys.ToArray();
+      });
     }
 
     /// <summary>
@@ -523,23 +582,26 @@ namespace System.Data.Fuse.Ef {
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     /// </returns>
     public TEntity TryUpdateEntity(TEntity entity) {
-      try {
-        // Check if the entity exists
-        object[] keySetValues = entity.GetValues(PrimaryKeySet);
-        TEntity existingEntity = this._DbContext.Set<TEntity>().Find(keySetValues);
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        try {
+          // Check if the entity exists
+          object[] keySetValues = entity.GetValues(PrimaryKeySet);
+          TEntity existingEntity = dbContext.Set<TEntity>().Find(keySetValues);
 
-        // If the entity exists, update it
-        if (existingEntity != null) {
-          CopyFields(entity, existingEntity);
-          _DbContext.SaveChanges();
-          return existingEntity;
+          // If the entity exists, update it
+          if (existingEntity != null) {
+            CopyFields(entity, existingEntity);
+            dbContext.SaveChanges();
+            return existingEntity;
+          }
         }
-      } catch (Exception) {
-        // Ignore exceptions and return null
-      }
+        catch (Exception) {
+          // Ignore exceptions and return null
+        }
 
-      // If the entity does not exist or if an error occurs, return null
-      return null;
+        // If the entity does not exist or if an error occurs, return null
+        return null;
+      });
     }
 
     /// <summary>
@@ -556,43 +618,47 @@ namespace System.Data.Fuse.Ef {
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> TryUpdateEntityFields(Dictionary<string, object> fields) {
+
       // Check if the dictionary contains all the key fields
       var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
       if (!keyFieldNames.All(k => fields.ContainsKey(k))) {
         throw new ArgumentException("The given dictionary must contain all the key fields.");
       }
 
-      try {
-        // Check if the entity exists
-        object[] keySetValues = fields.TryGetValuesByFields(PrimaryKeySet);
-        TEntity existingEntity = this._DbContext.Set<TEntity>().Find(keySetValues);
+      return _ContextInstanceProvider.VisitCurrentDbContext<Dictionary<string, object>>((dbContext) => {
+        try {
+          // Check if the entity exists
+          object[] keySetValues = fields.TryGetValuesByFields(PrimaryKeySet);
+          TEntity existingEntity = dbContext.Set<TEntity>().Find(keySetValues);
 
-        // If the entity exists, update its fields
-        if (existingEntity != null) {
-          CopyFields2(fields, existingEntity);
-          _DbContext.SaveChanges();
+          // If the entity exists, update its fields
+          if (existingEntity != null) {
+            CopyFields2(fields, existingEntity);
+            dbContext.SaveChanges();
 
-          // Build a dictionary of the fields that are different from the given values
-          Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
-          foreach (var field in fields) {
-            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
-            if (propertyInfo != null) {
-              var updatedValue = propertyInfo.GetValue(existingEntity);
-              if (!Equals(updatedValue, field.Value)) {
-                conflictingFields[field.Key] = updatedValue;
+            // Build a dictionary of the fields that are different from the given values
+            Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
+            foreach (var field in fields) {
+              var propertyInfo = typeof(TEntity).GetProperty(field.Key);
+              if (propertyInfo != null) {
+                var updatedValue = propertyInfo.GetValue(existingEntity);
+                if (!Equals(updatedValue, field.Value)) {
+                  conflictingFields[field.Key] = updatedValue;
+                }
               }
             }
+
+            // Return the dictionary of conflicting fields
+            return conflictingFields;
           }
-
-          // Return the dictionary of conflicting fields
-          return conflictingFields;
         }
-      } catch (Exception) {
-        // Ignore exceptions and return null
-      }
+        catch (Exception) {
+          // Ignore exceptions and return null
+        }
 
-      // If the entity does not exist or if an error occurs, return null
-      return null;
+        // If the entity does not exist or if an error occurs, return null
+        return null;
+      });
     }
 
     /// <summary>
@@ -603,34 +669,37 @@ namespace System.Data.Fuse.Ef {
     /// <param name="newKey"></param>
     /// <returns></returns>
     public bool TryUpdateKey(TKey currentKey, TKey newKey) {
-      try {
-        // Check if the entity with the current key exists
-        object[] currentKeyValues = currentKey.GetKeyFieldValues();
-        TEntity existingEntity = this._DbContext.Set<TEntity>().Find(currentKeyValues);
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        try {
+          // Check if the entity with the current key exists
+          object[] currentKeyValues = currentKey.GetKeyFieldValues();
+          TEntity existingEntity = dbContext.Set<TEntity>().Find(currentKeyValues);
 
-        // If the entity exists, update its key
-        if (existingEntity != null) {
-          // Check if the entity with the new key already exists
-          object[] newKeyValues = newKey.GetKeyFieldValues();
-          TEntity newEntity = this._DbContext.Set<TEntity>().Find(newKeyValues);
+          // If the entity exists, update its key
+          if (existingEntity != null) {
+            // Check if the entity with the new key already exists
+            object[] newKeyValues = newKey.GetKeyFieldValues();
+            TEntity newEntity = dbContext.Set<TEntity>().Find(newKeyValues);
 
-          // If the entity with the new key does not exist, update the key
-          if (newEntity == null) {
-            foreach (var propertyInfo in PrimaryKeySet) {
-              var newKeyValue = newKey.GetType().GetProperty(propertyInfo.Name).GetValue(newKey);
-              propertyInfo.SetValue(existingEntity, newKeyValue);
+            // If the entity with the new key does not exist, update the key
+            if (newEntity == null) {
+              foreach (var propertyInfo in PrimaryKeySet) {
+                var newKeyValue = newKey.GetType().GetProperty(propertyInfo.Name).GetValue(newKey);
+                propertyInfo.SetValue(existingEntity, newKeyValue);
+              }
+
+              dbContext.SaveChanges();
+              return true;
             }
-
-            _DbContext.SaveChanges();
-            return true;
           }
         }
-      } catch (Exception) {
-        // Ignore exceptions and return false
-      }
+        catch (Exception) {
+          // Ignore exceptions and return false
+        }
 
-      // If the entity does not exist, the entity with the new key already exists, or if an error occurs, return false
-      return false;
+        // If the entity does not exist, the entity with the new key already exists, or if an error occurs, return false
+        return false;
+      });
     }
 
   }

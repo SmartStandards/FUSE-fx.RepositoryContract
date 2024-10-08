@@ -7,7 +7,9 @@ using System.Text.Json;
 
 namespace System.Data.Fuse.Convenience {
 
-  //AI
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public class DictVsEntityRepository<TEntity, TKey>
     : IRepository<Dictionary<string, object>, object>
     where TEntity : class {

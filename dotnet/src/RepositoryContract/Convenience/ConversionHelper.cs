@@ -12,6 +12,9 @@ using System.Threading;
 
 namespace System.Data.Fuse.Convenience {
 
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public static class ConversionHelper {
 
     public static ModelVsEntityRepository<TModel, TEntity, TKey> CreateModelVsEntityRepositry<TModel, TEntity, TKey>(

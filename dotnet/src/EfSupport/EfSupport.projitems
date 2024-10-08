@@ -9,28 +9,25 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)LocalDictUniversalRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)LocalDataStore.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)LocalModelVsEntityDataStore.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)LocalRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)LocalUniversalRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\LongLivingDbContextInstanceProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\ShortLivingDbContextInstanceProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\DelegateBasedDbContextInstanceProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\DbContextExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)persistence\EfDataStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\EfDictUniversalRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\EfDynamicRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\EfRepositoryOld.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\EfRepository1_Alt.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\EfRepositoryBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\EfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfUniversalRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)persistence\[old]\FilterExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\SchemaCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)playground\SqlReportService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QuerableSupport\RepositoryQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\DbContextDeclaratedEntityResolver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\DbContextRuntimeEntityResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web\EfFuseController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[Store]\EfDataStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[Store]\IEfDataStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\IDbContextInstanceProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Playground\" />
-    <Folder Include="$(MSBuildThisFileDirectory)persistence\[old]\" />
   </ItemGroup>
 </Project>

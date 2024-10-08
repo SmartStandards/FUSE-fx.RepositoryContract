@@ -4,6 +4,9 @@ using System.Reflection;
 
 namespace System.Data.Fuse.Convenience {
 
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public class ModelVsEntityParams<TModel, TEntity> {
     public readonly Action<TModel, TEntity> OnAfterModelToEntity = (m, e) => { };
     public readonly Action<TEntity, TModel> OnAfterEntityToModel = (e, m) => { };
@@ -12,7 +15,9 @@ namespace System.Data.Fuse.Convenience {
     public readonly Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> HandlePropertyEntityToModel = (pi, e, m) => false;
   }
 
-  //AI
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public class ModelVsEntityRepository<TModel, TEntity, TKey>
     : IRepository<TModel, TKey>
     where TEntity : class

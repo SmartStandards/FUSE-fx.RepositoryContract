@@ -5,7 +5,7 @@ namespace System.Data.Fuse {
   /// (from 'FUSE-fx.RepositoryContract')
   /// </summary>
   public interface ICommitableRepository<TEntity, TKey>
-    : IRepository<TEntity, TKey>, ICommitable
+    : IRepository<TEntity, TKey>, ISchemaProvider
     where TEntity : class { 
   
   }

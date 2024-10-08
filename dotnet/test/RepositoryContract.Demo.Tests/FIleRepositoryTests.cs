@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.Fuse;
 using System.Data.Fuse.FileSupport;
 using System.Data.ModelDescription;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,8 +13,6 @@ namespace RepositoryContract.Tests {
 
   [TestClass]
   public class FIleRepositoryTests {
-
-    private static string _BasePath = "F:\\Temp";
 
     protected static SchemaRoot SchemaRoot => ModelReader.GetSchema(
       typeof(PersonEntity).Assembly,
@@ -29,7 +28,7 @@ namespace RepositoryContract.Tests {
     [TestMethod]
     public void FileRepository_AddOrUpdate_Works() {
       FileRepository<ReligionEntity, int> fileRepository = new FileRepository<ReligionEntity, int>(
-        _BasePath, SchemaRoot
+        Path.GetTempPath(), SchemaRoot
       );
 
       // Add a new entity

@@ -5,6 +5,9 @@ using System.Reflection;
 
 namespace System.Data.Fuse.Convenience {
 
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public class RepoFactoryDataStore : IDataStore {
 
     private static Dictionary<Type, Func<object>> _RepositoryFactories = new Dictionary<Type, Func<object>>();

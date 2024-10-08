@@ -8,7 +8,11 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-*(none)*
+* **breaking Change**: Renamed Local... to InMemeory... Artefacts
+
+* **new Feature**: added 'IDbContextInstanceProvider' (+common implementations) to get IoC for DbContext lifetime handling
+
+- **new Feature**: added 'IEntityResolver' (+common implementations)  to get IoC for Resolving Entity-Types
 
 
 
@@ -120,7 +124,7 @@ released **2024-03-12**, including:
 
 
 
- 
+
 ## v 0.2.1
 released **2024-03-12**, including:
  - adjusted some details for the ExpressionTree

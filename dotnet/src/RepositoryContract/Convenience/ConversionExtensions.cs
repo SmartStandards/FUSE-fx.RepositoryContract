@@ -4,6 +4,7 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Data.Fuse.Convenience.Internal;
 #if NETCOREAPP
 using System.Text.Json;
 using System.Threading;
@@ -11,6 +12,9 @@ using System.Threading;
 
 namespace System.Data.Fuse.Convenience {
 
+  /// <summary>
+  /// (from 'FUSE-fx.RepositoryContract')
+  /// </summary>
   public static class ConversionExtensions {
 
     public static IList<T2> ToBuseinssModels<T1, T2>(
