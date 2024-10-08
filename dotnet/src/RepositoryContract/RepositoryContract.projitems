@@ -14,10 +14,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)convenience\UniversalRepoExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileSupport\FileRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FileSupport\SimpleJsonFileRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Playground\IReportService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Playground\ReportResponse.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\ISchemaProvider.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\..\%28git%29\FUSE-fx.RepositoryContract\dotnet\src\RepositoryContract\convenience\InMemoryDictUniversalRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\..\%28git%29\FUSE-fx.RepositoryContract\dotnet\src\RepositoryContract\convenience\InMemoryRepository.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\..\..\..\..\%28git%29\FUSE-fx.RepositoryContract\dotnet\src\RepositoryContract\convenience\InMemoryUniversalRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\InMemoryDictUniversalRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\InMemoryRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\InMemoryUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\ListBasedEntityResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\AssemblySearchEntityResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\IEntityResolver.cs" />
