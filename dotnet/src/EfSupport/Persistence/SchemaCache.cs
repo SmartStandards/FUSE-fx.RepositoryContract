@@ -70,14 +70,14 @@ namespace System.Data.Fuse.Ef {
     private static Dictionary<Type, string[]> _EntityTypeNamesPerContextType = new Dictionary<Type, string[]>();
 
     public static string[] GetEntityTypeNamesForContext<TDbContext>()
-    where TDbContext:DbContext {
+    where TDbContext : DbContext {
       return GetEntityTypeNamesForContext(typeof(TDbContext));
-    }
+    } 
 
     public static string[] GetEntityTypeNamesForContext(Type dbContextType) {
-      using (DbContext dbContext = (DbContext) Activator.CreateInstance(dbContextType)) {
+      using (DbContext dbContext = (DbContext)Activator.CreateInstance(dbContextType)) {
         return GetEntityTypeNamesForContext(dbContext);
-      } 
+      }
     }
 
     public static string[] GetEntityTypeNamesForContext(DbContext dbContext) {

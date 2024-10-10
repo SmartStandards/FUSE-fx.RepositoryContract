@@ -53,12 +53,16 @@ namespace System.Data.Fuse.Ef {
     public IRepository<TEntity, TKey> GetRepository<TEntity, TKey>() where TEntity : class {
 
       //check if TEntity is part of the model
-      string[] typeNames = SchemaCache.GetEntityTypeNamesForContext<TDbContext>();
-      if (!(typeNames.Any(tn => tn == typeof(TEntity).FullName))) {
-        throw new InvalidOperationException(
-          $"Entity type {typeof(TEntity).FullName} is not part of the model for this context."
-        );
-      }
+      _ContextInstanceProvider.VisitCurrentDbContext(
+        (dbContext) => {
+          string[] typeNames = SchemaCache.GetEntityTypeNamesForContext(dbContext);
+          if (!(typeNames.Any(tn => tn == typeof(TEntity).FullName))) {
+            throw new InvalidOperationException(
+              $"Entity type {typeof(TEntity).FullName} is not part of the model for this context."
+            );
+          }
+        }
+      );
 
       //HACK: sollte doch nicht immer eine neue instanz sein oder?
       return new EfRepository<TEntity, TKey>(_ContextInstanceProvider);
