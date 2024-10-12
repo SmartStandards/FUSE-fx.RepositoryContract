@@ -658,6 +658,26 @@ namespace System.Data.Fuse.Convenience {
       return GetKey(keyProperties, keyValues);
     }
 
+    public static string GetLabel(object o, SchemaRoot schemaRoot) {
+      if (o == null) {
+        return "";
+      } 
+      Type type = o.GetNonDynamicType();
+      EntitySchema entitySchema = schemaRoot.GetSchema(type.Name);
+      if (entitySchema == null) {
+        return "";
+      }
+      foreach (FieldSchema fieldSchema in entitySchema.Fields) {
+        if (fieldSchema.IdentityLabel) {
+          PropertyInfo property = type.GetProperty(fieldSchema.Name);
+          if (property != null) {
+            return property.GetValue(o).ToString();
+          }
+        }
+      }
+      return "";
+    }
+
     public static Type GetNonDynamicType(this object o) {
       if (o == null) return null;
       Type result = o.GetType();

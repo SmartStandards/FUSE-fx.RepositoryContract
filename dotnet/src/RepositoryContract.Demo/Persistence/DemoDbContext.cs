@@ -4,11 +4,11 @@ using RepositoryContract.Demo.Model;
 namespace RepositoryContract.Demo.WebApi.Persistence {
   public class DemoDbContext : DbContext {
 
-    DbSet<Employee> Employees { get; set; } = null!;
-    DbSet<Address> Addresses { get; set; } = null!;
-    DbSet<BusinessUnit> BusinessUnits { get; set; } = null!;
-    DbSet<BusinessProject> BusinessProjects { get; set; } = null!;
-    DbSet<ContractDetails> ContractDetailsList { get; set; } = null!;
+    public DbSet<Employee> Employees { get; set; } = null!;
+    public DbSet<Address> Addresses { get; set; } = null!;
+    public DbSet<BusinessUnit> BusinessUnits { get; set; } = null!;
+    public DbSet<BusinessProject> BusinessProjects { get; set; } = null!;
+    public DbSet<ContractDetails> ContractDetailsList { get; set; } = null!;
 
     public DemoDbContext() : base() { }
 

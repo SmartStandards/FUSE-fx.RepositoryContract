@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RepositoryContract.Demo.Model {
 
+  [PrimaryIdentity(nameof(Id))]
+  [PropertyGroup(nameof(Id), nameof(Id))]
   public class Employee : IEquatable<Employee> {
 
     public int Id { get; set; }

@@ -6,10 +6,12 @@ using Microsoft.Extensions.Hosting;
 using RepositoryContract.Demo.Model;
 using RepositoryContract.Demo.WebApi.Persistence;
 using System;
+using System.Data.Fuse;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef;
 using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.Fuse.SchemaResolving;
+using System.Web.UJMW;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,18 @@ builder.Services.AddDbContext<DemoDbContext>(
   options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+
+builder.Services.AddScoped<IUniversalRepository>((s) => {
+  DemoDbContext dbContext = s.GetService<DemoDbContext>()!;
+  return new EfDictUniversalRepository(
+    new ShortLivingDbContextInstanceProvider(
+      () => new DemoDbContext(connectionString)
+    ),
+    new DbContextRuntimeEntityResolver(() => s.GetService<DemoDbContext>()!, true)
+  );
+});
+
 builder.Services.AddScoped<IEfDataStore>((s) => {
   Func<DemoDbContext> factory = () => {
     return s.GetService<DemoDbContext>()!;
@@ -60,6 +74,10 @@ builder.Services.AddScoped<RepositoryCollection>((s) => {
     )
   );
   return dataStore;
+});
+
+builder.Services.AddDynamicUjmwControllers(r => {
+  r.AddControllerFor<IUniversalRepository>("DemoStore");
 });
 
 var app = builder.Build();

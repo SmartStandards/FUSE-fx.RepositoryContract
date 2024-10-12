@@ -402,13 +402,18 @@ namespace System.Data.Fuse.Ef {
       ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     ) {
       return GetEntities(filter, sortedBy, limit, skip).Select(
-        e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(), e.ToString())
+        e => new EntityRef<TKey>(
+          e.GetValues(PrimaryKeySet).ToKey<TKey>(), 
+          ConversionHelper.GetLabel(e,this.GetSchemaRoot())
+        )
       ).ToArray();
     }
 
     public EntityRef<TKey>[] GetEntityRefsByKey(TKey[] keysToLoad) {
       return GetEntitiesByKey(keysToLoad).Select(
-        e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(), e.ToString())
+        e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(),
+        ConversionHelper.GetLabel(e, this.GetSchemaRoot())
+      )
       ).ToArray();
     }
 
@@ -416,7 +421,9 @@ namespace System.Data.Fuse.Ef {
       string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
     ) {
       return GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip).Select(
-        e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(), e.ToString())
+        e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(), 
+        ConversionHelper.GetLabel(e, this.GetSchemaRoot())
+      )
       ).ToArray();
     }
 

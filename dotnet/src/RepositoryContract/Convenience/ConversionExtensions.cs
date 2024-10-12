@@ -111,12 +111,12 @@ namespace System.Data.Fuse.Convenience {
         if (handleProperty(pi, businessModel, result)) continue;
 
         if (!businessModel.TryGetValue(pi.Name, out object propValue)) { continue; }
+        if (propValue == null) { pi.SetValue(result, null); continue; }
 #if NETCOREAPP
         if (typeof(JsonElement).IsAssignableFrom(propValue.GetType())) {
           propValue = ConversionHelper.GetValueFromJsonElementByType((JsonElement)propValue, pi.PropertyType);
         }
 #endif
-        if (propValue == null) { pi.SetValue(result, null); continue; }
         if (pi.PropertyType.IsAssignableFrom(propValue.GetType())) {
           pi.SetValue(result, propValue);
         }
@@ -220,6 +220,27 @@ namespace System.Data.Fuse.Convenience {
       } else if (prop.PropertyType == typeof(Guid)) {
         return propertyValue.GetGuid();
       } else if (prop.PropertyType == typeof(double)) {
+        return propertyValue.GetDouble();
+      } else {
+        return null;
+      }
+    }
+    public static object GetValue(Type t, JsonElement propertyValue) {
+      if (t == typeof(string)) {
+        return propertyValue.GetString();
+      } else if (t == typeof(Int64)) {
+        return propertyValue.GetInt64();
+      } else if (t == typeof(bool)) {
+        return propertyValue.GetBoolean();
+      } else if (t == typeof(DateTime)) {
+        return propertyValue.GetDateTime();
+      } else if (t == typeof(Int32)) {
+        return propertyValue.GetInt32();
+      } else if (t == typeof(decimal)) {
+        return propertyValue.GetDecimal();
+      } else if (t == typeof(Guid)) {
+        return propertyValue.GetGuid();
+      } else if (t == typeof(double)) {
         return propertyValue.GetDouble();
       } else {
         return null;
