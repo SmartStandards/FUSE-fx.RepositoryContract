@@ -43,6 +43,54 @@ namespace System.Data.Fuse {
       };
     }
 
+    public static FieldPredicate NotEqual(string fieldName, object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.NotEqual,
+        Value = value
+      };
+    }
+
+    public static FieldPredicate GreaterOrEqual(string fieldName, object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.GreaterOrEqual,
+        Value = value
+      };
+    }
+
+    public static FieldPredicate Greater(string fieldName, object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.Greater,
+        Value = value
+      };
+    }
+
+    public static FieldPredicate StartsWith(string fieldName, object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.StartsWith,
+        Value = value
+      };
+    }
+
+    public static FieldPredicate SubstringOf(string fieldName, object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.SubstringOf,
+        Value = value
+      };
+    }
+
+    public static FieldPredicate Contains(string fieldName, object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.Contains,
+        Value = value
+      };
+    }
+
   }
 
 }

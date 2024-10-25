@@ -86,6 +86,13 @@ namespace System.Data.Fuse {
       };
     }
 
+    public static ExpressionTree Or(params FieldPredicate[] predicates) {
+      return new ExpressionTree() {
+        MatchAll = false,
+        Predicates = predicates.ToList()
+      };
+    }
+
   }
 
 }
