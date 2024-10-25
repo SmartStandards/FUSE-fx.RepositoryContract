@@ -88,10 +88,13 @@ namespace System.Data.Fuse.Convenience {
         ConversionHelper._VisitedTypeNames.Value = new List<string>();
       }
       foreach (PropertyInfo pi in t.GetProperties()) {
-        if (!pi.CanWrite) continue;
-        if (handleProperty(pi, entity, result)) continue;
-        if (result.ContainsKey(pi.Name)) { continue; }
-        result.Add(pi.Name, pi.GetValue(entity));
+        try {
+          if (!pi.CanWrite) continue;
+          if (handleProperty(pi, entity, result)) continue;
+          if (result.ContainsKey(pi.Name)) { continue; }
+          result.Add(pi.Name, pi.GetValue(entity));
+        } catch (Exception) {
+        }
       }
       if (initVisitedTypeNames) {
         ConversionHelper._VisitedTypeNames = null;
@@ -161,9 +164,9 @@ namespace System.Data.Fuse.Convenience {
     //  result.Add(pi.Name, entityRef);
     //}
 
-    public static T Deserialize<T>(this Dictionary<string, object> businessModel ) {
+    public static T Deserialize<T>(this Dictionary<string, object> businessModel) {
       Type type = typeof(T);
-      return (T)Deserialize(businessModel, type);      
+      return (T)Deserialize(businessModel, type);
     }
 
     public static object Deserialize(this Dictionary<string, object> businessModel, Type type) {
@@ -284,14 +287,14 @@ namespace System.Data.Fuse.Convenience {
           }
         } else {
 #endif
-          if (propertyValue.GetType().IsClass) {
-            PropertyInfo otherIdProperty = propertyValue.GetType().GetProperty("Id");
-            if (otherIdProperty == null) { continue; }
-            string foreignKeyPropertyName = sourceProperty.Key + "Id";
-            PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
-            if (foreignKeyPropertyTarget == null) { continue; }
-            object idValue = otherIdProperty.GetValue(propertyValue);
-            foreignKeyPropertyTarget.SetValue(target, idValue);
+        if (propertyValue.GetType().IsClass) {
+          PropertyInfo otherIdProperty = propertyValue.GetType().GetProperty("Id");
+          if (otherIdProperty == null) { continue; }
+          string foreignKeyPropertyName = sourceProperty.Key + "Id";
+          PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
+          if (foreignKeyPropertyTarget == null) { continue; }
+          object idValue = otherIdProperty.GetValue(propertyValue);
+          foreignKeyPropertyTarget.SetValue(target, idValue);
 #if NETCOREAPP
           }
 #endif
