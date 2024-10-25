@@ -12,6 +12,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 0.4.6
+released **2024-10-25**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.4.5
 released **2024-10-25**, including:
  - new revision without significant changes
