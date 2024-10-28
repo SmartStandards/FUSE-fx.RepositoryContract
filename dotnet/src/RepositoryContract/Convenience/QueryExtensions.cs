@@ -52,7 +52,7 @@ namespace System.Data.Fuse.Convenience {
       string dlOperator = expression.MatchAll ? "and" : "or";
 
       StringBuilder result = new StringBuilder();
-      if (dlOperator == "not") {
+      if (expression.Negate) {
         result.Append("(");
         result.Append("not ");
       }
@@ -71,7 +71,7 @@ namespace System.Data.Fuse.Convenience {
       }
       result.Append(")");
 
-      if (dlOperator == "not") {
+      if (expression.Negate) {
         result.Append(")");
       }
 
