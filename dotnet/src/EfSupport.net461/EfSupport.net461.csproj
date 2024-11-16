@@ -52,8 +52,8 @@
     <Reference Include="FUSE-fx.ModelDescription, Version=1.0.0.29271, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\vendor\nuget\FUSE-fx.ModelDescription.2.0.14\lib\net46\FUSE-fx.ModelDescription.dll</HintPath>
     </Reference>
-    <Reference Include="FUSE-fx.ModelReader, Version=0.1.0.28480, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.2\lib\net46\FUSE-fx.ModelReader.dll</HintPath>
+    <Reference Include="FUSE-fx.ModelReader, Version=0.1.0.22538, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.3\lib\net46\FUSE-fx.ModelReader.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />

@@ -17,12 +17,12 @@
 		<dependencies>
 			<group targetFramework=".NETFramework4.6">
         <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />   
-        <dependency id="FUSE-fx.ModelReader" version="[0.2.2,2.0)" />
+        <dependency id="FUSE-fx.ModelReader" version="[0.2.3,2.0)" />
         <dependency id="EntityFramework" version="6.5.0" />        
       </group>
       <group targetFramework="net6.0">
         <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
-        <dependency id="FUSE-fx.ModelReader" version="[0.2.2,2.0)" />
+        <dependency id="FUSE-fx.ModelReader" version="[0.2.3,2.0)" />
         <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
 			</group>
 		</dependencies>
