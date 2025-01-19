@@ -4,6 +4,10 @@ using System.Reflection;
 #if NETCOREAPP
 using System.Text.Json;
 #endif
+#if !NETCOREAPP
+using System.Data.Fuse.WcfSupport;
+#endif
+
 
 namespace System.Data.Fuse.Convenience {
 
@@ -12,6 +16,9 @@ namespace System.Data.Fuse.Convenience {
   /// </summary>
   public class DictVsEntityRepository<TEntity, TKey>
     : IRepository<Dictionary<string, object>, object>
+    #if !NETCOREAPP
+    , IWcfRepository<Dictionary<string, object>, object>
+    #endif
     where TEntity : class {
 
     IRepository<TEntity, TKey> _Repository;

@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+#if !NETCOREAPP
+using System.Data.Fuse.WcfSupport;
+#endif
 
 namespace System.Data.Fuse.Convenience {
 
@@ -20,6 +23,9 @@ namespace System.Data.Fuse.Convenience {
   /// </summary>
   public class ModelVsEntityRepository<TModel, TEntity, TKey>
     : IRepository<TModel, TKey>
+#if !NETCOREAPP
+    , IWcfRepository<TModel, TKey>
+#endif
     where TEntity : class
     where TModel : class {
 
