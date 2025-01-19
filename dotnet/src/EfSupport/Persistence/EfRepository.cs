@@ -13,13 +13,20 @@ using System.Reflection;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Data.Fuse.Ef.InstanceManagement;
+#if !NETCOREAPP
+using System.Data.Fuse.WcfSupport;
+#endif
 
 namespace System.Data.Fuse.Ef {
 
   /// <summary>
   /// (from 'FUSE-fx.RepositoryContract')
   /// </summary>
-  public class EfRepository<TEntity, TKey> : IRepository<TEntity, TKey>
+  public class EfRepository<TEntity, TKey> 
+    : IRepository<TEntity, TKey>
+#if !NETCOREAPP
+    , IWcfRepository<TEntity, TKey>
+#endif
     where TEntity : class {
 
     #region " SchemaRoot/Metadata Caching "
@@ -153,8 +160,7 @@ namespace System.Data.Fuse.Ef {
         if (existingEntity != null) {
           // If existing entity found, update it
           CopyFields2(fields, existingEntity);
-        }
-        else {
+        } else {
           // Create a new instance of TEntity
           TEntity entity = Activator.CreateInstance<TEntity>();
           CopyFields2(fields, entity);
@@ -268,8 +274,7 @@ namespace System.Data.Fuse.Ef {
         IQueryable<TEntity> entities;
         if (filter == null) {
           entities = dbContext.Set<TEntity>();
-        }
-        else {
+        } else {
           entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
         }
 
@@ -403,8 +408,8 @@ namespace System.Data.Fuse.Ef {
     ) {
       return GetEntities(filter, sortedBy, limit, skip).Select(
         e => new EntityRef<TKey>(
-          e.GetValues(PrimaryKeySet).ToKey<TKey>(), 
-          ConversionHelper.GetLabel(e,this.GetSchemaRoot())
+          e.GetValues(PrimaryKeySet).ToKey<TKey>(),
+          ConversionHelper.GetLabel(e, this.GetSchemaRoot())
         )
       ).ToArray();
     }
@@ -421,7 +426,7 @@ namespace System.Data.Fuse.Ef {
       string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
     ) {
       return GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip).Select(
-        e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(), 
+        e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(),
         ConversionHelper.GetLabel(e, this.GetSchemaRoot())
       )
       ).ToArray();
@@ -528,8 +533,7 @@ namespace System.Data.Fuse.Ef {
             dbContext.SaveChanges();
             return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
           }
-        }
-        catch (Exception) {
+        } catch (Exception) {
           // Ignore exceptions and return default(TKey)
         }
 
@@ -563,8 +567,7 @@ namespace System.Data.Fuse.Ef {
               dbContext.SaveChanges();
               deletedKeys.Add(key);
             }
-          }
-          catch (Exception) {
+          } catch (Exception) {
             // Ignore exceptions and continue with the next key
           }
         }
@@ -601,8 +604,7 @@ namespace System.Data.Fuse.Ef {
             dbContext.SaveChanges();
             return existingEntity;
           }
-        }
-        catch (Exception) {
+        } catch (Exception) {
           // Ignore exceptions and return null
         }
 
@@ -658,8 +660,7 @@ namespace System.Data.Fuse.Ef {
             // Return the dictionary of conflicting fields
             return conflictingFields;
           }
-        }
-        catch (Exception) {
+        } catch (Exception) {
           // Ignore exceptions and return null
         }
 
@@ -699,8 +700,7 @@ namespace System.Data.Fuse.Ef {
               return true;
             }
           }
-        }
-        catch (Exception) {
+        } catch (Exception) {
           // Ignore exceptions and return false
         }
 
