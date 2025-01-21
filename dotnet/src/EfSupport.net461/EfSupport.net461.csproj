@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\vendor\nuget\EntityFramework.6.5.0\build\build\net6.0\EntityFramework.props" Condition="Exists('..\..\vendor\nuget\EntityFramework.6.5.0\build\build\net6.0\EntityFramework.props')" />
-  <Import Project="..\..\vendor\nuget\EntityFramework.6.5.0\build\build\EntityFramework.props" Condition="Exists('..\..\vendor\nuget\EntityFramework.6.5.0\build\build\EntityFramework.props')" />
+  <Import Project="..\..\vendor\nuget\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('..\..\vendor\nuget\EntityFramework.6.4.4\build\EntityFramework.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -41,10 +40,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\EntityFramework.6.5.0\lib\net45\EntityFramework.dll</HintPath>
+      <HintPath>..\..\vendor\nuget\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\EntityFramework.6.5.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <HintPath>..\..\vendor\nuget\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
     <Reference Include="FUSE-fx.EntityAnnotations, Version=999.0.0.30033, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\vendor\nuget\FUSE-fx.EntityAnnotations.4.0.3\lib\net46\FUSE-fx.EntityAnnotations.dll</HintPath>
@@ -88,11 +87,8 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\vendor\nuget\EntityFramework.6.5.0\build\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\vendor\nuget\EntityFramework.6.5.0\build\build\EntityFramework.props'))" />
-    <Error Condition="!Exists('..\..\vendor\nuget\EntityFramework.6.5.0\build\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\vendor\nuget\EntityFramework.6.5.0\build\build\EntityFramework.targets'))" />
-    <Error Condition="!Exists('..\..\vendor\nuget\EntityFramework.6.5.0\build\build\net6.0\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\vendor\nuget\EntityFramework.6.5.0\build\build\net6.0\EntityFramework.props'))" />
-    <Error Condition="!Exists('..\..\vendor\nuget\EntityFramework.6.5.0\build\build\net6.0\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\vendor\nuget\EntityFramework.6.5.0\build\build\net6.0\EntityFramework.targets'))" />
+    <Error Condition="!Exists('..\..\vendor\nuget\EntityFramework.6.4.4\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\vendor\nuget\EntityFramework.6.4.4\build\EntityFramework.props'))" />
+    <Error Condition="!Exists('..\..\vendor\nuget\EntityFramework.6.4.4\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\vendor\nuget\EntityFramework.6.4.4\build\EntityFramework.targets'))" />
   </Target>
-  <Import Project="..\..\vendor\nuget\EntityFramework.6.5.0\build\build\EntityFramework.targets" Condition="Exists('..\..\vendor\nuget\EntityFramework.6.5.0\build\build\EntityFramework.targets')" />
-  <Import Project="..\..\vendor\nuget\EntityFramework.6.5.0\build\build\net6.0\EntityFramework.targets" Condition="Exists('..\..\vendor\nuget\EntityFramework.6.5.0\build\build\net6.0\EntityFramework.targets')" />
+  <Import Project="..\..\vendor\nuget\EntityFramework.6.4.4\build\EntityFramework.targets" Condition="Exists('..\..\vendor\nuget\EntityFramework.6.4.4\build\EntityFramework.targets')" />
 </Project>
