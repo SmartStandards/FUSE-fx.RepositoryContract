@@ -56,7 +56,7 @@ namespace System.Data.Fuse.Ef {
       _ContextInstanceProvider.VisitCurrentDbContext(
         (dbContext) => {
           string[] typeNames = SchemaCache.GetEntityTypeNamesForContext(dbContext);
-          if (!(typeNames.Any(tn => tn == typeof(TEntity).FullName))) {
+          if (!(typeNames.Any(tn => tn == typeof(TEntity).FullName || tn == typeof(TEntity).Name))) {
             throw new InvalidOperationException(
               $"Entity type {typeof(TEntity).FullName} is not part of the model for this context."
             );
