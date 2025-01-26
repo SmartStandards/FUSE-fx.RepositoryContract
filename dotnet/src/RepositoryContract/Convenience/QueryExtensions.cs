@@ -127,54 +127,7 @@ namespace System.Data.Fuse.Convenience {
 #endif
         result1.Append(")");
         return result1.ToString();
-      }
-
-      //      string[] notInRels = new string[] { "not in" };
-      //      if (notInRels.Contains(relationElement.Relation)) {
-      //        StringBuilder result1 = new StringBuilder();
-      //        result1.Append("(");
-      //        object rawValues = relationElement.Value;
-      //#if NETCOREAPP
-      //        if (typeof(JsonElement).IsAssignableFrom(rawValues?.GetType())) {
-      //          JsonElement valuesJson = (JsonElement)relationElement.Value;
-      //          ArrayEnumerator values = valuesJson.EnumerateArray();
-      //          foreach (JsonElement value in values) {
-      //            RelationElement innerRelationElement = new RelationElement() {
-      //              PropertyName = relationElement.PropertyName,
-      //              PropertyType = relationElement.PropertyType,
-      //              Relation = "!=",
-      //              Value = value
-      //            };
-      //            result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
-      //            result1.Append(" and ");
-      //          }
-      //          if (values.Count() > 0) {
-      //            result1.Length -= 5;
-      //          }
-      //        } else {
-      //#endif
-      //          IEnumerable values = (IEnumerable)rawValues;
-      //          int count = 0;
-      //          foreach (object value in values) {
-      //            count++;
-      //            RelationElement innerRelationElement = new RelationElement() {
-      //              PropertyName = relationElement.PropertyName,
-      //              PropertyType = relationElement.PropertyType,
-      //              Relation = "!=",
-      //              Value = value
-      //            };
-      //            result1.Append(CompileRelationToWhereStatement(innerRelationElement, mode, prefix));
-      //            result1.Append(" and ");
-      //          }
-      //          if (count > 0) {
-      //            result1.Length -= 5;
-      //          }
-      //#if NETCOREAPP
-      //        }
-      //#endif
-      //        result1.Append(")");
-      //        return result1.ToString();
-      //      }
+      }    
 
       string serializedValue;
       string fieldName = prefix;
@@ -243,69 +196,6 @@ namespace System.Data.Fuse.Convenience {
           serializedValue = relationElement.Value.ToString();
         }
 
-        //switch (relationElement.PropertyType) {
-        //  case "string":
-        //  case "String":
-        //    if (mode == "sql") {
-        //      serializedValue = $"'{relationElement.Value}'";
-        //    } else {
-        //      serializedValue = $"\"{relationElement.Value}\"";
-        //    }
-        //    string[] containsRelations = new string[] { ">", ">=", "contains", "Contains", "includes", "Includes" };
-        //    string[] reversContainsRelations = new string[] { "<", "<=", "is substring of", "substring", "substringOf" };
-        //    if (containsRelations.Contains(@operator)) {
-        //      fieldName = prefix + relationElement.PropertyName;
-        //      if (mode == "sql") {
-        //        @operator = " like ";
-        //        serializedValue = $"'%{relationElement.Value}%'";
-        //      } else {
-        //        @operator = ".Contains";
-        //        serializedValue = $"(\"{relationElement.Value}\")";
-        //      }
-        //    }
-        //    if (reversContainsRelations.Contains(@operator)) {
-        //      if (mode == "sql") {
-        //        fieldName = $"'{relationElement.Value}'";
-        //        @operator = " like ";
-        //        serializedValue = $"'%'+{prefix + relationElement.PropertyName}+'%'";
-        //      } else {
-        //        fieldName = $"\"{relationElement.Value}\"";
-        //        @operator = ".Contains";
-        //        serializedValue = $"({prefix + relationElement.PropertyName})";
-        //      }
-        //    }
-        //    break;
-        //  case "dateTime":
-        //  case "DateTime":
-        //  case "datetime":
-        //  case "Datetime":
-        //    DateTime date = DateTime.Parse(relationElement.Value.ToString());
-        //    if (mode == "sql") {
-        //      if (date.Hour > 9) {
-        //        serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
-        //      } else {
-        //        serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T0{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
-        //      }
-        //    } else {
-        //      serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
-        //    }
-        //    break;
-        //  case "date":
-        //  case "Date":
-        //    DateTime date2 = DateTime.Parse(relationElement.Value.ToString());
-        //    if (mode == "sql") {
-        //      serializedValue = $"'{date2.Year}-{date2.Month}-{date2.Day}'";
-        //      fieldName = prefix + relationElement.PropertyName;
-        //    } else {
-        //      serializedValue = $"DateTime({date2.Year}, {date2.Month}, {date2.Day}).Date";
-        //      fieldName = $"{prefix + relationElement.PropertyName}.Date ";
-        //    }
-        //    break;
-        //  default:
-        //    serializedValue = relationElement.Value.ToString();
-        //    break;
-        //}
-
       }
 
       StringBuilder result = new StringBuilder();
@@ -324,15 +214,20 @@ namespace System.Data.Fuse.Convenience {
       return result.ToString();
     }
 
-    private static string ResolveStringField(FieldPredicate fieldPredicate, string mode, string prefix, ref string fieldName, ref string @operator) {
+    private static string ResolveStringField(
+      FieldPredicate fieldPredicate, string mode, string prefix, ref string fieldName, ref string @operator
+    ) {
       string serializedValue;
       if (mode == "sql") {
         serializedValue = $"'{fieldPredicate.Value}'";
       } else {
         serializedValue = $"\"{fieldPredicate.Value}\"";
       }
-      string[] containsRelations = new string[] { ">", ">=", "contains", "Contains", "includes", "Includes" };
-      string[] reversContainsRelations = new string[] { "<", "<=", "is substring of", "substring", "substringOf" };
+      string[] containsRelations = new string[] { FieldOperators.Contains, ">", ">=", "contains", "Contains", "includes", "Includes" };
+      string[] reversContainsRelations = new string[] { FieldOperators.SubstringOf, "<", "<=", "is substring of", "substring", "substringOf" };
+      string[] startsWithRelations = new string[] { FieldOperators.StartsWith, "|*", "starts with", "startsWith"};
+      string[] endsWithRelations = new string[] { FieldOperators.EndsWith, "<", "<=", "is substring of", "substring", "substringOf" };
+
       if (containsRelations.Contains(@operator)) {
         fieldName = prefix + fieldPredicate.FieldName;
         if (mode == "sql") {
@@ -354,6 +249,16 @@ namespace System.Data.Fuse.Convenience {
           serializedValue = $"({prefix + fieldPredicate.FieldName})";
         }
       }
+      if (startsWithRelations.Contains(@operator)) {
+        fieldName = prefix + fieldPredicate.FieldName;
+        if (mode == "sql") {
+          @operator = " like ";
+          serializedValue = $"'{fieldPredicate.Value}%'";
+        } else {
+          @operator = ".StartsWith";
+          serializedValue = $"(\"{fieldPredicate.Value}\")";
+        }
+      }     
 
       return serializedValue;
     }
