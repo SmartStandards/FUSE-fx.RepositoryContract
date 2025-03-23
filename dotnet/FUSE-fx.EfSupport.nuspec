@@ -17,14 +17,24 @@
 		<dependencies>
 			<group targetFramework=".NETFramework4.6">
         <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />   
-        <dependency id="FUSE-fx.ModelReader" version="[0.2.3,2.0)" />
+        <dependency id="FUSE-fx.ModelReader" version="[0.2.5,2.0)" />
         <dependency id="EntityFramework" version="6.4.4" />        
+      </group>
+      <group targetFramework=".NETFramework4.8">
+        <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
+        <dependency id="FUSE-fx.ModelReader" version="[0.2.5,2.0)" />
+        <dependency id="EntityFramework" version="6.4.4" />
       </group>
       <group targetFramework="net6.0">
         <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
-        <dependency id="FUSE-fx.ModelReader" version="[0.2.3,2.0)" />
+        <dependency id="FUSE-fx.ModelReader" version="[0.2.5,2.0)" />
         <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
 			</group>
+      <group targetFramework="net8.0">
+        <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
+        <dependency id="FUSE-fx.ModelReader" version="[0.2.5,2.0)" />
+        <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
+      </group>
 		</dependencies>
 	</metadata>
 	<files>
@@ -34,9 +44,17 @@
 		<file src="dist\bin-net46\FUSE-fx.EfSupport.dll" target="lib/net46" />
 		<file src="dist\bin-net46\FUSE-fx.EfSupport.xml" target="lib/net46" />
 		<file src="dist\bin-net46\FUSE-fx.EfSupport.pdb" target="lib/net46" />
+    <!-- .NET 4.8 -->
+    <file src="dist\bin-net48\FUSE-fx.EfSupport.dll" target="lib/net48" />
+    <file src="dist\bin-net48\FUSE-fx.EfSupport.xml" target="lib/net48" />
+    <file src="dist\bin-net48\FUSE-fx.EfSupport.pdb" target="lib/net48" />
 		<!-- .NET 6.0 -->
 		<file src="dist\bin-net6.0\FUSE-fx.EfSupport.dll" target="lib/net6.0" />
 		<file src="dist\bin-net6.0\FUSE-fx.EfSupport.xml" target="lib/net6.0" />
 		<file src="dist\bin-net6.0\FUSE-fx.EfSupport.pdb" target="lib/net6.0" />
+    <!-- .NET 8.0 -->
+    <!--<file src="dist\bin-net8.0\FUSE-fx.EfSupport.dll" target="lib/net8.0" />
+    <file src="dist\bin-net8.0\FUSE-fx.EfSupport.xml" target="lib/net8.0" />
+    <file src="dist\bin-net8.0\FUSE-fx.EfSupport.pdb" target="lib/net8.0" />-->
 	</files>
 </package>

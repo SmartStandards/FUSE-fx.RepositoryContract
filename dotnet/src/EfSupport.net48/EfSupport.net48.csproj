@@ -5,12 +5,12 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B0BA06FE-6437-4B9E-8C76-3ADFC8D191D3}</ProjectGuid>
+    <ProjectGuid>{76A15D21-891F-442D-9211-BEF1B3C1B422}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>System</RootNamespace>
     <AssemblyName>FUSE-fx.EfSupport</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>false</Deterministic>
     <TargetFrameworkProfile />
@@ -21,21 +21,21 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\dist\bin-net46\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NET46</DefineConstants>
+    <OutputPath>..\..\dist\bin-net48\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NET48</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\dist\bin-net46\FUSE-fx.EfSupport.xml</DocumentationFile>
+    <DocumentationFile>..\..\dist\bin-net48\FUSE-fx.EfSupport.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\dist\bin-net46\</OutputPath>
-    <DefineConstants>TRACE;NET46</DefineConstants>
+    <OutputPath>..\..\dist\bin-net48\</OutputPath>
+    <DefineConstants>TRACE;NET48</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\dist\bin-net46\FUSE-fx.EfSupport.xml</DocumentationFile>
+    <DocumentationFile>..\..\dist\bin-net48\FUSE-fx.EfSupport.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -45,20 +45,20 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\..\vendor\nuget\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
-    <Reference Include="FUSE-fx.EntityAnnotations, Version=999.0.0.32990, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.EntityAnnotations.4.1.0\lib\net46\FUSE-fx.EntityAnnotations.dll</HintPath>
+    <Reference Include="FUSE-fx.EntityAnnotations, Version=999.0.0.32996, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.EntityAnnotations.4.1.0\lib\net48\FUSE-fx.EntityAnnotations.dll</HintPath>
     </Reference>
     <Reference Include="FUSE-fx.ModelDescription, Version=1.0.0.38878, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelDescription.2.0.16\lib\net46\FUSE-fx.ModelDescription.dll</HintPath>
+      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelDescription.2.0.16\lib\net48\FUSE-fx.ModelDescription.dll</HintPath>
     </Reference>
-    <Reference Include="FUSE-fx.ModelReader, Version=0.1.0.29879, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.5\lib\net46\FUSE-fx.ModelReader.dll</HintPath>
+    <Reference Include="FUSE-fx.ModelReader, Version=0.1.0.29883, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.5\lib\net48\FUSE-fx.ModelReader.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Linq.Dynamic.Core, Version=1.4.3.0, Culture=neutral, PublicKeyToken=0f07ec44de6ac832, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\System.Linq.Dynamic.Core.1.4.3\lib\net46\System.Linq.Dynamic.Core.dll</HintPath>
+    <Reference Include="System.Linq.Dynamic.Core, Version=1.6.0.2, Culture=neutral, PublicKeyToken=0f07ec44de6ac832, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\System.Linq.Dynamic.Core.1.6.0.2\lib\net46\System.Linq.Dynamic.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -76,9 +76,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RepositoryContract.net461\RepositoryContract.net461.csproj">
+    <ProjectReference Include="..\RepositoryContract.net48\RepositoryContract.net48.csproj">
       <Project>{b0ba06fe-6437-4b9e-8c76-3adfc8d191d2}</Project>
-      <Name>RepositoryContract.net461</Name>
+      <Name>RepositoryContract.net48</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\EfSupport\EfSupport.projitems" Label="Shared" />
