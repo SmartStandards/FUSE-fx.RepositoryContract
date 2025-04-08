@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\EfSupport.net6.0\EfSupport.net6.0.csproj" />
+    <ProjectReference Include="..\..\src\RepositoryContract.Demo\RepositoryContract.Demo.csproj" />
     <ProjectReference Include="..\..\src\RepositoryContract.net6.0\RepositoryContract.net6.0.csproj" />
   </ItemGroup>
 

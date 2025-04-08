@@ -9,7 +9,10 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\IDbConnectionProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\LongLivingDbConnectionInstanceProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\LongLivingDbContextInstanceProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\ShortLivingDbConnectionInstanceProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\ShortLivingDbContextInstanceProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\DelegateBasedDbContextInstanceProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\DbContextExtensions.cs" />
@@ -17,12 +20,14 @@
     <Compile Include="$(MSBuildThisFileDirectory)persistence\EfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\SchemaCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\SqlRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)playground\SqlReportService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QuerableSupport\RepositoryQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\DbContextDeclaratedEntityResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\DbContextRuntimeEntityResolver.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StringExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Web\EfFuseController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)[Store]\SqlDataStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[Store]\EfDataStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[Store]\IEfDataStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\IDbContextInstanceProvider.cs" />

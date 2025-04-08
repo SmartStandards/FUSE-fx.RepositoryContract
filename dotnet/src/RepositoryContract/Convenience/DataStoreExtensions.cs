@@ -33,8 +33,8 @@ namespace System.Data.Fuse.Convenience {
       return dataStore.GetRepository<TEntity, TKey>().AddOrUpdateEntity(entity);
     }
 
-    public static TKey[] AddOrUpdate<TEntity, TKey>(
-      this IDataStore dataStore, TKey[] keysToDelete
+    public static TKey[] TryDeleteEntities<TEntity, TKey>(
+      this IDataStore dataStore, params TKey[] keysToDelete
     )
     where TEntity : class {
       return dataStore.GetRepository<TEntity, TKey>().TryDeleteEntities(keysToDelete);

@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace System.Data.Fuse.Ef {
 
-  internal static class SchemaCache {
+  public static class SchemaCache {
 
     private static Dictionary<Type, SchemaRoot> _SchemaRootsPerContextType = new Dictionary<Type, SchemaRoot>();
 
