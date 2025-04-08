@@ -358,6 +358,32 @@ namespace System.Data.Fuse.Convenience {
       return Expression.Lambda<Func<TEntity, bool>>(body, parameter);
     }
 
+    public static ExpressionTree GetExpressionTreeByValues(
+      this object[] values, params PropertyInfo[] properties
+    ) {
+      if (values.Length != properties.Length)
+        throw new ArgumentException("Number of values must match number of properties");
+
+      var expressionTree = new ExpressionTree {
+        MatchAll = true,
+        Predicates = new List<FieldPredicate>()
+      };
+
+      for (int i = 0; i < properties.Length; i++) {
+        var propertyInfo = properties[i];
+        var value = values[i];
+
+        var fieldPredicate = new FieldPredicate {
+          FieldName = propertyInfo.Name,
+          Operator = FieldOperators.Equal,
+          Value = value
+        };
+
+        expressionTree.Predicates.Add(fieldPredicate);
+      }
+
+      return expressionTree;
+    }
 
     public static object[] TryGetValuesByFields(
       this Dictionary<string, object> fields,

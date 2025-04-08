@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace RepositoryContract.Tests {
 
+  [PrimaryIdentity(nameof(Id))]
+  [PropertyGroup(nameof(Id), nameof(Id))]
   [HasLookup(nameof(Nation), nameof(NationId), "", null, nameof(NationEntity))]
   [HasLookup(nameof(Religion), nameof(ReligionId), "", null, nameof(ReligionEntity))]
   [HasDependent(nameof(Addresses), nameof(AddressEntity.PersonId), "")]
@@ -33,6 +35,9 @@ namespace RepositoryContract.Tests {
     public string Name2 { get; set; } = string.Empty;
   }
 
+  [PrimaryIdentity(nameof(Id))]
+  [PropertyGroup(nameof(Id), nameof(Id))]
+  [PropertyGroup(nameof(PersonId), nameof(PersonId))]
   public class AddressEntity {
     public int Id { get; set; }
     public string Street { get; set; } = string.Empty;
