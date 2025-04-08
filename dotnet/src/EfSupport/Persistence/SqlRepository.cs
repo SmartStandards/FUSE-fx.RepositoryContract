@@ -1,10 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Data.Fuse.Convenience;
-using System.Data.Fuse.Ef;
 using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.ModelDescription;
 using System.Data.ModelDescription.Convenience;
