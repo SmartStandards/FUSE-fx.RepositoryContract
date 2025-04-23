@@ -22,7 +22,7 @@ namespace System.Data.Fuse {
     /// </summary>
     public string Operator { get; set; }
 
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
     public string ValueSerialized { get; set; } = "null";
 
     public T? TryGetValue<T>() {
@@ -45,7 +45,7 @@ namespace System.Data.Fuse {
 #endif
 
     public override string ToString() {
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
       return $"{FieldName} {Operator} {ValueSerialized}";
 #else
       return $"{FieldName} {Operator} {Value}";
@@ -56,7 +56,7 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.Equal,
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
         Value = value,
@@ -68,7 +68,7 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.NotEqual,
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
         Value = value,
@@ -80,7 +80,7 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.GreaterOrEqual,
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
         Value = value,
@@ -92,7 +92,7 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.Greater,
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
         Value = value,
@@ -104,7 +104,7 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.StartsWith,
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
         Value = value,
@@ -116,7 +116,7 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.SubstringOf,
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
         Value = value,
@@ -128,7 +128,7 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.Contains,
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
         Value = value,

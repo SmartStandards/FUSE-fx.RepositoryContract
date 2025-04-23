@@ -8,7 +8,7 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-*(none)*
+ - Breaking Change: Changed Value (object) in FieldPredicate to ValueSerialized (string)
 
 
 

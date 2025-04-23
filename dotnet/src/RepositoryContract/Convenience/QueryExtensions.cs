@@ -87,7 +87,7 @@ namespace System.Data.Fuse.Convenience {
         StringBuilder result1 = new StringBuilder();
         result1.Append("(");
 
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         IEnumerable? values = relationElement.TryGetValue<IEnumerable>();
         if (values == null) {
           throw new ArgumentException("The value of the 'in' operator must be an Array.");
@@ -103,7 +103,7 @@ namespace System.Data.Fuse.Convenience {
           FieldPredicate innerRelationElement = new FieldPredicate() {
             FieldName = relationElement.FieldName,
             Operator = "=",
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
             ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
             Value = value
@@ -170,7 +170,7 @@ namespace System.Data.Fuse.Convenience {
         serializedValue = "";
       } else {
 
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
         string relationElementValue = relationElement.ValueSerialized;
 #else
         string relationElementValue = relationElement.Value.ToString(); 
@@ -380,7 +380,7 @@ namespace System.Data.Fuse.Convenience {
         var fieldPredicate = new FieldPredicate {
           FieldName = propertyInfo.Name,
           Operator = FieldOperators.Equal,
-#if NET6_0_OR_GREATER
+#if NETCOREAPP
           ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
 #else
           Value = value
