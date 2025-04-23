@@ -8,6 +8,12 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
+*(none)*
+
+
+
+## v 0.5.0
+released **2025-04-23**, including:
  - Breaking Change: Changed Value (object) in FieldPredicate to ValueSerialized (string)
 
 
