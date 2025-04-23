@@ -10,6 +10,7 @@ using System.Linq.Dynamic.Core;
 using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.Fuse.Sql;
 using System.Data.ModelDescription.Convenience;
+using System.Data.Fuse.Sql.InstanceManagement;
 
 namespace System.Data.Fuse.Ef {
 

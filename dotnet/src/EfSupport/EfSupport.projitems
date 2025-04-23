@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\ShortLivingDbContextInstanceProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InstanceManagement\DelegateBasedDbContextInstanceProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\DbContextExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\SqlDictUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\EfDictUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\EfRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfUniversalRepository.cs" />

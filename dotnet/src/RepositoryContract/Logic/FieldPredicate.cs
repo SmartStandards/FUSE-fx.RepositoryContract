@@ -22,6 +22,18 @@ namespace System.Data.Fuse {
     /// </summary>
     public string Operator { get; set; }
 
+#if NET6_0_OR_GREATER
+    public string ValueSerialized { get; set; } = "null";
+
+    public T? TryGetValue<T>() {
+      return System.Text.Json.JsonSerializer.Deserialize<T>(ValueSerialized);
+    }
+
+    public void SetValue<T>(T value) {
+      ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value);
+    }
+#else
+
     /// <summary>
     /// The value to match!
     /// (NOTE: in th special case of using the 'in' operator,
@@ -30,16 +42,25 @@ namespace System.Data.Fuse {
     /// at least one value within that array.)
     /// </summary>
     public object Value { get; set; }
+#endif
 
     public override string ToString() {
+#if NET6_0_OR_GREATER
+      return $"{FieldName} {Operator} {ValueSerialized}";
+#else
       return $"{FieldName} {Operator} {Value}";
+#endif
     }
 
-    public static FieldPredicate Equal(string fieldName,  object value) {
+    public static FieldPredicate Equal(string fieldName, object value) {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.Equal,
-        Value = value
+#if NET6_0_OR_GREATER
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
+        Value = value,
+#endif
       };
     }
 
@@ -47,7 +68,11 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.NotEqual,
-        Value = value
+#if NET6_0_OR_GREATER
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
+        Value = value,
+#endif
       };
     }
 
@@ -55,7 +80,11 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.GreaterOrEqual,
-        Value = value
+#if NET6_0_OR_GREATER
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
+        Value = value,
+#endif
       };
     }
 
@@ -63,7 +92,11 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.Greater,
-        Value = value
+#if NET6_0_OR_GREATER
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
+        Value = value,
+#endif
       };
     }
 
@@ -71,7 +104,11 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.StartsWith,
-        Value = value
+#if NET6_0_OR_GREATER
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
+        Value = value,
+#endif
       };
     }
 
@@ -79,7 +116,11 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.SubstringOf,
-        Value = value
+#if NET6_0_OR_GREATER
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
+        Value = value,
+#endif
       };
     }
 
@@ -87,7 +128,11 @@ namespace System.Data.Fuse {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.Contains,
-        Value = value
+#if NET6_0_OR_GREATER
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
+        Value = value,
+#endif
       };
     }
 

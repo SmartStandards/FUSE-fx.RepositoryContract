@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef.InstanceManagement;
+using System.Data.Fuse.Sql.InstanceManagement;
 using System.Data.ModelDescription;
 using System.Data.ModelDescription.Convenience;
 using System.Linq;

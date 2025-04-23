@@ -86,33 +86,28 @@ namespace System.Data.Fuse.Convenience {
       if (inRels.Contains(relationElement.Operator)) {
         StringBuilder result1 = new StringBuilder();
         result1.Append("(");
+
+#if NET6_0_OR_GREATER
+        IEnumerable? values = relationElement.TryGetValue<IEnumerable>();
+        if (values == null) {
+          throw new ArgumentException("The value of the 'in' operator must be an Array.");
+        }
+#else
         object rawValues = relationElement.Value;
-#if NETCOREAPP
-        if (typeof(JsonElement).IsAssignableFrom(rawValues?.GetType())) {
-          JsonElement valuesJson = (JsonElement)relationElement.Value;
-          ArrayEnumerator values = valuesJson.EnumerateArray();
-          foreach (JsonElement value in values) {
-            FieldPredicate innerRelationElement = new FieldPredicate() {
-              FieldName = relationElement.FieldName,
-              Operator = "=",
-              Value = value
-            };
-            result1.Append(CompileFieldPredicateToWhereStatement(entitySchema, innerRelationElement, mode, prefix));
-            result1.Append(" or ");
-          }
-          if (values.Count() > 0) {
-            result1.Length -= 4;
-          }
-        } else {
-#endif
         IEnumerable values = (IEnumerable)rawValues;
+#endif
+
         int count = 0;
         foreach (object value in values) {
           count++;
           FieldPredicate innerRelationElement = new FieldPredicate() {
             FieldName = relationElement.FieldName,
             Operator = "=",
+#if NET6_0_OR_GREATER
+            ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
             Value = value
+#endif
           };
           result1.Append(
             CompileFieldPredicateToWhereStatement(entitySchema, innerRelationElement, mode, prefix)
@@ -122,12 +117,10 @@ namespace System.Data.Fuse.Convenience {
         if (count > 0) {
           result1.Length -= 4;
         }
-#if NETCOREAPP
-        }
-#endif
+
         result1.Append(")");
         return result1.ToString();
-      }    
+      }
 
       string serializedValue;
       string fieldName = prefix;
@@ -176,11 +169,18 @@ namespace System.Data.Fuse.Convenience {
       if (checkNull) {
         serializedValue = "";
       } else {
+
+#if NET6_0_OR_GREATER
+        string relationElementValue = relationElement.ValueSerialized;
+#else
+        string relationElementValue = relationElement.Value.ToString(); 
+#endif
+
         if (
           (fieldType == "DateTime" || fieldType == "Date") &&
-          DateTime.TryParse(relationElement.Value.ToString(), out DateTime dateTime)
+          DateTime.TryParse(relationElementValue, out DateTime dateTime)
         ) {
-          DateTime date = DateTime.Parse(relationElement.Value.ToString());
+          DateTime date = DateTime.Parse(relationElementValue);
           if (mode == "sql") {
             if (date.Hour > 9) {
               serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
@@ -191,9 +191,12 @@ namespace System.Data.Fuse.Convenience {
             serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
           }
         } else if (fieldType == "String" || fieldType == "Guid") {
-          serializedValue = ResolveStringField(relationElement, mode, prefix, ref fieldName, ref @operator);
+          serializedValue = ResolveStringField(
+            relationElementValue, relationElement.FieldName, mode, prefix,
+            ref fieldName, ref @operator
+          );
         } else {
-          serializedValue = relationElement.Value.ToString();
+          serializedValue = relationElementValue;
         }
 
       }
@@ -215,50 +218,51 @@ namespace System.Data.Fuse.Convenience {
     }
 
     private static string ResolveStringField(
-      FieldPredicate fieldPredicate, string mode, string prefix, ref string fieldName, ref string @operator
+      string valueSerialized, string predicateFieldName,
+      string mode, string prefix, ref string fieldName, ref string @operator
     ) {
       string serializedValue;
       if (mode == "sql") {
-        serializedValue = $"'{fieldPredicate.Value}'";
+        serializedValue = $"'{valueSerialized}'";
       } else {
-        serializedValue = $"\"{fieldPredicate.Value}\"";
+        serializedValue = $"\"{valueSerialized}\"";
       }
       string[] containsRelations = new string[] { FieldOperators.Contains, ">", ">=", "contains", "Contains", "includes", "Includes" };
       string[] reversContainsRelations = new string[] { FieldOperators.SubstringOf, "<", "<=", "is substring of", "substring", "substringOf" };
-      string[] startsWithRelations = new string[] { FieldOperators.StartsWith, "|*", "starts with", "startsWith"};
+      string[] startsWithRelations = new string[] { FieldOperators.StartsWith, "|*", "starts with", "startsWith" };
       string[] endsWithRelations = new string[] { FieldOperators.EndsWith, "<", "<=", "is substring of", "substring", "substringOf" };
 
       if (containsRelations.Contains(@operator)) {
-        fieldName = prefix + fieldPredicate.FieldName;
+        fieldName = prefix + predicateFieldName;
         if (mode == "sql") {
           @operator = " like ";
-          serializedValue = $"'%{fieldPredicate.Value}%'";
+          serializedValue = $"'%{valueSerialized}%'";
         } else {
           @operator = ".Contains";
-          serializedValue = $"(\"{fieldPredicate.Value}\")";
+          serializedValue = $"(\"{valueSerialized}\")";
         }
       }
       if (reversContainsRelations.Contains(@operator)) {
         if (mode == "sql") {
-          fieldName = $"'{fieldPredicate.Value}'";
+          fieldName = $"'{valueSerialized}'";
           @operator = " like ";
-          serializedValue = $"'%'+{prefix + fieldPredicate.FieldName}+'%'";
+          serializedValue = $"'%'+{prefix + predicateFieldName}+'%'";
         } else {
-          fieldName = $"\"{fieldPredicate.Value}\"";
+          fieldName = $"\"{valueSerialized}\"";
           @operator = ".Contains";
-          serializedValue = $"({prefix + fieldPredicate.FieldName})";
+          serializedValue = $"({prefix + predicateFieldName})";
         }
       }
       if (startsWithRelations.Contains(@operator)) {
-        fieldName = prefix + fieldPredicate.FieldName;
+        fieldName = prefix + predicateFieldName;
         if (mode == "sql") {
           @operator = " like ";
-          serializedValue = $"'{fieldPredicate.Value}%'";
+          serializedValue = $"'{valueSerialized}%'";
         } else {
           @operator = ".StartsWith";
-          serializedValue = $"(\"{fieldPredicate.Value}\")";
+          serializedValue = $"(\"{valueSerialized}\")";
         }
-      }     
+      }
 
       return serializedValue;
     }
@@ -376,7 +380,11 @@ namespace System.Data.Fuse.Convenience {
         var fieldPredicate = new FieldPredicate {
           FieldName = propertyInfo.Name,
           Operator = FieldOperators.Equal,
+#if NET6_0_OR_GREATER
+          ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
+#else
           Value = value
+#endif
         };
 
         expressionTree.Predicates.Add(fieldPredicate);

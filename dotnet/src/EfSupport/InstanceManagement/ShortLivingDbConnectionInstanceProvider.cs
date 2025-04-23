@@ -7,7 +7,7 @@ using System.Data.Entity.Core.Metadata.Edm;
 #endif
 using System.Diagnostics;
 
-namespace System.Data.Fuse.Ef.InstanceManagement {
+namespace System.Data.Fuse.Sql.InstanceManagement {
 
   /// <summary>
   /// Provides short-time access to a managed instance of an DbContext
