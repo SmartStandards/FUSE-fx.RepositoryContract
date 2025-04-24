@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+#if NETCOREAPP
+using System.Text.Json;
+#endif
 
 namespace System.Data.Fuse {
 
@@ -23,16 +26,33 @@ namespace System.Data.Fuse {
     public string Operator { get; set; }
 
 #if NETCOREAPP
-    public string ValueSerialized { get; set; } = "null";
+    public string ValueSerialized { get; set; } = null;
 
     public T? TryGetValue<T>() {
+      if (string.IsNullOrEmpty(ValueSerialized)) {
+        if (typeof(JsonElement).IsAssignableFrom(Value.GetType())) {
+          return ((JsonElement)Value).Deserialize<T>();
+        }
+        return (T)Value;
+      }
       return System.Text.Json.JsonSerializer.Deserialize<T>(ValueSerialized);
+    }
+
+    public string GetValueAsString() {
+      if (string.IsNullOrEmpty(ValueSerialized)) {
+        if (typeof(JsonElement).IsAssignableFrom(Value.GetType())) {
+          return ((JsonElement)Value).ToString();
+        }
+        return Value.ToString();
+      }
+      return ValueSerialized;
     }
 
     public void SetValue<T>(T value) {
       ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value);
+      Value = value;
     }
-#else
+#endif
 
     /// <summary>
     /// The value to match!
@@ -42,7 +62,6 @@ namespace System.Data.Fuse {
     /// at least one value within that array.)
     /// </summary>
     public object Value { get; set; }
-#endif
 
     public override string ToString() {
 #if NETCOREAPP
@@ -57,10 +76,9 @@ namespace System.Data.Fuse {
         FieldName = fieldName,
         Operator = FieldOperators.Equal,
 #if NETCOREAPP
-        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
-#else
-        Value = value,
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
 #endif
+        Value = value,
       };
     }
 
@@ -69,10 +87,9 @@ namespace System.Data.Fuse {
         FieldName = fieldName,
         Operator = FieldOperators.NotEqual,
 #if NETCOREAPP
-        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
-#else
-        Value = value,
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
 #endif
+        Value = value
       };
     }
 
@@ -81,10 +98,9 @@ namespace System.Data.Fuse {
         FieldName = fieldName,
         Operator = FieldOperators.GreaterOrEqual,
 #if NETCOREAPP
-        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
-#else
-        Value = value,
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
 #endif
+        Value = value
       };
     }
 
@@ -93,10 +109,9 @@ namespace System.Data.Fuse {
         FieldName = fieldName,
         Operator = FieldOperators.Greater,
 #if NETCOREAPP
-        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
-#else
-        Value = value,
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
 #endif
+        Value = value
       };
     }
 
@@ -105,10 +120,9 @@ namespace System.Data.Fuse {
         FieldName = fieldName,
         Operator = FieldOperators.StartsWith,
 #if NETCOREAPP
-        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
-#else
-        Value = value,
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
 #endif
+        Value = value
       };
     }
 
@@ -117,10 +131,9 @@ namespace System.Data.Fuse {
         FieldName = fieldName,
         Operator = FieldOperators.SubstringOf,
 #if NETCOREAPP
-        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
-#else
-        Value = value,
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
 #endif
+        Value = value
       };
     }
 
@@ -129,10 +142,9 @@ namespace System.Data.Fuse {
         FieldName = fieldName,
         Operator = FieldOperators.Contains,
 #if NETCOREAPP
-        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value)
-#else
-        Value = value,
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
 #endif
+        Value = value
       };
     }
 

@@ -12,6 +12,8 @@ namespace RepositoryContract.Demo.Model {
 
     public long SomeUid { get; set; }
 
+    public Guid SomeGuid { get; set; } = Guid.NewGuid();
+
     public string LastName { get; set; } = string.Empty;  
     public string FirstName { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
