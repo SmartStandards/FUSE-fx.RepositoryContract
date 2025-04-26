@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.5.0",
-  "currentVersionWithSuffix": "0.5.0",
+  "currentVersion": "0.5.1",
+  "currentVersionWithSuffix": "0.5.1",
   "releaseType": "official",
-  "previousVersion": "0.4.16",
-  "changeGrade": "major",
+  "previousVersion": "0.5.0",
+  "changeGrade": "patch",
   "currentMajor": 0,
   "currentMinor": 5,
-  "currentPatch": 0,
-  "versionDateInfo": "2025-04-23",
-  "versionTimeInfo": "14:57:43",
-  "versionNotes": "- Breaking Change: Changed Value (object) in FieldPredicate to ValueSerialized (string)\n"
+  "currentPatch": 1,
+  "versionDateInfo": "2025-04-26",
+  "versionTimeInfo": "10:45:55",
+  "versionNotes": "- new revision without significant changes\n"
 }
