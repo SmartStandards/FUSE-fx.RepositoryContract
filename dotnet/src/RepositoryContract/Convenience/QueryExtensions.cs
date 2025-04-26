@@ -172,18 +172,23 @@ namespace System.Data.Fuse.Convenience {
 #if NETCOREAPP
         string relationElementValue = relationElement.GetValueAsString();
 #else
-        string relationElementValue = relationElement.Value.ToString(); 
+        string relationElementValue = relationElement.Value.ToString();
 #endif
 
         if (
           (fieldType == "DateTime" || fieldType == "Date")
         ) {
           DateTime date;
+#if NETCOREAPP
           if (relationElementValue.Contains("\"")) {
             date = JsonSerializer.Deserialize<DateTime>(relationElementValue);
           } else {
             date = DateTime.Parse(relationElementValue);
           }
+#else
+          date = DateTime.Parse(relationElementValue);
+#endif
+
           if (mode == "sql") {
             if (date.Hour > 9) {
               serializedValue = $"'{date.Year}-{date.Month}-{date.Day}T{date.Hour}:{date.Minute}:{date.Second}.{date.Millisecond}'";
@@ -194,15 +199,15 @@ namespace System.Data.Fuse.Convenience {
             serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
           }
         } else if (fieldType == "String" || fieldType == "Guid") {
+#if NETCOREAPP
           if (
             fieldType == "Guid" &&
             (relationElementValue.Contains("\""))
           ) {
             relationElementValue = JsonSerializer.Deserialize<Guid>(relationElementValue).ToString();
           }
-          DateTime test = new DateTime();
-          string test1 = JsonSerializer.Serialize(test);
-          DateTime test2 = DateTime.Parse(test1);
+#endif
+
           serializedValue = ResolveStringField(
             relationElementValue, relationElement.FieldName, mode, prefix,
             ref fieldName, ref @operator
