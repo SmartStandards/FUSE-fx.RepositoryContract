@@ -38,14 +38,14 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="FUSE-fx.EntityAnnotations, Version=999.0.0.32996, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.EntityAnnotations.4.1.0\lib\net48\FUSE-fx.EntityAnnotations.dll</HintPath>
+    <Reference Include="FUSE-fx.EntityAnnotations, Version=999.0.0.24829, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.EntityAnnotations.4.1.1\lib\net48\FUSE-fx.EntityAnnotations.dll</HintPath>
     </Reference>
     <Reference Include="FUSE-fx.ModelDescription, Version=1.0.0.38878, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\vendor\nuget\FUSE-fx.ModelDescription.2.0.16\lib\net48\FUSE-fx.ModelDescription.dll</HintPath>
     </Reference>
-    <Reference Include="FUSE-fx.ModelReader, Version=0.1.0.29883, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.5\lib\net48\FUSE-fx.ModelReader.dll</HintPath>
+    <Reference Include="FUSE-fx.ModelReader, Version=0.1.0.15931, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.7\lib\net48\FUSE-fx.ModelReader.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
