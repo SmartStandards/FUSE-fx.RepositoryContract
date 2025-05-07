@@ -27,10 +27,10 @@
         <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
         <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
 			</group>
-      <group targetFramework="net8.0">
+      <!--<group targetFramework="net8.0">
         <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
         <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
-      </group>
+      </group>-->
 		</dependencies>
 	</metadata>
 	<files>

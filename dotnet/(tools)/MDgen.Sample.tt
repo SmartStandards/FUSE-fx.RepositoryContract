@@ -19,11 +19,16 @@
          // BASE-SETTINGS /////////////////////////////////////////////////////////////////////
 
            // Source:
-           inputFile = Host.ResolvePath(".\\bin\\Demo.dll"),
-           interfaceTypeNamePattern = "MyBusinessNamespace.I*",
+           inputFile = Path.GetFullPath(Host.ResolvePath(".\\bin\\Demo.dll")),
+           assemblyResolveDir = Path.GetFullPath(Host.ResolvePath(".\\bin")),
+
+           interfaceTypeNamePatterns = new string[] {
+             "MyBusinessNamespace.I*"
+           },
 
            requireXmlDocForNamespaces = new string[] { 
-             "MyBusinessNamespace"
+             "MyBusinessNamespace",
+             "System.Data.Fuse"
            },
 
            // Output:
@@ -34,7 +39,8 @@
            countOfPrefixCharsToRemove = 1,
 
            namespaceWildcardsForModelImport = new string[] { 
-             "MyBusinessNamespace.*"
+             "MyBusinessNamespace.*",
+             "System.Data.Fuse.*"
            }
 
          //////////////////////////////////////////////////////////////////////////////////////
@@ -42,3 +48,25 @@
 
 #>
 <#=Generate(cfg)#>
+<# /*
+
+      IF YOU GET ANY ERRORS, REGARDING LOAD OF FILEs, PLEASE ENSURE THAT DLLS FROM NUGET-PACKAGES ARE COPIED INTO YOUR OUT-DIR:
+
+      Place this in the frist section of your project-file:
+
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+     -------
+
+      IF YOU GET ANY ERRORS, REGARDING LOAD OF DOCUMENTATION-FILES, PLEASE ENSURE THAT XML FROM NUGET-PACKAGES ARE COPIED INTO YOUR OUT-DIR:
+
+      Place this at the end of your project-file:
+
+        <Target Name="_ResolveCopyLocalNuGetPkgXmls" AfterTargets="ResolveReferences">
+          <ItemGroup><!-- Copy XML files from all PackageReferences to output dir -->
+            <ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->'%(RootDir)%(Directory)%(Filename).xml')"
+            Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)'!='' and Exists('%(RootDir)%(Directory)%(Filename).xml')" />
+          </ItemGroup>
+        </Target>
+
+*/#>
