@@ -8,7 +8,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* Package-Updates (and removed major-version-constraint)
+*(none)*
+
+
+
+## v 0.5.3
+released **2025-05-07**, including:
+ - Package-Updates (and removed major-version-constraint)
 
 
 
