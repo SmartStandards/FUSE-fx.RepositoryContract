@@ -48,8 +48,8 @@
     <Reference Include="FUSE-fx.EntityAnnotations, Version=999.0.0.25199, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\vendor\nuget\FUSE-fx.EntityAnnotations.4.1.2\lib\net46\FUSE-fx.EntityAnnotations.dll</HintPath>
     </Reference>
-    <Reference Include="FUSE-fx.ModelDescription, Version=1.0.0.13846, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelDescription.2.0.20\lib\net46\FUSE-fx.ModelDescription.dll</HintPath>
+    <Reference Include="FUSE-fx.ModelDescription, Version=1.0.0.18376, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelDescription.2.0.21\lib\net46\FUSE-fx.ModelDescription.dll</HintPath>
     </Reference>
     <Reference Include="FUSE-fx.ModelReader, Version=0.1.0.14382, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.13\lib\net46\FUSE-fx.ModelReader.dll</HintPath>
