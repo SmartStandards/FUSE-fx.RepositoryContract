@@ -35,6 +35,9 @@ namespace System.Data.Fuse.Convenience {
       throw new NotImplementedException();
     }
 
+    public Tuple<Type, Type>[] GetManagedTypes() {
+      return Array.Empty<Tuple<Type, Type>>(); // TODO
+    }
   }
 
 }

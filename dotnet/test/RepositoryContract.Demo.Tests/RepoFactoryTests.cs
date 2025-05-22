@@ -56,6 +56,10 @@ namespace RepositoryContract.Tests {
       IRepository<SampleEntity2, int> IRepoFactory<SampleEntity2, int>.GetRepositoryInternal() {
         throw new NotImplementedException();
       }
+
+      public Tuple<Type, Type>[] GetManagedTypes() {
+        throw new NotImplementedException();
+      }
     }
 
     [TestMethod]

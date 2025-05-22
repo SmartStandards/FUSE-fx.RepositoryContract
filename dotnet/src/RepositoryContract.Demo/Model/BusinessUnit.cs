@@ -1,4 +1,8 @@
-﻿namespace RepositoryContract.Demo.Model {
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace RepositoryContract.Demo.Model {
+  [PrimaryIdentity(nameof(Id))]
+  [PropertyGroup(nameof(Id), nameof(Id))]
   public class BusinessUnit {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;

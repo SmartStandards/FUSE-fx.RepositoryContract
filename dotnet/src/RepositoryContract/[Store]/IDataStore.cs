@@ -10,6 +10,7 @@ namespace System.Data.Fuse {
     IRepository<TEntity,TKey> GetRepository<TEntity, TKey>()
       where TEntity : class;
 
+    Tuple<Type, Type>[] GetManagedTypes();
   }
 
 }

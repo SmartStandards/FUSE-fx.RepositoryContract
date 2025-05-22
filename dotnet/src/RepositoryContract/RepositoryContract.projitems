@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ConversionHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\DataStoreExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Convenience\ModelVsEntityDataStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[Store]\IRepoFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\RepoFactoryDataStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\UniversalRepoExtensions.cs" />

@@ -11,6 +11,7 @@ namespace System.Data.Fuse.Convenience {
   public class RepoFactoryDataStore : IDataStore {
 
     private static Dictionary<Type, Func<object>> _RepositoryFactories = new Dictionary<Type, Func<object>>();
+    private static List<Tuple<Type, Type>> _ManagedTypes = new List<Tuple<Type, Type>>();
     private static SchemaRoot _SchemaRoot;
 
     public static void RegisterRepositoryFactory<TModel,TKey>(
@@ -26,12 +27,17 @@ namespace System.Data.Fuse.Convenience {
       _SchemaRoot = ModelReader.GetSchema(
         typeof(TModel).Assembly, _RepositoryFactories.Keys.Select((k) => k.Name).ToArray()
       );
+      _ManagedTypes.Add(new Tuple<Type, Type>(typeof(TModel), typeof(TKey)));
     }
 
     public void BeginTransaction() {
     }
 
     public void CommitTransaction() {
+    }
+
+    public Tuple<Type, Type>[] GetManagedTypes() {
+      return _ManagedTypes.ToArray();
     }
 
     public IRepository<TModel, TKey> GetRepository<TModel, TKey>() where TModel : class {

@@ -91,6 +91,11 @@ namespace System.Data.Fuse.Convenience {
       throw new NotImplementedException();
     }
 
+    public Tuple<Type, Type>[] GetManagedTypes() {
+      return _KeyTypesByEntityName
+        .Select(kvp => new Tuple<Type, Type>(kvp.Key, kvp.Value))
+        .ToArray();
+    }
   }
 
 }

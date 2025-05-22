@@ -31,7 +31,13 @@ namespace RepositoryContract.Tests {
       var contextProvider = new ShortLivingDbConnectionInstanceProvider(
         () => new SqlConnection(@"Server=(localdb)\mssqllocaldb;Database=DemoDbContext")
       );
-      var dataStore = new SqlDataStore(contextProvider, schemaRoot, (EntitySchema es) => {
+      var dataStore = new SqlDataStore(contextProvider, new Tuple<Type, Type>[] {
+        new Tuple<Type,Type>(typeof(Employee),typeof(int)),
+        new Tuple<Type,Type>(typeof(Address),typeof(int)),
+        new Tuple<Type,Type>(typeof(BusinessUnit),typeof(int)),
+        new Tuple<Type,Type>(typeof(BusinessProject),typeof(int)),
+        new Tuple<Type,Type>(typeof(ContractDetails),typeof(int))
+      }, (EntitySchema es) => {
         if (es.Name == "Employee") {
           return "Employees";
         }

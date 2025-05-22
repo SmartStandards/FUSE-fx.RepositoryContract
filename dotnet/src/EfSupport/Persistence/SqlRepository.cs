@@ -29,6 +29,81 @@ namespace System.Data.Fuse.Sql {
       return _SchemaRoot;
     }
 
+    public class NavigationInfo {
+      public EntitySchema OtherType { get; set; } = null;
+      public FieldSchema[] Fields { get; set; } = null;
+      public RelationSchema RelationSchema { get; set; } = null;
+      public PropertyInfo NavigationProperty { get; set; } = null;
+      public string JoinTemplate { get; set; } = null;
+      public FieldSchema LabelField { get; set; } = null;
+    }
+
+    private static Dictionary<string, NavigationInfo[]> _NavigationInfoByFullTypeName;
+
+    protected NavigationInfo[] GetNavigationInfo(Type type) {
+      string fullTypeName = type.FullName;
+      if (_NavigationInfoByFullTypeName == null) {
+        _NavigationInfoByFullTypeName = new Dictionary<string, NavigationInfo[]>();
+      }
+      if (!_NavigationInfoByFullTypeName.TryGetValue(fullTypeName, out var info)) {
+        info = LoadNavigationInfo(type);
+        _NavigationInfoByFullTypeName[fullTypeName] = info;
+      }
+      return info;
+    }
+
+    private NavigationInfo[] LoadNavigationInfo(Type type) {
+      EntitySchema schema = this.GetSchemaRoot().GetSchema(type.Name);
+      IEnumerable<RelationSchema> relations = this.GetSchemaRoot().Relations.Where(
+        (r) => r.ForeignEntityName == type.Name || r.PrimaryEntityName == type.Name
+      );
+
+      if (relations.Count() == 0) {
+        return Array.Empty<NavigationInfo>();
+      }
+      List<NavigationInfo> result = new List<NavigationInfo>();
+      foreach (RelationSchema relation in relations) {
+        if (relation.ForeignEntityName == type.Name) {
+          if (string.IsNullOrEmpty(relation.ForeignNavigationName)) continue;
+          PropertyInfo navigationProp = type.GetProperty(relation.ForeignNavigationName);
+          if (navigationProp == null) continue;
+          NavigationInfo info = new NavigationInfo();
+          EntitySchema otherSchema = this.GetSchemaRoot().GetSchema(relation.PrimaryEntityName);
+          if (otherSchema == null) continue;
+          info.OtherType = otherSchema;
+          info.RelationSchema = relation;
+          info.NavigationProperty = navigationProp;
+          if (typeof(EntityRef).IsAssignableFrom(navigationProp.PropertyType)) {
+            IndexSchema keyIndexSchema = otherSchema.GetIndex(otherSchema.PrimaryKeyIndexName);
+            List<FieldSchema> fields = keyIndexSchema.MemberFieldNames
+              .Select((f) => otherSchema.Fields.Single((fs) => fs.Name == f))
+              .ToList();
+            FieldSchema labelField = otherSchema.Fields.FirstOrDefault((f) => f.IdentityLabel);
+            info.LabelField = labelField;
+            if (labelField != null) {
+              fields.Add(labelField);
+            }
+            info.Fields = fields.ToArray();
+          }
+          else {
+            info.Fields = otherSchema.Fields.ToArray();
+          }
+          IndexSchema foreignKeyIndexSchema = schema.GetIndex(relation.ForeignKeyIndexName);
+          IndexSchema primaryIndexSchema = otherSchema.GetIndex(otherSchema.PrimaryKeyIndexName);
+          if (primaryIndexSchema.MemberFieldNames.Length == 0) { continue; }
+          if (foreignKeyIndexSchema.MemberFieldNames.Length == 0) { continue; }
+          for (int i = 0; i < foreignKeyIndexSchema.MemberFieldNames.Length; ++i) {
+            info.JoinTemplate += $"t0.{foreignKeyIndexSchema.MemberFieldNames[i]} = t{{0}}.{primaryIndexSchema.MemberFieldNames[i]}";
+          }
+          result.Add(info);
+        }
+        else if (relation.PrimaryEntityName == type.Name) {
+          //TODO
+        }
+      }
+      return result.ToArray();
+    }
+
     #endregion
 
     private readonly IDbConnectionProvider _ConnectionProvider;
@@ -106,9 +181,48 @@ namespace System.Data.Fuse.Sql {
 
     #region " Helper Methods "
 
-    private string BuildSelectSql(string whereClause = null, string orderByClause = null, int? limit = null, int? offset = null) {
+    private string BuildSelectSql(
+      bool includeNavigations,
+      string whereClause = null,
+      string orderByClause = null,
+      int? limit = null, int? offset = null
+    ) {
+      NavigationInfo[] navigationInfos = GetNavigationInfo(typeof(TEntity));
+
       StringBuilder sql = new StringBuilder();
-      sql.Append("SELECT * FROM ").Append(_TableName);
+
+      //TODO select only the fields that are in the TEntity
+      if (includeNavigations) {
+        sql.Append($"SELECT t0.*");
+      }
+      else {
+        sql.Append("SELECT *");
+      }
+      int t = 1;
+      if (includeNavigations) {
+        foreach (var info in navigationInfos) {
+          if (info.Fields != null && info.Fields.Length > 0) {
+            sql.Append(", ");
+            sql.Append(string.Join(", ", info.Fields.Select((f) => $"t{t}.{f.Name} as 'nav_{t}.{f.Name}'")));
+          }
+          t++;
+        }
+        t = 1;
+      }
+      if (includeNavigations) {
+      sql.Append($" FROM {_TableName} t0 ");
+      } else {
+        sql.Append($" FROM {_TableName}");
+      }
+      if (includeNavigations) {
+        foreach (var info in navigationInfos) {
+          if (info.Fields != null && info.Fields.Length > 0) {
+            string otherTableName = info.OtherType.NamePlural;
+            sql.Append($"left outer join {otherTableName} t{t} on {string.Format(info.JoinTemplate, t)}");
+          }
+          t++;
+        }
+      }
 
       if (!string.IsNullOrEmpty(whereClause)) {
         sql.Append(" WHERE ").Append(whereClause);
@@ -229,6 +343,9 @@ namespace System.Data.Fuse.Sql {
         if (!first) {
           whereClause.Append(" AND ");
         }
+        //if (useAlias) {
+        //  whereClause.Append("t0.");
+        //}
         whereClause.Append(PrimaryKeySet[i].Name).Append(" = @").Append(PrimaryKeySet[i].Name);
         first = false;
       }
@@ -257,7 +374,8 @@ namespace System.Data.Fuse.Sql {
           whereClause.Append("@").Append(PrimaryKeySet[0].Name).Append(i);
         }
         whereClause.Append(")");
-      } else {
+      }
+      else {
         // Composite primary key - use OR with AND clauses
         whereClause.Append("(");
         for (int keyIndex = 0; keyIndex < keys.Length; keyIndex++) {
@@ -300,7 +418,8 @@ namespace System.Data.Fuse.Sql {
           param.Value = keys[i].GetKeyFieldValues()[0] ?? DBNull.Value;
           command.Parameters.Add(param);
         }
-      } else {
+      }
+      else {
         // Composite primary key
         for (int keyIndex = 0; keyIndex < keys.Length; keyIndex++) {
           object[] keyValues = keys[keyIndex].GetKeyFieldValues();
@@ -327,8 +446,61 @@ namespace System.Data.Fuse.Sql {
     private TEntity DataRowToEntity(IDataReader reader) {
       TEntity entity = Activator.CreateInstance<TEntity>();
 
+      NavigationInfo[] navigationInfos = GetNavigationInfo(typeof(TEntity));
+
+
+      Dictionary<int, object> navigationObjectsByIndex = new Dictionary<int, object>();
+
       for (int i = 0; i < reader.FieldCount; i++) {
         string columnName = reader.GetName(i);
+
+        if (columnName.StartsWith("nav_")) {
+          int indexOfDot = columnName.IndexOf('.');
+          string navIndexString = columnName.Substring(4, indexOfDot - 4);
+          int navIndex = int.Parse(navIndexString) - 1;
+          string fieldName = columnName.Substring(indexOfDot + 1);
+
+          NavigationInfo navigationInfo = navigationInfos[navIndex];
+          object navigationObject;
+          if (!navigationObjectsByIndex.ContainsKey(navIndex)) {
+            navigationObject = Activator.CreateInstance(navigationInfo.NavigationProperty.PropertyType);
+            navigationObjectsByIndex.Add(navIndex, navigationObject);
+            navigationInfo.NavigationProperty.SetValue(entity, navigationObject);
+          }
+          else {
+            navigationObject = navigationObjectsByIndex[navIndex];
+          }
+          object value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+          if (typeof(EntityRef).IsAssignableFrom(navigationObject.GetType())) {
+            EntityRef entityRef = (EntityRef)navigationObject;
+
+            if (navigationInfo.LabelField != null && fieldName == navigationInfo.LabelField.Name) {
+              entityRef.Label = value == null ? "null" : value.ToString();
+            }
+            else {
+              var keyFields = navigationInfo.Fields.Where((f) => f.Name != navigationInfo.LabelField?.Name);
+              if (keyFields.Count() == 1) {
+                entityRef.Key = value;
+              }
+              else {
+                //TODO
+              }
+            }
+          }
+          else {
+            PropertyInfo fieldProperty = navigationInfo.NavigationProperty.PropertyType.GetProperty(fieldName);
+            if (fieldProperty != null) {
+
+
+              if (value != null && fieldProperty.PropertyType != value.GetType()) {
+                value = ConvertToPropertyType(value, fieldProperty.PropertyType);
+              }
+              fieldProperty.SetValue(navigationObject, value);
+            }
+          }
+
+        }
+
         PropertyInfo prop = typeof(TEntity).GetProperty(columnName);
 
         if (prop != null && prop.CanWrite) {
@@ -352,7 +524,8 @@ namespace System.Data.Fuse.Sql {
         int ordinal;
         try {
           ordinal = reader.GetOrdinal(fieldName);
-        } catch (IndexOutOfRangeException) {
+        }
+        catch (IndexOutOfRangeException) {
           continue; // Field not found in result set
         }
 
@@ -374,7 +547,8 @@ namespace System.Data.Fuse.Sql {
 
       try {
         return Convert.ChangeType(value, targetType);
-      } catch {
+      }
+      catch {
         // If direct conversion fails, try more specialized conversions
         if (targetType == typeof(Guid) && value is string) {
           return Guid.Parse((string)value);
@@ -420,7 +594,8 @@ namespace System.Data.Fuse.Sql {
         if (sortField.StartsWith("^")) {
           string descSortField = sortField.Substring(1); // Remove the "^" prefix
           orderByClause.Append(descSortField).Append(" DESC");
-        } else {
+        }
+        else {
           orderByClause.Append(sortField).Append(" ASC");
         }
       }
@@ -472,7 +647,7 @@ namespace System.Data.Fuse.Sql {
 
         // Try to find by primary key first
         using (var command = connection.CreateCommand()) {
-          command.CommandText = BuildSelectSql(BuildWhereClauseForKey(keyValues.ToKey<TKey>()));
+          command.CommandText = BuildSelectSql(false, BuildWhereClauseForKey(keyValues.ToKey<TKey>()));
           AddKeyParameters(command, keyValues.ToKey<TKey>());
 
           using (var reader = command.ExecuteReader()) {
@@ -500,7 +675,7 @@ namespace System.Data.Fuse.Sql {
                 first = false;
               }
 
-              command.CommandText = BuildSelectSql(whereClause.ToString());
+              command.CommandText = BuildSelectSql(false, whereClause.ToString());
 
               for (int i = 0; i < keyset.Count; i++) {
                 var param = command.CreateParameter();
@@ -544,7 +719,8 @@ namespace System.Data.Fuse.Sql {
           }
 
           return existingEntity;
-        } else {
+        }
+        else {
           // Insert new entity
           Dictionary<string, object> fields = ExtractFieldsFromEntity(entity);
 
@@ -554,7 +730,7 @@ namespace System.Data.Fuse.Sql {
 
             var insertedId = command.ExecuteScalar();
 
-            if (insertedId != null) {              
+            if (insertedId != null) {
               if (PrimaryKeySet.Count == 1 && PrimaryKeySet[0].PropertyType == typeof(int)) {
                 insertedId = Convert.ToInt32(insertedId);
                 PropertyInfo keyProp = typeof(TEntity).GetProperty(PrimaryKeySet[0].Name);
@@ -580,7 +756,7 @@ namespace System.Data.Fuse.Sql {
         // Try to find by primary key if values are provided
         if (primaryKeyValues != null) {
           using (var command = connection.CreateCommand()) {
-            command.CommandText = BuildSelectSql(BuildWhereClauseForKey(primaryKeyValues.ToKey<TKey>()));
+            command.CommandText = BuildSelectSql(false, BuildWhereClauseForKey(primaryKeyValues.ToKey<TKey>()));
             AddKeyParameters(command, primaryKeyValues.ToKey<TKey>());
 
             using (var reader = command.ExecuteReader()) {
@@ -610,7 +786,7 @@ namespace System.Data.Fuse.Sql {
                   first = false;
                 }
 
-                command.CommandText = BuildSelectSql(whereClause.ToString());
+                command.CommandText = BuildSelectSql(false, whereClause.ToString());
 
                 for (int i = 0; i < keyset.Count; i++) {
                   var param = command.CreateParameter();
@@ -657,7 +833,8 @@ namespace System.Data.Fuse.Sql {
               prop.SetValue(existingEntity, field.Value);
             }
           }
-        } else {
+        }
+        else {
           // Insert new entity
           using (var command = connection.CreateCommand()) {
             command.CommandText = BuildInsertSql(fields);
@@ -743,6 +920,7 @@ namespace System.Data.Fuse.Sql {
 
         using (var command = connection.CreateCommand()) {
           command.CommandText = BuildSelectSql(
+            true,
             TranslateExpressionTreeToSql(filter),
             BuildOrderByClause(sortedBy),
             limit,
@@ -769,7 +947,7 @@ namespace System.Data.Fuse.Sql {
         List<TEntity> result = new List<TEntity>();
 
         using (var command = connection.CreateCommand()) {
-          command.CommandText = BuildSelectSql(BuildWhereClauseForKeys(keysToLoad));
+          command.CommandText = BuildSelectSql(true, BuildWhereClauseForKeys(keysToLoad));
           AddKeysParameters(command, keysToLoad);
 
           using (var reader = command.ExecuteReader()) {
@@ -789,6 +967,7 @@ namespace System.Data.Fuse.Sql {
 
         using (var command = connection.CreateCommand()) {
           command.CommandText = BuildSelectSql(
+            true,
             TranslateSearchExpressionToSql(searchExpression),
             BuildOrderByClause(sortedBy),
             limit,
@@ -961,7 +1140,8 @@ namespace System.Data.Fuse.Sql {
 
             return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
           }
-        } catch (Exception) {
+        }
+        catch (Exception) {
           // Ignore exceptions and return default(TKey)
         }
 
@@ -996,7 +1176,8 @@ namespace System.Data.Fuse.Sql {
                 deletedKeys.Add(key);
               }
             }
-          } catch (Exception) {
+          }
+          catch (Exception) {
             // Ignore exceptions and continue with the next key
           }
         }
@@ -1013,7 +1194,7 @@ namespace System.Data.Fuse.Sql {
           TEntity existingEntity = null;
 
           using (var command = connection.CreateCommand()) {
-            command.CommandText = BuildSelectSql(BuildWhereClauseForKey(keySetValues.ToKey<TKey>()));
+            command.CommandText = BuildSelectSql(false, BuildWhereClauseForKey(keySetValues.ToKey<TKey>()));
             AddKeyParameters(command, keySetValues.ToKey<TKey>());
 
             using (var reader = command.ExecuteReader()) {
@@ -1045,7 +1226,8 @@ namespace System.Data.Fuse.Sql {
 
             return existingEntity;
           }
-        } catch (Exception) {
+        }
+        catch (Exception) {
           // Ignore exceptions and return null
         }
 
@@ -1068,7 +1250,7 @@ namespace System.Data.Fuse.Sql {
           TEntity existingEntity = null;
 
           using (var command = connection.CreateCommand()) {
-            command.CommandText = BuildSelectSql(BuildWhereClauseForKey(keySetValues.ToKey<TKey>()));
+            command.CommandText = BuildSelectSql(false, BuildWhereClauseForKey(keySetValues.ToKey<TKey>()));
             AddKeyParameters(command, keySetValues.ToKey<TKey>());
 
             using (var reader = command.ExecuteReader()) {
@@ -1096,7 +1278,7 @@ namespace System.Data.Fuse.Sql {
 
             // Retrieve the updated entity to get any database-generated values
             using (var command = connection.CreateCommand()) {
-              command.CommandText = BuildSelectSql(BuildWhereClauseForKey(keySetValues.ToKey<TKey>()));
+              command.CommandText = BuildSelectSql(false, BuildWhereClauseForKey(keySetValues.ToKey<TKey>()));
               AddKeyParameters(command, keySetValues.ToKey<TKey>());
 
               using (var reader = command.ExecuteReader()) {
@@ -1120,7 +1302,8 @@ namespace System.Data.Fuse.Sql {
 
             return conflictingFields;
           }
-        } catch (Exception) {
+        }
+        catch (Exception) {
           // Ignore exceptions and return null
         }
 
@@ -1158,7 +1341,7 @@ namespace System.Data.Fuse.Sql {
             TEntity entity = null;
 
             using (var command = connection.CreateCommand()) {
-              command.CommandText = BuildSelectSql(BuildWhereClauseForKey(currentKey));
+              command.CommandText = BuildSelectSql(false, BuildWhereClauseForKey(currentKey));
               AddKeyParameters(command, currentKey);
 
               using (var reader = command.ExecuteReader()) {
@@ -1201,14 +1384,16 @@ namespace System.Data.Fuse.Sql {
 
                   transaction.Commit();
                   return true;
-                } catch {
+                }
+                catch {
                   transaction.Rollback();
                   throw;
                 }
               }
             }
           }
-        } catch (Exception) {
+        }
+        catch (Exception) {
           // Ignore exceptions and return false
         }
 

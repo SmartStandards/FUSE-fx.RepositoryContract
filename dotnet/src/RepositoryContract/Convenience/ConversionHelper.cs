@@ -341,7 +341,11 @@ namespace System.Data.Fuse.Convenience {
       if (targetPropertyType == null) { return true; }
 
       string entityName = primaryNavigationPropertyRelation.ForeignEntityName;
-      Type modelType = (isMultiple) ? targetPropertyType.GenericTypeArguments[0] : targetPropertyType;
+      Type modelType = (isMultiple) ? (
+        targetPropertyType.IsArray ?
+        targetPropertyType.GetElementType() :
+        targetPropertyType.GenericTypeArguments[0]
+      ) : targetPropertyType;
       if (string.IsNullOrEmpty(primaryNavigationPropertyRelation.ForeignKeyIndexName)) {
         return true;
       }
@@ -661,7 +665,7 @@ namespace System.Data.Fuse.Convenience {
     public static string GetLabel(object o, SchemaRoot schemaRoot) {
       if (o == null) {
         return "";
-      } 
+      }
       Type type = o.GetNonDynamicType();
       EntitySchema entitySchema = schemaRoot.GetSchema(type.Name);
       if (entitySchema == null) {
@@ -715,6 +719,36 @@ namespace System.Data.Fuse.Convenience {
       }
 
       return Activator.CreateInstance(keyType, keyValues);
+    }
+
+    public static object GetKeyType(List<PropertyInfo> keyProperties) {
+      if (keyProperties.Count == 0) {
+        throw new InvalidOperationException("No key properties found");
+      }
+
+      if (keyProperties.Count == 1) {
+        return keyProperties[0];
+      }
+
+      Type keyType = null;
+      switch (keyProperties.Count) {
+        case 2:
+          keyType = typeof(CompositeKey2<,>).MakeGenericType(keyProperties.Select(p => p.PropertyType).ToArray());
+          break;
+        case 3:
+          keyType = typeof(CompositeKey3<,,>).MakeGenericType(keyProperties.Select(p => p.PropertyType).ToArray());
+          break;
+        case 4:
+          keyType = typeof(CompositeKey4<,,,>).MakeGenericType(keyProperties.Select(p => p.PropertyType).ToArray());
+          break;
+        case 5:
+          keyType = typeof(CompositeKey5<,,,,>).MakeGenericType(keyProperties.Select(p => p.PropertyType).ToArray());
+          break;
+        default:
+          throw new InvalidOperationException("Unsupported number of key properties");
+      }
+
+      return keyType;
     }
 
     // gets the key type of the entity. 
@@ -793,7 +827,7 @@ namespace System.Data.Fuse.Convenience {
       );
 
       return (EntityRef[])getEntityRefsBySearchExpressionMethod.Invoke(
-        repository, new object[] { searchExpression, new string[] { } }
+        repository, new object[] { searchExpression, new string[] { }, 0, 0 }
       );
     }
 

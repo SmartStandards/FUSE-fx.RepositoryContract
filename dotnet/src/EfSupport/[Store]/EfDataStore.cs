@@ -8,6 +8,8 @@ using System.Linq;
 using System.Reflection;
 using System.Linq.Dynamic.Core;
 using System.Data.Fuse.Ef.InstanceManagement;
+using System.Data.Fuse.Convenience;
+using System.Collections.Generic;
 
 namespace System.Data.Fuse.Ef {
 
@@ -77,6 +79,21 @@ namespace System.Data.Fuse.Ef {
     public void RollbackTransaction() {
       throw new NotImplementedException();
     }
+
+    public Tuple<Type, Type>[] GetManagedTypes() {
+
+      Type[] types = (
+        from p in typeof(TDbContext).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy)
+        where p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition().Name.StartsWith("DbSet")
+        select p.PropertyType.GetGenericArguments()[0]
+      ).ToArray();
+
+      if (types.Length == 0) {
+        return new Tuple<Type, Type>[0];
+      } else {
+        return types.Select(t => new Tuple<Type, Type>(t, ConversionHelper.GetKeyType(t, GetSchemaRoot()))).ToArray();
+      }
+    }  
 
   }
 

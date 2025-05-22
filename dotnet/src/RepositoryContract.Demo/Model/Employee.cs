@@ -6,6 +6,7 @@ namespace RepositoryContract.Demo.Model {
 
   [PrimaryIdentity(nameof(Id))]
   [PropertyGroup(nameof(Id), nameof(Id))]
+  [PropertyGroup(nameof(BusinessUnitId), nameof(BusinessUnitId))]
   public class Employee : IEquatable<Employee> {
 
     public int Id { get; set; }

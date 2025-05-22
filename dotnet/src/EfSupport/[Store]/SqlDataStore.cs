@@ -22,7 +22,7 @@ namespace System.Data.Fuse.Ef {
     #region " SchemaRoot/Metadata Caching "
 
     private static SchemaRoot _SchemaRoot = null;
-    public SchemaRoot GetSchemaRoot() {     
+    public SchemaRoot GetSchemaRoot() {
       return _SchemaRoot;
     }
 
@@ -32,24 +32,31 @@ namespace System.Data.Fuse.Ef {
     private readonly Func<EntitySchema, string> _TableNameGetter = null;
 
     private IDbConnectionProvider _ConnectionProvider;
+    private readonly Tuple<Type, Type>[] _ManagedTypes;
+
     public IDbConnectionProvider ConnectionProvider {
       get {
         return _ConnectionProvider;
       }
     }
 
-    public SqlDataStore(IDbConnectionProvider connectionProvider, SchemaRoot schemaRoot, Func<EntitySchema, string> tableNameGetter = null) {
+    public SqlDataStore(
+      IDbConnectionProvider connectionProvider,
+      Tuple<Type, Type>[] managedTypes,
+      Func<EntitySchema, string> tableNameGetter = null
+    ) {
       _ConnectionProvider = connectionProvider;
-      _SchemaRoot = schemaRoot;
+      _ManagedTypes = managedTypes;
+      _SchemaRoot = ModelReader.GetSchema(managedTypes.Select((mt) => mt.Item1).ToArray(), true);
       this._TableNameGetter = tableNameGetter != null ? tableNameGetter : (EntitySchema es) => es.NamePlural;
-    }  
+    }
 
     public IRepository<TEntity, TKey> GetRepository<TEntity, TKey>() where TEntity : class {
 
       //HACK: sollte doch nicht immer eine neue instanz sein oder?
       EntitySchema schema = _SchemaRoot.GetSchema(typeof(TEntity).Name);
       string tableName = _TableNameGetter.Invoke(schema);
-      return new SqlRepository<TEntity, TKey>(_ConnectionProvider,_SchemaRoot, tableName);
+      return new SqlRepository<TEntity, TKey>(_ConnectionProvider, _SchemaRoot, tableName);
     }
 
     public void BeginTransaction() {
@@ -62,6 +69,9 @@ namespace System.Data.Fuse.Ef {
       throw new NotImplementedException();
     }
 
+    public Tuple<Type, Type>[] GetManagedTypes() {
+      return _ManagedTypes;
+    }
   }
 
 }

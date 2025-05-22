@@ -17,6 +17,42 @@ namespace System.Data.Fuse.Convenience {
       );
     }
 
+    public static EntityRef<TKey>[] GetEntityRefs<TEntity, TKey>(
+      this IDataStore dataStore, ExpressionTree filter, string[] sortedBy = null, int limit = 100, int skip = 0
+    )
+      where TEntity : class {
+      return dataStore.GetRepository<TEntity, TKey>().GetEntityRefs(
+        filter, sortedBy ?? Array.Empty<string>(), limit, skip
+      );
+    }
+
+    public static EntityRef<TKey>[] GetEntityRefsBySearchExpression<TEntity, TKey>(
+      this IDataStore dataStore, string filter, string[] sortedBy = null, int limit = 100, int skip = 0
+    )
+      where TEntity : class {
+      return dataStore.GetRepository<TEntity, TKey>().GetEntityRefsBySearchExpression(
+        filter, sortedBy ?? Array.Empty<string>(), limit, skip
+      );
+    }
+
+    public static TEntity[] GetEntitiesByKey<TEntity, TKey>(
+      this IDataStore dataStore, TKey[] keys
+    )
+      where TEntity : class {
+      return dataStore.GetRepository<TEntity, TKey>().GetEntitiesByKey(
+        keys
+      );
+    }
+
+    public static EntityRef<TKey>[] GetEntityRefsByKey<TEntity, TKey>(
+      this IDataStore dataStore, TKey[] keys
+    )
+      where TEntity : class {
+      return dataStore.GetRepository<TEntity, TKey>().GetEntityRefsByKey(
+        keys
+      );
+    }
+
     public static TEntity[] GetEntitiesBySearchExpression<TEntity, TKey>(
       this IDataStore dataStore, string searchExpression, string[] sortedBy = null, int limit = 100, int skip = 0
     )

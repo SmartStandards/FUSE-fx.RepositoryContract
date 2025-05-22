@@ -181,6 +181,7 @@ namespace System.Data.Fuse.Convenience {
         if (propValue == null) { pi.SetValue(result, null); continue; }
         if (pi.PropertyType.IsAssignableFrom(propValue.GetType())) {
           pi.SetValue(result, propValue, null);
+          continue;
         }
         if (
           typeof(IEnumerable).IsAssignableFrom(propValue.GetType()) &&

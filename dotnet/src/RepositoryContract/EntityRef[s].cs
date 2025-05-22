@@ -11,6 +11,7 @@ namespace System.Data.Fuse {
 
     public EntityRef() {
     }
+
     public EntityRef(object key, string label) {
       this.Key = key;
       this.Label = label;
@@ -50,6 +51,8 @@ namespace System.Data.Fuse {
   [DebuggerDisplay("EntityRef {Label}")]
   public class EntityRef<TKey> : EntityRef {
 
+    private bool _TypedKeyWasSet;
+
     public EntityRef() {
     }
 
@@ -63,8 +66,17 @@ namespace System.Data.Fuse {
     //NOTE: the 'new' keyword is used to do a socalled 'SHADOWING'
     //which is an override with typechange!
     public new TKey Key {
-      get { return _Key; }
-      set { _Key = value; base.Key = value; }
+      get {
+        if (!_TypedKeyWasSet) {
+          _Key = (TKey)base.Key;
+        } 
+        return _Key;
+      }
+      set {
+        _Key = value;
+        base.Key = value;
+        _TypedKeyWasSet = true;
+      }
     }
 
     /// <summary>
@@ -83,7 +95,6 @@ namespace System.Data.Fuse {
       }
       return this.Key.GetHashCode();
     }
-
   }
 
 }

@@ -52,6 +52,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EfSupport.net48", "src\EfSu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfSupport.net8.0", "src\EfSupport.net8.0\EfSupport.net8.0.csproj", "{7457E4ED-35D8-489E-877F-047D22E5A19C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechDemo.WebApi", "src\TechDemo.WebApi\TechDemo.WebApi.csproj", "{83E7F798-BC20-468D-923E-8C20D6D98543}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +106,10 @@ Global
 		{7457E4ED-35D8-489E-877F-047D22E5A19C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7457E4ED-35D8-489E-877F-047D22E5A19C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7457E4ED-35D8-489E-877F-047D22E5A19C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83E7F798-BC20-468D-923E-8C20D6D98543}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83E7F798-BC20-468D-923E-8C20D6D98543}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83E7F798-BC20-468D-923E-8C20D6D98543}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83E7F798-BC20-468D-923E-8C20D6D98543}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -125,6 +131,7 @@ Global
 		{AA63F109-770D-4C95-945D-A0F57225DC84} = {B9C01000-4A72-4ADD-8569-9AA76495C23C}
 		{76A15D21-891F-442D-9211-BEF1B3C1B422} = {B9C01000-4A72-4ADD-8569-9AA76495C23C}
 		{7457E4ED-35D8-489E-877F-047D22E5A19C} = {B9C01000-4A72-4ADD-8569-9AA76495C23C}
+		{83E7F798-BC20-468D-923E-8C20D6D98543} = {25D3BAED-F39D-452C-BE5B-2436706E4E4E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D2F37C1D-32F0-4BF2-AAEB-46B9D8C07D23}
