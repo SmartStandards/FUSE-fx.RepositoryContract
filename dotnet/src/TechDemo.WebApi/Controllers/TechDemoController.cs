@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Data.Fuse;
 using System.Data.Fuse.Convenience;
 using TechDemo.WebApi.DomainObjects;

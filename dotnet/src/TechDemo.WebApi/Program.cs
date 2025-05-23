@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
 using TechDemo.WebApi.DomainObjects;
 using TechDemo.WebApi.Persistence;
 

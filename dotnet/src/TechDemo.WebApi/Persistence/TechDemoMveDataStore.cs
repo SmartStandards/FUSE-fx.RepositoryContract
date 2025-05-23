@@ -1,4 +1,5 @@
-﻿using System.Convenience;
+﻿using System;
+using System.Convenience;
 using System.Data.Fuse;
 
 namespace TechDemo.WebApi.Persistence {

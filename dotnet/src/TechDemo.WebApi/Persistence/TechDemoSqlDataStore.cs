@@ -1,4 +1,5 @@
-﻿using System.Data.Fuse.Ef;
+﻿using System;
+using System.Data.Fuse.Ef;
 using System.Data.Fuse.Sql.InstanceManagement;
 using System.Data.ModelDescription;
 using System.Data.SqlClient;
