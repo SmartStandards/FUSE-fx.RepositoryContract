@@ -32,7 +32,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "EfSupport", "src\EfSupport\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfSupport.net6.0", "src\EfSupport.net6.0\EfSupport.net6.0.csproj", "{F80F0165-972E-49E4-A6EC-0F3C06C108E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepositoryContract.Tests.net461", "test\RepositoryContract.Tests.Net4\RepositoryContract.Tests.net461.csproj", "{F2F17019-9184-46DC-A950-E2210692BC39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepositoryContract.Tests.net48", "test\RepositoryContract.Tests.Net4\RepositoryContract.Tests.net48.csproj", "{F2F17019-9184-46DC-A950-E2210692BC39}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "demo", "demo", "{25D3BAED-F39D-452C-BE5B-2436706E4E4E}"
 EndProject
