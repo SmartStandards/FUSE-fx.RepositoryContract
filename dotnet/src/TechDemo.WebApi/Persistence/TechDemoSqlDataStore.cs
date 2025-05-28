@@ -13,7 +13,7 @@ namespace TechDemo.WebApi.Persistence {
       new ShortLivingDbConnectionInstanceProvider(() => {
         return new SqlConnection(@"Server=(localdb)\mssqllocaldb;Database=TechDemoDbContext");
       }
-    ), managedTypes, tableNameGetter
+    ), managedTypes, tableNameGetter, "dbo"
     ) {
     }
   }

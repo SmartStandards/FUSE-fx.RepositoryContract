@@ -109,6 +109,8 @@ namespace System.Data.Fuse.Sql {
     private readonly IDbConnectionProvider _ConnectionProvider;
     private readonly bool _OwnsConnection;
     private readonly string _TableName = null;
+    private readonly string _SchemaName = null;
+    private string SchemaAndTableName => string.IsNullOrEmpty(_SchemaName) ? _TableName : $"{_SchemaName}.{_TableName}";
 
     public IDbConnectionProvider ConnectionProvider {
       get {
@@ -125,13 +127,15 @@ namespace System.Data.Fuse.Sql {
     public SqlRepository(
       IDbConnectionProvider connectionProvider,
       SchemaRoot schemaRoot,
-      string tableName = null
+      string tableName = null,
+      string schemaName = null
     ) {
       _ConnectionProvider = connectionProvider;
       _SchemaRoot = schemaRoot;
       _OwnsConnection = false;
       EntitySchema schema = _SchemaRoot.GetSchema(typeof(TEntity).Name);
       this._TableName = string.IsNullOrEmpty(tableName) ? schema.NamePlural : tableName;
+      this._SchemaName = schemaName;
     }
 
     //[Obsolete("This overload is unsafe because it doesn't care about lifetime management of the connection!")]
@@ -140,15 +144,6 @@ namespace System.Data.Fuse.Sql {
     //  _tableName = GetTableName(typeof(TEntity));
     //  _ownsConnection = true;
     //}
-
-    [Obsolete("This overload is unsafe because it doesn't care about lifetime management of the connection!")]
-    public SqlRepository(IDbConnection connection, SchemaRoot schemaRoot, string tableName = null) {
-      _ConnectionProvider = new LongLivingDbConnectionInstanceProvider(connection);
-      _SchemaRoot = schemaRoot;
-      _OwnsConnection = true;
-      EntitySchema schema = _SchemaRoot.GetSchema(typeof(TEntity).Name);
-      this._TableName = string.IsNullOrEmpty(tableName) ? schema.NamePlural : tableName;
-    }
 
     private static List<List<PropertyInfo>> _UniqueKeySets;
     private static List<PropertyInfo> _PrimaryKeySet;
@@ -210,14 +205,17 @@ namespace System.Data.Fuse.Sql {
         t = 1;
       }
       if (includeNavigations) {
-      sql.Append($" FROM {_TableName} t0 ");
-      } else {
-        sql.Append($" FROM {_TableName}");
+        sql.Append($" FROM {SchemaAndTableName} t0 ");
+      }
+      else {
+        sql.Append($" FROM {SchemaAndTableName}");
       }
       if (includeNavigations) {
         foreach (var info in navigationInfos) {
           if (info.Fields != null && info.Fields.Length > 0) {
-            string otherTableName = info.OtherType.NamePlural;
+            string otherTableName = string.IsNullOrEmpty(_SchemaName) ?
+              info.OtherType.NamePlural :
+              $"{_SchemaName}.{info.OtherType.NamePlural}";
             sql.Append($"left outer join {otherTableName} t{t} on {string.Format(info.JoinTemplate, t)}");
           }
           t++;
@@ -248,7 +246,7 @@ namespace System.Data.Fuse.Sql {
 
     private string BuildSelectFieldsSql(string[] fieldNames, string whereClause = null, string orderByClause = null, int? limit = null, int? offset = null) {
       StringBuilder sql = new StringBuilder();
-      sql.Append("SELECT ").Append(string.Join(", ", fieldNames)).Append(" FROM ").Append(_TableName);
+      sql.Append("SELECT ").Append(string.Join(", ", fieldNames)).Append(" FROM ").Append(SchemaAndTableName);
 
       if (!string.IsNullOrEmpty(whereClause)) {
         sql.Append(" WHERE ").Append(whereClause);
@@ -274,7 +272,7 @@ namespace System.Data.Fuse.Sql {
 
     private string BuildCountSql(string whereClause = null) {
       StringBuilder sql = new StringBuilder();
-      sql.Append("SELECT COUNT(*) FROM ").Append(_TableName);
+      sql.Append("SELECT COUNT(*) FROM ").Append(SchemaAndTableName);
 
       if (!string.IsNullOrEmpty(whereClause)) {
         sql.Append(" WHERE ").Append(whereClause);
@@ -312,7 +310,7 @@ namespace System.Data.Fuse.Sql {
         first = false;
       }
 
-      return $"INSERT INTO {_TableName} ({columnNames}) VALUES ({parameterNames}) SELECT SCOPE_IDENTITY()";
+      return $"INSERT INTO {SchemaAndTableName} ({columnNames}) VALUES ({parameterNames}) SELECT SCOPE_IDENTITY()";
     }
 
     private string BuildUpdateSql(Dictionary<string, object> fields, string whereClause) {
@@ -327,11 +325,11 @@ namespace System.Data.Fuse.Sql {
         first = false;
       }
 
-      return $"UPDATE {_TableName} SET {setClause} WHERE {whereClause}";
+      return $"UPDATE {SchemaAndTableName} SET {setClause} WHERE {whereClause}";
     }
 
     private string BuildDeleteSql(string whereClause) {
-      return $"DELETE FROM {_TableName} WHERE {whereClause}";
+      return $"DELETE FROM {SchemaAndTableName} WHERE {whereClause}";
     }
 
     private string BuildWhereClauseForKey(TKey key) {
