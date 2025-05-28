@@ -69,13 +69,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\EfSupport.net461\EfSupport.net461.csproj">
-      <Project>{b0ba06fe-6437-4b9e-8c76-3adfc8d191d3}</Project>
-      <Name>EfSupport.net461</Name>
+    <ProjectReference Include="..\..\src\EfSupport.net48\EfSupport.net48.csproj">
+      <Project>{76a15d21-891f-442d-9211-bef1b3c1b422}</Project>
+      <Name>EfSupport.net48</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\src\RepositoryContract.net461\RepositoryContract.net461.csproj">
-      <Project>{b0ba06fe-6437-4b9e-8c76-3adfc8d191d2}</Project>
-      <Name>RepositoryContract.net461</Name>
+    <ProjectReference Include="..\..\src\RepositoryContract.net48\RepositoryContract.net48.csproj">
+      <Project>{aa63f109-770d-4c95-945d-a0f57225dc84}</Project>
+      <Name>RepositoryContract.net48</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
