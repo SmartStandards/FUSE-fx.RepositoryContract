@@ -15,10 +15,6 @@
 		<icon>PackageIcon.png</icon>
 		<projectUrl>https://github.com/SmartStandards/FUSE-fx.RepositoryContract</projectUrl>
 		<dependencies>
-			<group targetFramework=".NETFramework4.6">
-        <dependency id="FUSE-fx.ModelReader" version="0.2.14" />
-        <dependency id="System.Linq.Dynamic.Core" version="1.4.3" />
-			</group>
       <group targetFramework=".NETFramework4.8">
         <dependency id="FUSE-fx.ModelReader" version="0.2.14" />
         <dependency id="System.Linq.Dynamic.Core" version="1.4.3" />
@@ -27,19 +23,15 @@
         <dependency id="FUSE-fx.ModelReader" version="0.2.14" />
         <dependency id="System.Linq.Dynamic.Core" version="1.4.3" />
 			</group>
-      <!--<group targetFramework="net8.0">
-        <dependency id="FUSE-fx.ModelReader" version="0.2.8" />
+      <group targetFramework="net8.0">
+        <dependency id="FUSE-fx.ModelReader" version="0.2.14" />
         <dependency id="System.Linq.Dynamic.Core" version="1.4.3" />
-      </group>-->
+      </group>
 		</dependencies>
 	</metadata>
 	<files>
 		<!-- https://docs.microsoft.com/en-us/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
-		<file src="PackageIcon.png" target="" />
-		<!-- .NET 4.6.1 -->
-		<file src="dist\bin-net46\FUSE-fx.RepositoryContract.dll" target="lib/net46" />
-		<file src="dist\bin-net46\FUSE-fx.RepositoryContract.xml" target="lib/net46" />
-		<file src="dist\bin-net46\FUSE-fx.RepositoryContract.pdb" target="lib/net46" />
+		<file src="PackageIcon.png" target="" />		
     <!-- .NET 4.8 -->
     <file src="dist\bin-net48\FUSE-fx.RepositoryContract.dll" target="lib/net48" />
     <file src="dist\bin-net48\FUSE-fx.RepositoryContract.xml" target="lib/net48" />
@@ -48,9 +40,9 @@
 		<file src="dist\bin-net6.0\FUSE-fx.RepositoryContract.dll" target="lib/net6.0" />
 		<file src="dist\bin-net6.0\FUSE-fx.RepositoryContract.xml" target="lib/net6.0" />
 		<file src="dist\bin-net6.0\FUSE-fx.RepositoryContract.pdb" target="lib/net6.0" />
-    <!-- .NET 6.0 -->
-    <!--<file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.dll" target="lib/net8.0" />
+    <!-- .NET 8.0 -->
+    <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.dll" target="lib/net8.0" />
     <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.xml" target="lib/net8.0" />
-    <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.pdb" target="lib/net8.0" />-->
+    <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.pdb" target="lib/net8.0" />
 	</files>
 </package>
