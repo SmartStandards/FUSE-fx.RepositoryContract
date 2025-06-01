@@ -34,7 +34,7 @@ namespace TechDemo.WebApi.Controllers {
       //TestMveDataStore();
 
       Nation nation1 = _SqlDataStore.AddOrUpdate<Nation, int>(new Nation() {
-        Code = 1,
+        Code = NationCode.Code1,
         Name = "United States",
       });
       Person person1 = _SqlDataStore.AddOrUpdate<Person, int>(new Person() {
@@ -50,12 +50,14 @@ namespace TechDemo.WebApi.Controllers {
       var loadedNation = people[0].Nation;
       var loadedAddresses = people[0].Addresses;
 
+      Nation[] nations = _SqlDataStore.GetEntities<Nation, int>(ExpressionTree.Empty());
+
       return Ok();
     }
 
     private void TestMveDataStore() {
       Nation nation1 = _MveDataStore.AddOrUpdate<Nation, int>(new Nation() {
-        Code = 1,
+        Code = NationCode.Code1,
         Name = "United States",
       });
       Person person1 = _MveDataStore.AddOrUpdate<Person, int>(new Person() {
@@ -73,7 +75,7 @@ namespace TechDemo.WebApi.Controllers {
 
     private void TestEfDataStore() {
       NationEntity nation1 = _EfDataStore.AddOrUpdate<NationEntity, int>(new NationEntity() {
-        Code = 1,
+        Code = NationCode.Code1,
         Name = "United States",
       });
       PersonEntity person1 = _EfDataStore.AddOrUpdate<PersonEntity, int>(new PersonEntity() {

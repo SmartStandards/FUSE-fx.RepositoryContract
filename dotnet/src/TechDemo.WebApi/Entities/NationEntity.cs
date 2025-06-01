@@ -6,6 +6,6 @@ namespace TechDemo.WebApi.Entities {
   public class NationEntity {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int Code { get; set; }
+    public NationCode Code { get; set; }
   }
 }

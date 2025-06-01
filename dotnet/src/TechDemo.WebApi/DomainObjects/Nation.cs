@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TechDemo.WebApi.Entities;
 
 namespace TechDemo.WebApi.DomainObjects {
   [PrimaryIdentity(nameof(Id))]
@@ -8,6 +9,6 @@ namespace TechDemo.WebApi.DomainObjects {
     public int Id { get; set; }
     [IdentityLabel]
     public string Name { get; set; } = string.Empty;
-    public int Code { get; set; }
+    public NationCode Code { get; set; }
   }
 }

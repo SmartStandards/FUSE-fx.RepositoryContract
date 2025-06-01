@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Text;
 #if NETCOREAPP
 using System.Text.Json;
+using System.Windows.Markup;
 #endif
 
 namespace System.Data.Fuse.Sql {
@@ -536,6 +537,7 @@ namespace System.Data.Fuse.Sql {
 
     private object ConvertToPropertyType(object value, Type targetType) {
       if (value == null) return null;
+      if (targetType == null) return value;
 
       if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>)) {
         targetType = Nullable.GetUnderlyingType(targetType);
@@ -544,9 +546,7 @@ namespace System.Data.Fuse.Sql {
       if (value.GetType() == targetType) return value;
 
       try {
-        return Convert.ChangeType(value, targetType);
-      }
-      catch {
+
         // If direct conversion fails, try more specialized conversions
         if (targetType == typeof(Guid) && value is string) {
           return Guid.Parse((string)value);
@@ -555,6 +555,20 @@ namespace System.Data.Fuse.Sql {
         if (targetType == typeof(DateTime) && value is string) {
           return DateTime.Parse((string)value);
         }
+
+        // Handle enums 
+        if (targetType.IsEnum) {
+          if (value is string strValue) {
+            return Enum.Parse(targetType, strValue, ignoreCase: true);
+          }
+          else {
+            return Enum.ToObject(targetType, value);
+          }
+        }
+
+        return Convert.ChangeType(value, targetType);
+      }
+      catch {        
 
         // Return null if conversion is not possible
         return null;

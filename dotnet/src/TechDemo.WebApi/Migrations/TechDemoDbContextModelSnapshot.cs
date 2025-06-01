@@ -44,7 +44,7 @@ namespace TechDemo.WebApi.Migrations
 
                     b.HasIndex("PersonId");
 
-                    b.ToTable("Addresses");
+                    b.ToTable("Addresses", (string)null);
                 });
 
             modelBuilder.Entity("TechDemo.WebApi.Entities.NationEntity", b =>
@@ -64,7 +64,7 @@ namespace TechDemo.WebApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Nations");
+                    b.ToTable("Nations", (string)null);
                 });
 
             modelBuilder.Entity("TechDemo.WebApi.Entities.PersonEntity", b =>
@@ -86,7 +86,7 @@ namespace TechDemo.WebApi.Migrations
 
                     b.HasIndex("NationId");
 
-                    b.ToTable("People");
+                    b.ToTable("People", (string)null);
                 });
 
             modelBuilder.Entity("TechDemo.WebApi.Entities.AddressEntity", b =>
