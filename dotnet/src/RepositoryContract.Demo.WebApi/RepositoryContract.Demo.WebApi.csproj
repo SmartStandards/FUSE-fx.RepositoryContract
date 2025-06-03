@@ -25,11 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="jose-jwt" Version="4.1.0" />
-    <PackageReference Include="kGEN.Generator" Version="1.5.0.853" />
-    <PackageReference Include="KornSW.AccessControl" Version="1.0.0.547" />
-    <PackageReference Include="KornSW.EntityFrameworkCore.DataAccessFilter" Version="2.0.864" />
-    <PackageReference Include="KornSW.TokenValidation" Version="1.1.0.633" />
-    <PackageReference Include="KornSW.Tools.MDgen" Version="1.1.3" />
+    <PackageReference Include="KornSW.EntityFrameworkCore.DataAccessFilter" Version="2.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.16" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.16" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.7" />
@@ -37,7 +33,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.3" />
     <PackageReference Include="UID64" Version="1.0.1" />
-    <PackageReference Include="UJMW.DynamicController" Version="4.0.5" />
+    <PackageReference Include="UJMW.DynamicController" Version="4.1.4" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,7 +5,7 @@ VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4130D21C-FE8F-4925-93E7-217B4AF1B7D9}"
 	ProjectSection(SolutionItems) = preProject
-		..\vers\changelog.md = ..\vers\changelog.md
+		..\doc\changelog.md = ..\doc\changelog.md
 		FUSE-fx.EfSupport.nuspec = FUSE-fx.EfSupport.nuspec
 		FUSE-fx.RepositoryContract.nuspec = FUSE-fx.RepositoryContract.nuspec
 		..\readme.md = ..\readme.md
@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.net6.0",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{CD3C708D-7B37-40E1-8808-68DA9E2AD789}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.Tests", "test\RepositoryContract.Demo.Tests\RepositoryContract.Tests.csproj", "{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.Tests.net6.0", "test\RepositoryContract.Tests.net6.0\RepositoryContract.Tests.net6.0.csproj", "{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{B9C01000-4A72-4ADD-8569-9AA76495C23C}"
 EndProject
@@ -32,7 +32,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "EfSupport", "src\EfSupport\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfSupport.net6.0", "src\EfSupport.net6.0\EfSupport.net6.0.csproj", "{F80F0165-972E-49E4-A6EC-0F3C06C108E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepositoryContract.Tests.net48", "test\RepositoryContract.Tests.Net4\RepositoryContract.Tests.net48.csproj", "{F2F17019-9184-46DC-A950-E2210692BC39}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepositoryContract.Tests.net48", "test\RepositoryContract.Tests.net48\RepositoryContract.Tests.net48.csproj", "{F2F17019-9184-46DC-A950-E2210692BC39}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "demo", "demo", "{25D3BAED-F39D-452C-BE5B-2436706E4E4E}"
 EndProject
