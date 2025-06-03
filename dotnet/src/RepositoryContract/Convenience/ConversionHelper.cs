@@ -112,6 +112,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     internal static AsyncLocal<List<string>> _VisitedTypeNames;
+    internal static object _VisitedTypeNamesLock = new object();
 
     public static Func<PropertyInfo, object, Dictionary<string, object>, bool> DismissNavigations(SchemaRoot schema) {
       return (pi, entity, dict) => {
@@ -168,9 +169,10 @@ namespace System.Data.Fuse.Convenience {
         }
 
         if (
-            _VisitedTypeNames != null &&
-            _VisitedTypeNames.Value != null &&
-            !_VisitedTypeNames.Value.Contains(entity.GetType().Name)) {
+          _VisitedTypeNames != null &&
+          _VisitedTypeNames.Value != null &&
+          !_VisitedTypeNames.Value.Contains(entity.GetType().Name)
+        ) {
           _VisitedTypeNames.Value.Add(entity.GetType().Name);
         }
 

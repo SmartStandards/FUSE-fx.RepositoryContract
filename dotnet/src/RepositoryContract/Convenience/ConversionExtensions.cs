@@ -82,22 +82,25 @@ namespace System.Data.Fuse.Convenience {
     ) {
       Type t = typeof(T);
       Dictionary<string, object> result = new Dictionary<string, object>();
-      bool initVisitedTypeNames = ConversionHelper._VisitedTypeNames == null;
-      if (initVisitedTypeNames) {
-        ConversionHelper._VisitedTypeNames = new AsyncLocal<List<string>>();
-        ConversionHelper._VisitedTypeNames.Value = new List<string>();
-      }
-      foreach (PropertyInfo pi in t.GetProperties()) {
-        try {
-          if (!pi.CanWrite) continue;
-          if (handleProperty(pi, entity, result)) continue;
-          if (result.ContainsKey(pi.Name)) { continue; }
-          result.Add(pi.Name, pi.GetValue(entity));
-        } catch (Exception) {
+      lock (ConversionHelper._VisitedTypeNamesLock) {
+        bool initVisitedTypeNames = ConversionHelper._VisitedTypeNames == null;
+        if (initVisitedTypeNames) {
+          ConversionHelper._VisitedTypeNames = new AsyncLocal<List<string>>();
+          ConversionHelper._VisitedTypeNames.Value = new List<string>();
         }
-      }
-      if (initVisitedTypeNames) {
-        ConversionHelper._VisitedTypeNames = null;
+        foreach (PropertyInfo pi in t.GetProperties()) {
+          try {
+            if (!pi.CanWrite) continue;
+            if (handleProperty(pi, entity, result)) continue;
+            if (result.ContainsKey(pi.Name)) { continue; }
+            result.Add(pi.Name, pi.GetValue(entity));
+          }
+          catch (Exception) {
+          }
+        }
+        if (initVisitedTypeNames) {
+          ConversionHelper._VisitedTypeNames = null;
+        }
       }
       return result;
     }
@@ -211,42 +214,58 @@ namespace System.Data.Fuse.Convenience {
     public static object GetValue(PropertyInfo prop, JsonElement propertyValue) {
       if (prop.PropertyType == typeof(string)) {
         return propertyValue.GetString();
-      } else if (prop.PropertyType == typeof(Int64)) {
+      }
+      else if (prop.PropertyType == typeof(Int64)) {
         return propertyValue.GetInt64();
-      } else if (prop.PropertyType == typeof(bool)) {
+      }
+      else if (prop.PropertyType == typeof(bool)) {
         return propertyValue.GetBoolean();
-      } else if (prop.PropertyType == typeof(DateTime)) {
+      }
+      else if (prop.PropertyType == typeof(DateTime)) {
         return propertyValue.GetDateTime();
-      } else if (prop.PropertyType == typeof(Int32)) {
+      }
+      else if (prop.PropertyType == typeof(Int32)) {
         return propertyValue.GetInt32();
-      } else if (prop.PropertyType == typeof(decimal)) {
+      }
+      else if (prop.PropertyType == typeof(decimal)) {
         return propertyValue.GetDecimal();
-      } else if (prop.PropertyType == typeof(Guid)) {
+      }
+      else if (prop.PropertyType == typeof(Guid)) {
         return propertyValue.GetGuid();
-      } else if (prop.PropertyType == typeof(double)) {
+      }
+      else if (prop.PropertyType == typeof(double)) {
         return propertyValue.GetDouble();
-      } else {
+      }
+      else {
         return null;
       }
     }
     public static object GetValue(Type t, JsonElement propertyValue) {
       if (t == typeof(string)) {
         return propertyValue.GetString();
-      } else if (t == typeof(Int64)) {
+      }
+      else if (t == typeof(Int64)) {
         return propertyValue.GetInt64();
-      } else if (t == typeof(bool)) {
+      }
+      else if (t == typeof(bool)) {
         return propertyValue.GetBoolean();
-      } else if (t == typeof(DateTime)) {
+      }
+      else if (t == typeof(DateTime)) {
         return propertyValue.GetDateTime();
-      } else if (t == typeof(Int32)) {
+      }
+      else if (t == typeof(Int32)) {
         return propertyValue.GetInt32();
-      } else if (t == typeof(decimal)) {
+      }
+      else if (t == typeof(decimal)) {
         return propertyValue.GetDecimal();
-      } else if (t == typeof(Guid)) {
+      }
+      else if (t == typeof(Guid)) {
         return propertyValue.GetGuid();
-      } else if (t == typeof(double)) {
+      }
+      else if (t == typeof(double)) {
         return propertyValue.GetDouble();
-      } else {
+      }
+      else {
         return null;
       }
     }
@@ -281,21 +300,23 @@ namespace System.Data.Fuse.Convenience {
             PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
             if (foreignKeyPropertyTarget == null) { continue; }
             foreignKeyPropertyTarget.SetValue(target, idValue);
-          } else {
+          }
+          else {
             PropertyInfo targetProperty = target.GetType().GetProperty(sourceProperty.Key.CapitalizeFirst());
             if (targetProperty == null) { continue; }
             SetPropertyValue(targetProperty, target, propertyValueJson);
           }
-        } else {
+        }
+        else {
 #endif
-        if (propertyValue.GetType().IsClass) {
-          PropertyInfo otherIdProperty = propertyValue.GetType().GetProperty("Id");
-          if (otherIdProperty == null) { continue; }
-          string foreignKeyPropertyName = sourceProperty.Key + "Id";
-          PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
-          if (foreignKeyPropertyTarget == null) { continue; }
-          object idValue = otherIdProperty.GetValue(propertyValue);
-          foreignKeyPropertyTarget.SetValue(target, idValue);
+          if (propertyValue.GetType().IsClass) {
+            PropertyInfo otherIdProperty = propertyValue.GetType().GetProperty("Id");
+            if (otherIdProperty == null) { continue; }
+            string foreignKeyPropertyName = sourceProperty.Key + "Id";
+            PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
+            if (foreignKeyPropertyTarget == null) { continue; }
+            object idValue = otherIdProperty.GetValue(propertyValue);
+            foreignKeyPropertyTarget.SetValue(target, idValue);
 #if NETCOREAPP
           }
 #endif
@@ -307,13 +328,17 @@ namespace System.Data.Fuse.Convenience {
     public static void SetPropertyValue(PropertyInfo targetProperty, object target, JsonElement propertyValue) {
       if (targetProperty.PropertyType == typeof(string)) {
         targetProperty.SetValue(target, propertyValue.GetString());
-      } else if (targetProperty.PropertyType == typeof(Int64)) {
+      }
+      else if (targetProperty.PropertyType == typeof(Int64)) {
         targetProperty.SetValue(target, propertyValue.GetInt64());
-      } else if (targetProperty.PropertyType == typeof(bool)) {
+      }
+      else if (targetProperty.PropertyType == typeof(bool)) {
         targetProperty.SetValue(target, propertyValue.GetBoolean());
-      } else if (targetProperty.PropertyType == typeof(DateTime)) {
+      }
+      else if (targetProperty.PropertyType == typeof(DateTime)) {
         targetProperty.SetValue(target, propertyValue.GetDateTime());
-      } else if (targetProperty.PropertyType == typeof(Int32)) {
+      }
+      else if (targetProperty.PropertyType == typeof(Int32)) {
         targetProperty.SetValue(target, propertyValue.GetInt32());
       }
     }
