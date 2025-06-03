@@ -8,7 +8,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* cleaned solution structure
+*(none)*
+
+
+
+## v 0.5.11
+released **2025-06-03**, including:
+ - cleaned solution structure
 
 
 
