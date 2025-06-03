@@ -1,6 +1,6 @@
 {
   "name": "fusefx-repositorycontract",
-  "version": "0.1.0",
+  "version": "0.5.12",
   "description": "FUSE-fx RepositoryContract",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

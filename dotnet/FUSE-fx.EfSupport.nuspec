@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>FUSE-fx.EfSupport</id>
-		<version>999.0.0-localbuild</version>
+		<version>0.5.12</version>
 		<title>FUSE-fx.EfSupport</title>
 		<authors>SmartStandards</authors>
 		<owners>SmartStandards</owners>
@@ -16,15 +16,15 @@
 		<projectUrl>https://github.com/SmartStandards/FUSE-fx.RepositoryContract</projectUrl>
 		<dependencies>
       <group targetFramework=".NETFramework4.8">
-        <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
+        <dependency id="FUSE-fx.RepositoryContract" version="[0.5.12]" />
         <dependency id="EntityFramework" version="6.4.4" />
       </group>
       <group targetFramework="net6.0">
-        <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
+        <dependency id="FUSE-fx.RepositoryContract" version="[0.5.12]" />
         <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
 			</group>
       <group targetFramework="net8.0">
-        <dependency id="FUSE-fx.RepositoryContract" version="999.0.0-localbuild" />
+        <dependency id="FUSE-fx.RepositoryContract" version="[0.5.12]" />
         <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
       </group>
 		</dependencies>
