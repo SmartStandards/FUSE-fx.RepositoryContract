@@ -6,9 +6,9 @@ This files contains a version history including all changes relevant for semanti
 
 
 
-## Upcoming Changes
-
-*(none)*
+## Upcoming Changes (0.4.14-fix46)
+released **2025-06-04**, including:
+ - new revision without significant changes
 
 
 

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -13,10 +13,10 @@
     <Product>FUSE-fx.EfSupport</Product>
     <Company>(public domain)</Company>
     <Copyright>SmartStandards</Copyright>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Version>0.4.14-fix46</Version>
+    <AssemblyVersion>0.4.14</AssemblyVersion>
     <Authors>SmartStandards</Authors>
-    <FileVersion>1.0.0.0</FileVersion>
+    <FileVersion>0.4.14</FileVersion>
     <PackageTags></PackageTags>
     <Nullable>enable</Nullable>
   </PropertyGroup>
