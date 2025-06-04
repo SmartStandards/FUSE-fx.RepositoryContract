@@ -82,22 +82,25 @@ namespace System.Data.Fuse.Convenience {
     ) {
       Type t = typeof(T);
       Dictionary<string, object> result = new Dictionary<string, object>();
-      bool initVisitedTypeNames = ConversionHelper._VisitedTypeNames == null;
-      if (initVisitedTypeNames) {
-        ConversionHelper._VisitedTypeNames = new AsyncLocal<List<string>>();
-        ConversionHelper._VisitedTypeNames.Value = new List<string>();
-      }
-      foreach (PropertyInfo pi in t.GetProperties()) {
-        try {
-          if (!pi.CanWrite) continue;
-          if (handleProperty(pi, entity, result)) continue;
-          if (result.ContainsKey(pi.Name)) { continue; }
-          result.Add(pi.Name, pi.GetValue(entity));
-        } catch (Exception) {
+      lock (ConversionHelper._VisitedTypeNamesLock) {
+        bool initVisitedTypeNames = ConversionHelper._VisitedTypeNames == null;
+        if (initVisitedTypeNames) {
+          ConversionHelper._VisitedTypeNames = new AsyncLocal<List<string>>();
+          ConversionHelper._VisitedTypeNames.Value = new List<string>();
         }
-      }
-      if (initVisitedTypeNames) {
-        ConversionHelper._VisitedTypeNames = null;
+        foreach (PropertyInfo pi in t.GetProperties()) {
+          try {
+            if (!pi.CanWrite) continue;
+            if (handleProperty(pi, entity, result)) continue;
+            if (result.ContainsKey(pi.Name)) { continue; }
+            result.Add(pi.Name, pi.GetValue(entity));
+          }
+          catch (Exception) {
+          }
+        }
+        if (initVisitedTypeNames) {
+          ConversionHelper._VisitedTypeNames = null;
+        }
       }
       return result;
     }
