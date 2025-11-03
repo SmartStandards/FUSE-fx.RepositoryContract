@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef.InstanceManagement;
@@ -620,12 +621,14 @@ namespace System.Data.Fuse.Sql {
 
       EntitySchema entitySchema = GetSchemaRoot().GetSchema(typeof(TEntity).Name);
       foreach (PropertyInfo prop in typeof(TEntity).GetProperties()) {
-        if (
-          !entitySchema.Fields.Any(
-            f => String.Compare(f.Name, prop.Name, StringComparison.OrdinalIgnoreCase) == 0
-          )
-        ) {
+        FieldSchema fieldSchema = entitySchema.Fields.FirstOrDefault(
+          f => String.Compare(f.Name, prop.Name, StringComparison.OrdinalIgnoreCase) == 0
+        );
+        if (fieldSchema == null) {
           continue; // Skip properties not in the schema
+        }
+        if (fieldSchema.SetabilityFlags == (int)Setability.Never) {
+          continue; // Skip read-only fields
         }
         if (prop.CanRead) {
           fields[prop.Name] = prop.GetValue(entity);
