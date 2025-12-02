@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.net6.0",
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{CD3C708D-7B37-40E1-8808-68DA9E2AD789}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.Tests.net6.0", "test\RepositoryContract.Tests.net6.0\RepositoryContract.Tests.net6.0.csproj", "{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.Tests.net8.0", "test\RepositoryContract.Tests.net8.0\RepositoryContract.Tests.net8.0.csproj", "{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{B9C01000-4A72-4ADD-8569-9AA76495C23C}"
 EndProject
