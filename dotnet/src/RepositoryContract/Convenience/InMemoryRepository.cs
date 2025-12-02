@@ -90,7 +90,6 @@ namespace System.Data.Fuse.Convenience {
       }
     }
 
-    //AI - minor adjustments
     public Dictionary<string, object> AddOrUpdateEntityFields(
       Dictionary<string, object> fields
     ) {
@@ -481,42 +480,43 @@ namespace System.Data.Fuse.Convenience {
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> TryUpdateEntityFields(Dictionary<string, object> fields) {
-      // Check if the dictionary contains all the key fields
-      var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
-      if (!keyFieldNames.All(k => fields.ContainsKey(k))) {
-        throw new ArgumentException("The given dictionary must contain all the key fields.");
-      }
+      // Check for existing entity by primary key
+      object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
+      TEntity existingEntity = (primaryKeyValues == null)
+        ? null : _Entities.FindMatchByValues(primaryKeyValues, PrimaryKeySet.ToArray());
 
-      try {
-        // Check if the entity exists
-        object[] keySetValues = fields.TryGetValuesByFields(PrimaryKeySet);
-        TEntity existingEntity = _Entities.FindMatchByValues(keySetValues, PrimaryKeySet.ToArray());
-
-        // If the entity exists, update its fields
-        if (existingEntity != null) {
-          CopyFields2(fields, existingEntity);
-
-          // Build a dictionary of the fields that are different from the given values
-          Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
-          foreach (var field in fields) {
-            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
-            if (propertyInfo != null) {
-              var updatedValue = propertyInfo.GetValue(existingEntity);
-              if (!Equals(updatedValue, field.Value)) {
-                conflictingFields[field.Key] = updatedValue;
-              }
-            }
+      // If not found by primary key, check for existing entity by unique keysets
+      if (existingEntity == null) {
+        foreach (var keyset in Keysets) {
+          object[] keysetValues = fields.GetValues(keyset);
+          existingEntity = (keysetValues == null)
+            ? null : _Entities.FindMatchByValues(keysetValues, keyset.ToArray());
+          if (existingEntity != null) {
+            break;
           }
-
-          // Return the dictionary of conflicting fields
-          return conflictingFields;
         }
-      } catch (Exception) {
-        // Ignore exceptions and return null
       }
 
-      // If the entity does not exist or if an error occurs, return null
-      return null;
+      if (existingEntity != null) {
+        // If existing entity found, update it
+        CopyFields2(fields, existingEntity);
+      } else {
+        return null;
+      }
+
+      // Convert the updated entity back to a dictionary and return it
+      Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
+      foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
+        var updatedValue = propertyInfo.GetValue(existingEntity);
+        if (
+          !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
+          !Equals(updatedValue, originalValue)
+        ) {
+          conflictingFields[propertyInfo.Name] = updatedValue;
+        }
+      }
+
+      return conflictingFields;
     }
 
     /// <summary>
@@ -540,11 +540,12 @@ namespace System.Data.Fuse.Convenience {
 
           // If the entity with the new key does not exist, update the key
           if (newEntity == null) {
-            foreach (var propertyInfo in PrimaryKeySet) {
-              var newKeyValue = newKey.GetType().GetProperty(propertyInfo.Name).GetValue(newKey);
+            int i = 0;
+            foreach (PropertyInfo propertyInfo in PrimaryKeySet) {
+              object newKeyValue = newKeyValues[i++];
               propertyInfo.SetValue(existingEntity, newKeyValue);
-            }
-
+            }            
+            
             return true;
           }
         }

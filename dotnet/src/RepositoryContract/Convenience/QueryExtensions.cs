@@ -206,6 +206,12 @@ namespace System.Data.Fuse.Convenience {
           ) {
             relationElementValue = JsonSerializer.Deserialize<Guid>(relationElementValue).ToString();
           }
+          if (
+            fieldType == "String" &&
+            (relationElementValue.Contains("\""))
+          ) {
+            relationElementValue = JsonSerializer.Deserialize<string>(relationElementValue) ?? "";
+          }
 #endif
 
           serializedValue = ResolveStringField(
@@ -409,6 +415,13 @@ namespace System.Data.Fuse.Convenience {
       return expressionTree;
     }
 
+    /// <summary>
+    /// For each property in 'properties' tries to get the value from the 'fields' dictionary.
+    /// If one property is missing, then null is returned.
+    /// </summary>
+    /// <param name="fields"></param>
+    /// <param name="properties"></param>
+    /// <returns></returns>
     public static object[] TryGetValuesByFields(
       this Dictionary<string, object> fields,
       List<PropertyInfo> properties
@@ -418,7 +431,7 @@ namespace System.Data.Fuse.Convenience {
         if (!fields.ContainsKey(propertyInfo.Name)) {
           return null;
         }
-        values.Add(propertyInfo.GetValue(fields[propertyInfo.Name], null));
+        values.Add(fields[propertyInfo.Name]);
       }
       return values.ToArray();
     }

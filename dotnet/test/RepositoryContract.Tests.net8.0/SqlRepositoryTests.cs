@@ -1,13 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 using RepositoryContract.Demo.Model;
 using RepositoryContract.Demo.WebApi.Persistence;
 using System;
-using System.Collections.Generic;
 using System.Data.Fuse;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef;
-using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.Fuse.SchemaResolving;
 using System.Data.Fuse.Sql;
 using System.Data.Fuse.Sql.InstanceManagement;
@@ -15,9 +12,6 @@ using System.Data.ModelDescription;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace RepositoryContract.Tests {
 

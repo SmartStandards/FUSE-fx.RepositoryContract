@@ -40,6 +40,9 @@ namespace System.Data.Fuse {
 
     public string GetValueAsString() {
       if (string.IsNullOrEmpty(ValueSerialized)) {
+        return string.Empty;
+      }
+      if (string.IsNullOrEmpty(ValueSerialized)) {
         if (typeof(JsonElement).IsAssignableFrom(Value.GetType())) {
           return ((JsonElement)Value).ToString();
         }
@@ -104,10 +107,32 @@ namespace System.Data.Fuse {
       };
     }
 
+    public static FieldPredicate LessOrEqual(string fieldName, object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.LessOrEqual,
+#if NETCOREAPP
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
+#endif
+        Value = value
+      };
+    }
+
     public static FieldPredicate Greater(string fieldName, object value) {
       return new FieldPredicate() {
         FieldName = fieldName,
         Operator = FieldOperators.Greater,
+#if NETCOREAPP
+        ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
+#endif
+        Value = value
+      };
+    }
+
+    public static FieldPredicate Less(string fieldName, object value) {
+      return new FieldPredicate() {
+        FieldName = fieldName,
+        Operator = FieldOperators.Less,
 #if NETCOREAPP
         ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
 #endif
