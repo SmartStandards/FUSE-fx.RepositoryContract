@@ -628,44 +628,47 @@ namespace System.Data.Fuse.Ef {
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> TryUpdateEntityFields(Dictionary<string, object> fields) {
 
-      // Check if the dictionary contains all the key fields
-      var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
-      if (!keyFieldNames.All(k => fields.ContainsKey(k))) {
-        throw new ArgumentException("The given dictionary must contain all the key fields.");
-      }
-
       return _ContextInstanceProvider.VisitCurrentDbContext<Dictionary<string, object>>((dbContext) => {
-        try {
-          // Check if the entity exists
-          object[] keySetValues = fields.TryGetValuesByFields(PrimaryKeySet);
-          TEntity existingEntity = dbContext.Set<TEntity>().Find(keySetValues);
 
-          // If the entity exists, update its fields
-          if (existingEntity != null) {
-            CopyFields2(fields, existingEntity);
-            dbContext.SaveChanges();
+        // Check for existing entity by primary key
+        object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
+        TEntity existingEntity = (primaryKeyValues == null)
+          ? null : dbContext.Set<TEntity>().Find(primaryKeyValues);
 
-            // Build a dictionary of the fields that are different from the given values
-            Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
-            foreach (var field in fields) {
-              var propertyInfo = typeof(TEntity).GetProperty(field.Key);
-              if (propertyInfo != null) {
-                var updatedValue = propertyInfo.GetValue(existingEntity);
-                if (!Equals(updatedValue, field.Value)) {
-                  conflictingFields[field.Key] = updatedValue;
-                }
-              }
+        // If not found by primary key, check for existing entity by unique keysets
+        if (existingEntity == null) {
+          foreach (var keyset in Keysets) {
+            object[] keysetValues = fields.GetValues(keyset);
+            existingEntity = (keysetValues == null)
+              ? null : dbContext.Set<TEntity>().Find(keysetValues);
+            if (existingEntity != null) {
+              break;
             }
-
-            // Return the dictionary of conflicting fields
-            return conflictingFields;
           }
-        } catch (Exception) {
-          // Ignore exceptions and return null
         }
 
-        // If the entity does not exist or if an error occurs, return null
-        return null;
+        if (existingEntity != null) {
+          // If existing entity found, update it
+          CopyFields2(fields, existingEntity);
+        } else {
+          return null;
+        }
+
+        dbContext.SaveChanges();
+
+        // Convert the updated entity back to a dictionary and return it
+        Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
+        foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
+          var updatedValue = propertyInfo.GetValue(existingEntity);
+          if (
+            !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
+            !Equals(updatedValue, originalValue)
+          ) {
+            conflictingFields[propertyInfo.Name] = updatedValue;
+          }
+        }
+
+        return conflictingFields;
       });
     }
 
@@ -679,22 +682,30 @@ namespace System.Data.Fuse.Ef {
     public bool TryUpdateKey(TKey currentKey, TKey newKey) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
         try {
-          // Check if the entity with the current key exists
+          // Find the entity with the current key
           object[] currentKeyValues = currentKey.GetKeyFieldValues();
           TEntity existingEntity = dbContext.Set<TEntity>().Find(currentKeyValues);
 
-          // If the entity exists, update its key
           if (existingEntity != null) {
             // Check if the entity with the new key already exists
             object[] newKeyValues = newKey.GetKeyFieldValues();
             TEntity newEntity = dbContext.Set<TEntity>().Find(newKeyValues);
 
-            // If the entity with the new key does not exist, update the key
             if (newEntity == null) {
-              foreach (var propertyInfo in PrimaryKeySet) {
-                var newKeyValue = newKey.GetType().GetProperty(propertyInfo.Name).GetValue(newKey);
-                propertyInfo.SetValue(existingEntity, newKeyValue);
+              // Create a copy of the entity and set the new key values
+              TEntity updatedEntity = Activator.CreateInstance<TEntity>();
+              CopyFields(existingEntity, updatedEntity);
+
+              int i = 0;
+              foreach (PropertyInfo propertyInfo in PrimaryKeySet) {
+                var newKeyValue = newKeyValues[i++];
+                propertyInfo.SetValue(updatedEntity, newKeyValue);
               }
+
+              // Remove the old entity
+              dbContext.Set<TEntity>().Remove(existingEntity);
+              // Add the new entity
+              dbContext.Set<TEntity>().Add(updatedEntity);
 
               dbContext.SaveChanges();
               return true;
@@ -704,7 +715,6 @@ namespace System.Data.Fuse.Ef {
           // Ignore exceptions and return false
         }
 
-        // If the entity does not exist, the entity with the new key already exists, or if an error occurs, return false
         return false;
       });
     }

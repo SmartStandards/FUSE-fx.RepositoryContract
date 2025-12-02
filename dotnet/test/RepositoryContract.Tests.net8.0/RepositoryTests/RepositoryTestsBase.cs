@@ -9,24 +9,17 @@ using System.Linq;
 
 namespace RepositoryTests {
 
-  [TestClass]
-  public class RepositoryTests {
+  public abstract class RepositoryTestsBase {
 
-    private Func<IRepository<LeafEntity1, int>> _CreateRepository = () => {
-      SchemaRoot schemaRoot = ModelReader.GetSchema(
-        new Type[] { typeof(LeafEntity1) }, false
-      );
-      return new InMemoryRepository<LeafEntity1, int>(schemaRoot);
-    };
+    protected abstract IRepository<LeafEntity1, int> CreateRepository();
 
     private void SeedRepository(
       IRepository<LeafEntity1, int> repository, int numEntities
     ) {
-      repository.TryDeleteEntities(
-        repository.GetEntityRefs(
-          ExpressionTree.Empty(), new string[] { }
-        ).Select(r => r.Key).ToArray()
-      );
+      var keyToDelete = repository.GetEntityRefs(
+        ExpressionTree.Empty(), new string[] { }
+      ).Select(r => r.Key).ToArray();
+      repository.TryDeleteEntities(keyToDelete);
       for (int i = 1; i <= numEntities; i++) {
         var entity = new LeafEntity1() {
           Id = i,
@@ -47,13 +40,13 @@ namespace RepositoryTests {
     public void Repository_GetEntityRefs_Works() {
 
       // Arrange
-      IRepository<LeafEntity1, int> repository = _CreateRepository();
+      IRepository<LeafEntity1, int> repository = this.CreateRepository();
 
       SeedRepository(repository, 10);
 
       // Act
       EntityRef<int>[] result = repository.GetEntityRefs(
-        ExpressionTree.Empty(), new string[] { }
+        ExpressionTree.Empty(), new string[] { nameof(LeafEntity1.Id) }
       );
 
       // Assert
@@ -169,7 +162,7 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_GetEntities_Works() {
       // Arrange
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       // Act
@@ -196,7 +189,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_GetEntitiesBySearchExpression_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       // Act
@@ -211,7 +204,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_GetEntitiesByKey_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       // Act
@@ -226,7 +219,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_GetEntityFields_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       // Act
@@ -247,7 +240,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_GetEntityFieldsBySearchExpression_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var fields = repository.GetEntityFieldsBySearchExpression(
@@ -265,7 +258,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_GetEntityFieldsByKey_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var fields = repository.GetEntityFieldsByKey(
@@ -279,7 +272,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_CountAll_And_Count_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       Assert.AreEqual(10, repository.CountAll(), "Expected 10 entities in total.");
@@ -290,7 +283,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_CountBySearchExpression_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var count = repository.CountBySearchExpression("Id < 4");
@@ -299,7 +292,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_ContainsKey_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       Assert.IsTrue(repository.ContainsKey(1), "Repository should contain key 1.");
@@ -308,7 +301,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_AddOrUpdateEntity_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       // Update existing
@@ -325,7 +318,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_AddOrUpdateEntityFields_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       // Update existing
@@ -353,7 +346,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_TryUpdateEntity_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var entity = new LeafEntity1 { Id = 3, StringValue = "TryUpdate" };
@@ -368,7 +361,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_TryUpdateEntityFields_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var fields = new System.Collections.Generic.Dictionary<string, object>
@@ -391,7 +384,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_TryAddEntity_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var entity = new LeafEntity1 { Id = 101, StringValue = "TryAdd" };
@@ -406,7 +399,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_MassupdateByKeys_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var keys = new[] { 1, 2, 3 };
@@ -423,7 +416,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_Massupdate_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var filter = ExpressionTree.And(FieldPredicate.Greater(nameof(LeafEntity1.Id), 8));
@@ -440,7 +433,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_MassupdateBySearchExpression_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var fields = new System.Collections.Generic.Dictionary<string, object>
@@ -456,7 +449,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_TryDeleteEntities_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var keysToDelete = new[] { 1, 2, 99 };
@@ -470,7 +463,7 @@ namespace RepositoryTests {
 
     [TestMethod]
     public void Repository_TryUpdateKey_Works() {
-      var repository = _CreateRepository();
+      var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
       var result = repository.TryUpdateKey(1, 1000);
