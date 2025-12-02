@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsTestProject>true</IsTestProject>
@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\EfSupport.net6.0\EfSupport.net6.0.csproj" />
+    <ProjectReference Include="..\..\src\EfSupport.net8.0\EfSupport.net8.0.csproj" />
     <ProjectReference Include="..\..\src\RepositoryContract.Demo\RepositoryContract.Demo.csproj" />
-    <ProjectReference Include="..\..\src\RepositoryContract.net6.0\RepositoryContract.net6.0.csproj" />
+    <ProjectReference Include="..\..\src\RepositoryContract.net8.0\RepositoryContract.net8.0.csproj" />
   </ItemGroup>
 
 </Project>
