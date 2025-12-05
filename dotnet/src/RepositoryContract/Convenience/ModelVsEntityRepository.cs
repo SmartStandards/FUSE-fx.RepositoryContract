@@ -15,7 +15,7 @@ namespace System.Data.Fuse.Convenience {
     public readonly Action<TEntity, TModel> OnAfterEntityToModel = (e, m) => { };
 
     public readonly Func<PropertyInfo, Dictionary<string, object>, TEntity, bool> HandlePropertyModelToEntity = (pi, m, e) => false;
-    public readonly Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> HandlePropertyEntityToModel = (pi, e, m) => false;
+    public readonly Func<TEntity, TModel, PropertyInfo, bool> HandlePropertyEntityToModel = (pi, e, m) => false;
   }
 
   /// <summary>
@@ -34,14 +34,14 @@ namespace System.Data.Fuse.Convenience {
     private readonly Action<TEntity, TModel> _OnAfterEntityToModel;
 
     private readonly Func<PropertyInfo, Dictionary<string, object>, TEntity, bool> _HandlePropertyModelToEntity;
-    private readonly Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> _HandlePropertyEntityToModel;
+    private readonly Func<TEntity, TModel, PropertyInfo, bool> _HandlePropertyEntityToModel;
 
     public ModelVsEntityRepository(
       IRepository<TEntity, TKey> repository,
       Action<TModel, TEntity> onAfterModelToEntity,
       Action<TEntity, TModel> onAfterEntityToModel,
       Func<PropertyInfo, Dictionary<string, object>, TEntity, bool> handlePropertyModelToEntity,
-      Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> handlePropertyEntityToModel
+      Func<TEntity, TModel, PropertyInfo, bool> handlePropertyEntityToModel
     ) {
       _Repository = repository;
       _OnAfterModelToEntity = onAfterModelToEntity;

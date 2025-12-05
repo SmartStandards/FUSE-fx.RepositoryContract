@@ -13,7 +13,7 @@ namespace RepositoryTests {
 
     protected abstract IRepository<LeafEntity1, int> CreateRepository();
 
-    private void SeedRepository(
+    protected void SeedRepository(
       IRepository<LeafEntity1, int> repository, int numEntities
     ) {
       var keyToDelete = repository.GetEntityRefs(

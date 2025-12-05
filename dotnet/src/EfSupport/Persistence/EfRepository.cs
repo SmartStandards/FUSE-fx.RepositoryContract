@@ -148,7 +148,7 @@ namespace System.Data.Fuse.Ef {
         // If not found by primary key, check for existing entity by unique keysets
         if (existingEntity == null) {
           foreach (var keyset in Keysets) {
-            object[] keysetValues = fields.GetValues(keyset);
+            object[] keysetValues = fields.GetValuesFromDictionary(keyset);
             existingEntity = (keysetValues == null)
               ? null : dbContext.Set<TEntity>().Find(keysetValues);
             if (existingEntity != null) {
@@ -638,7 +638,7 @@ namespace System.Data.Fuse.Ef {
         // If not found by primary key, check for existing entity by unique keysets
         if (existingEntity == null) {
           foreach (var keyset in Keysets) {
-            object[] keysetValues = fields.GetValues(keyset);
+            object[] keysetValues = fields.GetValuesFromDictionary(keyset);
             existingEntity = (keysetValues == null)
               ? null : dbContext.Set<TEntity>().Find(keysetValues);
             if (existingEntity != null) {

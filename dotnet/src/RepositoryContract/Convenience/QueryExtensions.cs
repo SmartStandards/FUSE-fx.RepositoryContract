@@ -325,6 +325,17 @@ namespace System.Data.Fuse.Convenience {
       return values.ToArray();
     }
 
+    public static object[] GetValuesFromDictionary(
+      this Dictionary<string, object> entity, 
+      List<PropertyInfo> properties
+    ) {
+      List<object> values = new List<object>();
+      foreach (PropertyInfo propertyInfo in properties) {
+        values.Add(entity[propertyInfo.Name]);
+      }
+      return values.ToArray();
+    }
+
     public static TEntity FindMatch<TEntity>(
       this IList<TEntity> entities, TEntity entity, PropertyInfo[] properties
     ) {

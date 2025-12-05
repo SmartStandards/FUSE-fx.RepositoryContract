@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Data.Fuse.Convenience.Internal;
+using System.Data.ModelDescription;
+
 #if NETCOREAPP
 using System.Text.Json;
 using System.Threading;
@@ -17,10 +19,10 @@ namespace System.Data.Fuse.Convenience {
   /// </summary>
   public static class ConversionExtensions {
 
-    public static IList<T2> ToBuseinssModels<T1, T2>(
-      this IList<T1> entityList,
-      Func<PropertyInfo, T1, Dictionary<string, object>, bool> handleProperty,
-      Action<T1, T2> onAfterConvert = null
+    public static IList<TModel> ToBuseinssModels<TEntity, TModel>(
+      this IList<TEntity> entityList,
+      Func<TEntity, TModel, PropertyInfo, bool> handleProperty,
+      Action<TEntity, TModel> onAfterConvert = null
     ) {
       return entityList.Select(entity => entity.ToBusinessModel(handleProperty, onAfterConvert)).ToList();
     }
@@ -56,12 +58,13 @@ namespace System.Data.Fuse.Convenience {
       return result;
     }
 
-    public static T2 ToBusinessModel<T1, T2>(
-      this T1 entity,
-      Func<PropertyInfo, T1, Dictionary<string, object>, bool> handleProperty,
-      Action<T1, T2> onAfterConvert = null
+    public static TModel ToBusinessModel<TEntity, TModel>(
+      this TEntity entity,
+      Func<TEntity, TModel, PropertyInfo, bool> handleProperty,
+      Action<TEntity, TModel> onAfterConvert = null
     ) {
-      T2 result = entity.ConvertToBusinessModelDynamic(handleProperty).Deserialize<T2>();
+      TModel result = entity.ConvertToBusinessModel(handleProperty);
+      //TModel result = entity.ConvertToBusinessModelDynamic(handleProperty).Deserialize<TModel>();
       onAfterConvert?.Invoke(entity, result);
       return result;
     }
@@ -76,10 +79,51 @@ namespace System.Data.Fuse.Convenience {
       return result;
     }
 
+    public static TModel ConvertToBusinessModel<TEntity, TModel>(
+      this TEntity entity,
+      Func<TEntity, TModel, PropertyInfo, bool> handleModelProperty
+    ) {
+      
+      Type modelType = typeof(TModel);
+
+      if (entity == null) {
+        return default(TModel);
+      }
+      TModel result = (TModel)Activator.CreateInstance(modelType);
+      lock (ConversionHelper._VisitedTypeNamesLock) {
+        bool initVisitedTypeNames = ConversionHelper._VisitedTypeNames == null;
+        if (initVisitedTypeNames) {
+          ConversionHelper._VisitedTypeNames = new AsyncLocal<List<string>>();
+          ConversionHelper._VisitedTypeNames.Value = new List<string>();
+          ConversionHelper._VisitedRelations = new AsyncLocal<List<RelationSchema>>();
+          ConversionHelper._VisitedRelations.Value = new List<RelationSchema>();
+        }
+        foreach (PropertyInfo pi in modelType.GetProperties()) {
+          if (!pi.CanWrite) { continue; }
+          if (handleModelProperty(entity, result, pi)) { continue; }
+          PropertyInfo entityProp = typeof(TEntity).GetProperty(pi.Name);
+          if (entityProp == null) { continue; }
+          object propValue = entityProp.GetValue(entity);
+          if (propValue == null) { pi.SetValue(result, null); continue; }
+          if (pi.PropertyType.IsAssignableFrom(propValue.GetType())) {
+            pi.SetValue(result, propValue, null);
+            continue;
+          }
+        }
+        if (initVisitedTypeNames) {
+          ConversionHelper._VisitedTypeNames = null;
+          ConversionHelper._VisitedRelations = null;
+        }
+      }
+
+      return result;
+    }
+
     public static Dictionary<string, object> ConvertToBusinessModelDynamic<T>(
       this T entity,
       Func<PropertyInfo, T, Dictionary<string, object>, bool> handleProperty
     ) {
+      if (entity == null) { return null; }
       Type t = typeof(T);
       Dictionary<string, object> result = new Dictionary<string, object>();
       lock (ConversionHelper._VisitedTypeNamesLock) {
@@ -87,6 +131,8 @@ namespace System.Data.Fuse.Convenience {
         if (initVisitedTypeNames) {
           ConversionHelper._VisitedTypeNames = new AsyncLocal<List<string>>();
           ConversionHelper._VisitedTypeNames.Value = new List<string>();
+          ConversionHelper._VisitedRelations = new AsyncLocal<List<RelationSchema>>();
+          ConversionHelper._VisitedRelations.Value = new List<RelationSchema>();
         }
         foreach (PropertyInfo pi in t.GetProperties()) {
           try {
@@ -94,12 +140,12 @@ namespace System.Data.Fuse.Convenience {
             if (handleProperty(pi, entity, result)) continue;
             if (result.ContainsKey(pi.Name)) { continue; }
             result.Add(pi.Name, pi.GetValue(entity));
-          }
-          catch (Exception) {
+          } catch (Exception) {
           }
         }
         if (initVisitedTypeNames) {
           ConversionHelper._VisitedTypeNames = null;
+          ConversionHelper._VisitedRelations = null;
         }
       }
       return result;
@@ -168,6 +214,7 @@ namespace System.Data.Fuse.Convenience {
     //}
 
     public static T Deserialize<T>(this Dictionary<string, object> businessModel) {
+      if (businessModel == null) { return default(T); }
       Type type = typeof(T);
       return (T)Deserialize(businessModel, type);
     }
@@ -214,58 +261,42 @@ namespace System.Data.Fuse.Convenience {
     public static object GetValue(PropertyInfo prop, JsonElement propertyValue) {
       if (prop.PropertyType == typeof(string)) {
         return propertyValue.GetString();
-      }
-      else if (prop.PropertyType == typeof(Int64)) {
+      } else if (prop.PropertyType == typeof(Int64)) {
         return propertyValue.GetInt64();
-      }
-      else if (prop.PropertyType == typeof(bool)) {
+      } else if (prop.PropertyType == typeof(bool)) {
         return propertyValue.GetBoolean();
-      }
-      else if (prop.PropertyType == typeof(DateTime)) {
+      } else if (prop.PropertyType == typeof(DateTime)) {
         return propertyValue.GetDateTime();
-      }
-      else if (prop.PropertyType == typeof(Int32)) {
+      } else if (prop.PropertyType == typeof(Int32)) {
         return propertyValue.GetInt32();
-      }
-      else if (prop.PropertyType == typeof(decimal)) {
+      } else if (prop.PropertyType == typeof(decimal)) {
         return propertyValue.GetDecimal();
-      }
-      else if (prop.PropertyType == typeof(Guid)) {
+      } else if (prop.PropertyType == typeof(Guid)) {
         return propertyValue.GetGuid();
-      }
-      else if (prop.PropertyType == typeof(double)) {
+      } else if (prop.PropertyType == typeof(double)) {
         return propertyValue.GetDouble();
-      }
-      else {
+      } else {
         return null;
       }
     }
     public static object GetValue(Type t, JsonElement propertyValue) {
       if (t == typeof(string)) {
         return propertyValue.GetString();
-      }
-      else if (t == typeof(Int64)) {
+      } else if (t == typeof(Int64)) {
         return propertyValue.GetInt64();
-      }
-      else if (t == typeof(bool)) {
+      } else if (t == typeof(bool)) {
         return propertyValue.GetBoolean();
-      }
-      else if (t == typeof(DateTime)) {
+      } else if (t == typeof(DateTime)) {
         return propertyValue.GetDateTime();
-      }
-      else if (t == typeof(Int32)) {
+      } else if (t == typeof(Int32)) {
         return propertyValue.GetInt32();
-      }
-      else if (t == typeof(decimal)) {
+      } else if (t == typeof(decimal)) {
         return propertyValue.GetDecimal();
-      }
-      else if (t == typeof(Guid)) {
+      } else if (t == typeof(Guid)) {
         return propertyValue.GetGuid();
-      }
-      else if (t == typeof(double)) {
+      } else if (t == typeof(double)) {
         return propertyValue.GetDouble();
-      }
-      else {
+      } else {
         return null;
       }
     }
@@ -300,14 +331,12 @@ namespace System.Data.Fuse.Convenience {
             PropertyInfo foreignKeyPropertyTarget = target.GetType().GetProperty(foreignKeyPropertyName.CapitalizeFirst());
             if (foreignKeyPropertyTarget == null) { continue; }
             foreignKeyPropertyTarget.SetValue(target, idValue);
-          }
-          else {
+          } else {
             PropertyInfo targetProperty = target.GetType().GetProperty(sourceProperty.Key.CapitalizeFirst());
             if (targetProperty == null) { continue; }
             SetPropertyValue(targetProperty, target, propertyValueJson);
           }
-        }
-        else {
+        } else {
 #endif
           if (propertyValue.GetType().IsClass) {
             PropertyInfo otherIdProperty = propertyValue.GetType().GetProperty("Id");
@@ -328,17 +357,13 @@ namespace System.Data.Fuse.Convenience {
     public static void SetPropertyValue(PropertyInfo targetProperty, object target, JsonElement propertyValue) {
       if (targetProperty.PropertyType == typeof(string)) {
         targetProperty.SetValue(target, propertyValue.GetString());
-      }
-      else if (targetProperty.PropertyType == typeof(Int64)) {
+      } else if (targetProperty.PropertyType == typeof(Int64)) {
         targetProperty.SetValue(target, propertyValue.GetInt64());
-      }
-      else if (targetProperty.PropertyType == typeof(bool)) {
+      } else if (targetProperty.PropertyType == typeof(bool)) {
         targetProperty.SetValue(target, propertyValue.GetBoolean());
-      }
-      else if (targetProperty.PropertyType == typeof(DateTime)) {
+      } else if (targetProperty.PropertyType == typeof(DateTime)) {
         targetProperty.SetValue(target, propertyValue.GetDateTime());
-      }
-      else if (targetProperty.PropertyType == typeof(Int32)) {
+      } else if (targetProperty.PropertyType == typeof(Int32)) {
         targetProperty.SetValue(target, propertyValue.GetInt32());
       }
     }
