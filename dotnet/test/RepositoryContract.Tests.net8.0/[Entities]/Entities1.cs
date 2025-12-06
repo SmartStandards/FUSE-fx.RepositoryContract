@@ -27,7 +27,7 @@ namespace RepositoryContract.Tests {
 
   [PrimaryIdentity(nameof(Id))]
   [PropertyGroup(nameof(Id), nameof(Id))]
-  public class NationEntity {
+  public class NationEntity {    
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
   }

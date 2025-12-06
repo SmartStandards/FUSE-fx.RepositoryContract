@@ -9,7 +9,7 @@ namespace RepositoryTests {
     public int Id { get; set; }
     public long LongValue { get; set; }
     public string StringValue { get; set; } = string.Empty;
-    public DateTime DateValue { get; set; }
+    public DateTime DateValue { get; set; } = new DateTime(1900, 1, 1);
     public Guid GuidValue { get; set; }
     public bool BoolValue { get; set; }
     public float FloatValue { get; set; }
@@ -21,6 +21,7 @@ namespace RepositoryTests {
   [PrimaryIdentity("PrimaryKey")]
   [HasLookup(null, nameof(Leaf1Id), null, null, nameof(LeafEntity1))]
   [HasDependent(null, nameof(ChildEntity1.Root1Id), null, null, nameof(ChildEntity1))]
+  [PropertyGroup(nameof(Leaf1Id), nameof(Leaf1Id))]
   public class RootEntity1 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -29,10 +30,11 @@ namespace RepositoryTests {
 
   [UniquePropertyGroup("PrimaryKey", nameof(Id))]
   [PrimaryIdentity("PrimaryKey")]
+  [PropertyGroup(nameof(Root1Id), nameof(Root1Id))]
   public class ChildEntity1 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int Root1Id { get; set; }    
+    public int Root1Id { get; set; }
   }
 
   [UniquePropertyGroup("PrimaryKey", nameof(Id))]

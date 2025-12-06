@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Data.Fuse.Convenience;
@@ -9,6 +10,7 @@ using System.Data.ModelDescription.Convenience;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 #if NETCOREAPP
 using System.Text.Json;
 using System.Windows.Markup;
@@ -86,8 +88,7 @@ namespace System.Data.Fuse.Sql {
               fields.Add(labelField);
             }
             info.Fields = fields.ToArray();
-          }
-          else {
+          } else {
             info.Fields = otherSchema.Fields.ToArray();
           }
           IndexSchema foreignKeyIndexSchema = schema.GetIndex(relation.ForeignKeyIndexName);
@@ -98,8 +99,7 @@ namespace System.Data.Fuse.Sql {
             info.JoinTemplate += $"t0.{foreignKeyIndexSchema.MemberFieldNames[i]} = t{{0}}.{primaryIndexSchema.MemberFieldNames[i]}";
           }
           result.Add(info);
-        }
-        else if (relation.PrimaryEntityName == type.Name) {
+        } else if (relation.PrimaryEntityName == type.Name) {
           //TODO
         }
       }
@@ -191,8 +191,7 @@ namespace System.Data.Fuse.Sql {
       //TODO select only the fields that are in the TEntity
       if (includeNavigations) {
         sql.Append($"SELECT t0.*");
-      }
-      else {
+      } else {
         sql.Append("SELECT *");
       }
       int t = 1;
@@ -208,8 +207,7 @@ namespace System.Data.Fuse.Sql {
       }
       if (includeNavigations) {
         sql.Append($" FROM {SchemaAndTableName} t0 ");
-      }
-      else {
+      } else {
         sql.Append($" FROM {SchemaAndTableName}");
       }
       if (includeNavigations) {
@@ -374,8 +372,7 @@ namespace System.Data.Fuse.Sql {
           whereClause.Append("@").Append(PrimaryKeySet[0].Name).Append(i);
         }
         whereClause.Append(")");
-      }
-      else {
+      } else {
         // Composite primary key - use OR with AND clauses
         whereClause.Append("(");
         for (int keyIndex = 0; keyIndex < keys.Length; keyIndex++) {
@@ -418,8 +415,7 @@ namespace System.Data.Fuse.Sql {
           param.Value = keys[i].GetKeyFieldValues()[0] ?? DBNull.Value;
           command.Parameters.Add(param);
         }
-      }
-      else {
+      } else {
         // Composite primary key
         for (int keyIndex = 0; keyIndex < keys.Length; keyIndex++) {
           object[] keyValues = keys[keyIndex].GetKeyFieldValues();
@@ -466,8 +462,7 @@ namespace System.Data.Fuse.Sql {
             navigationObject = Activator.CreateInstance(navigationInfo.NavigationProperty.PropertyType);
             navigationObjectsByIndex.Add(navIndex, navigationObject);
             navigationInfo.NavigationProperty.SetValue(entity, navigationObject);
-          }
-          else {
+          } else {
             navigationObject = navigationObjectsByIndex[navIndex];
           }
           object value = reader.IsDBNull(i) ? null : reader.GetValue(i);
@@ -476,18 +471,15 @@ namespace System.Data.Fuse.Sql {
 
             if (navigationInfo.LabelField != null && fieldName == navigationInfo.LabelField.Name) {
               entityRef.Label = value == null ? "null" : value.ToString();
-            }
-            else {
+            } else {
               var keyFields = navigationInfo.Fields.Where((f) => f.Name != navigationInfo.LabelField?.Name);
               if (keyFields.Count() == 1) {
                 entityRef.Key = value;
-              }
-              else {
+              } else {
                 //TODO
               }
             }
-          }
-          else {
+          } else {
             PropertyInfo fieldProperty = navigationInfo.NavigationProperty.PropertyType.GetProperty(fieldName);
             if (fieldProperty != null) {
 
@@ -524,8 +516,7 @@ namespace System.Data.Fuse.Sql {
         int ordinal;
         try {
           ordinal = reader.GetOrdinal(fieldName);
-        }
-        catch (IndexOutOfRangeException) {
+        } catch (IndexOutOfRangeException) {
           continue; // Field not found in result set
         }
 
@@ -561,15 +552,13 @@ namespace System.Data.Fuse.Sql {
         if (targetType.IsEnum) {
           if (value is string strValue) {
             return Enum.Parse(targetType, strValue, ignoreCase: true);
-          }
-          else {
+          } else {
             return Enum.ToObject(targetType, value);
           }
         }
 
         return Convert.ChangeType(value, targetType);
-      }
-      catch {        
+      } catch {
 
         // Return null if conversion is not possible
         return null;
@@ -585,9 +574,55 @@ namespace System.Data.Fuse.Sql {
     }
 
     private string TranslateSearchExpressionToSql(string searchExpression) {
-      // In a real implementation, you'd parse the search expression and convert it to SQL
-      // For now, just return the expression as is, assuming it's already SQL-compatible
-      return searchExpression;
+      if (string.IsNullOrWhiteSpace(searchExpression)) return null;
+
+      string s = searchExpression.Trim();
+
+      // Step 1: Convert double-quoted string literals to single-quoted SQL literals,
+      // escaping single quotes inside the literal.
+      s = Regex.Replace(s, "\"([^\"]*)\"", match => {
+        var inner = match.Groups[1].Value.Replace("'", "''");
+        return $"'{inner}'";
+      });
+
+      // Normalize logical operators
+      s = s.Replace("&&", " AND ");
+      s = s.Replace("||", " OR ");
+
+      // Handle null comparisons: = null / == null  -> IS NULL, != null -> IS NOT NULL
+      s = Regex.Replace(s, @"\b([A-Za-z0-9_\.]+)\s*(?:==|=)\s*null\b", @"$1 IS NULL", RegexOptions.IgnoreCase);
+      s = Regex.Replace(s, @"\b([A-Za-z0-9_\.]+)\s*!=\s*null\b", @"$1 IS NOT NULL", RegexOptions.IgnoreCase);
+      s = Regex.Replace(s, @"\b([A-Za-z0-9_\.]+)\s*<>\s*null\b", @"$1 IS NOT NULL", RegexOptions.IgnoreCase);
+
+      // Handle string methods when argument is a literal:
+      // Field.Contains('x') => (Field LIKE '%' + 'x' + '%')
+      s = Regex.Replace(s, @"\b(?<field>[A-Za-z0-9_\.]+)\.Contains\(\s*(?<arg>'[^']*')\s*\)",
+        m => $"({m.Groups["field"].Value} LIKE '%' + {m.Groups["arg"].Value} + '%')");
+
+      // Field.StartsWith('x') => (Field LIKE 'x' + '%')
+      s = Regex.Replace(s, @"\b(?<field>[A-Za-z0-9_\.]+)\.StartsWith\(\s*(?<arg>'[^']*')\s*\)",
+        m => $"({m.Groups["field"].Value} LIKE {m.Groups["arg"].Value} + '%')");
+
+      // Field.EndsWith('x') => (Field LIKE '%' + 'x')
+      s = Regex.Replace(s, @"\b(?<field>[A-Za-z0-9_\.]+)\.EndsWith\(\s*(?<arg>'[^']*')\s*\)",
+        m => $"({m.Groups["field"].Value} LIKE '%' + {m.Groups["arg"].Value})");
+
+      // Handle inequality operators
+      s = Regex.Replace(s, @"!=", " <> ");
+
+      // Normalize equality operator (handle both == and single = with spaces)
+      s = Regex.Replace(s, @"==", " = ");
+      s = Regex.Replace(s, @"(?<!=)\s=\s(?!=)", " = ");
+
+      // Convert boolean literals true/false to SQL BIT constants 1/0
+      // Use word boundaries to avoid touching text inside strings (strings already quoted)
+      s = Regex.Replace(s, @"\btrue\b", "1", RegexOptions.IgnoreCase);
+      s = Regex.Replace(s, @"\bfalse\b", "0", RegexOptions.IgnoreCase);
+
+      // Trim redundant whitespace
+      s = Regex.Replace(s, @"\s+", " ").Trim();
+
+      return s;
     }
 
     private string BuildOrderByClause(string[] sortedBy) {
@@ -607,8 +642,7 @@ namespace System.Data.Fuse.Sql {
         if (sortField.StartsWith("^")) {
           string descSortField = sortField.Substring(1); // Remove the "^" prefix
           orderByClause.Append(descSortField).Append(" DESC");
-        }
-        else {
+        } else {
           orderByClause.Append(sortField).Append(" ASC");
         }
       }
@@ -734,8 +768,7 @@ namespace System.Data.Fuse.Sql {
           }
 
           return existingEntity;
-        }
-        else {
+        } else {
           // Insert new entity
           Dictionary<string, object> fields = ExtractFieldsFromEntity(entity);
 
@@ -786,7 +819,7 @@ namespace System.Data.Fuse.Sql {
         // If not found by primary key, check unique keys
         if (!entityExists) {
           foreach (var keyset in Keysets) {
-            object[] keysetValues = fields.GetValues(keyset);
+            object[] keysetValues = fields.GetValuesFromDictionary(keyset);
 
             if (keysetValues != null) {
               using (var command = connection.CreateCommand()) {
@@ -848,8 +881,7 @@ namespace System.Data.Fuse.Sql {
               prop.SetValue(existingEntity, field.Value);
             }
           }
-        }
-        else {
+        } else {
           // Insert new entity
           using (var command = connection.CreateCommand()) {
             command.CommandText = BuildInsertSql(fields);
@@ -1155,8 +1187,7 @@ namespace System.Data.Fuse.Sql {
 
             return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
           }
-        }
-        catch (Exception) {
+        } catch (Exception) {
           // Ignore exceptions and return default(TKey)
         }
 
@@ -1191,8 +1222,7 @@ namespace System.Data.Fuse.Sql {
                 deletedKeys.Add(key);
               }
             }
-          }
-          catch (Exception) {
+          } catch (Exception) {
             // Ignore exceptions and continue with the next key
           }
         }
@@ -1241,8 +1271,7 @@ namespace System.Data.Fuse.Sql {
 
             return existingEntity;
           }
-        }
-        catch (Exception) {
+        } catch (Exception) {
           // Ignore exceptions and return null
         }
 
@@ -1304,21 +1333,21 @@ namespace System.Data.Fuse.Sql {
             }
 
             // Build a dictionary of the fields that are different from the given values
+            // Also include properties present on the existingEntity but not present in the given fields
             Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
-            foreach (var field in fields) {
-              var propertyInfo = typeof(TEntity).GetProperty(field.Key);
-              if (propertyInfo != null) {
-                var updatedValue = propertyInfo.GetValue(existingEntity);
-                if (!Equals(updatedValue, field.Value)) {
-                  conflictingFields[field.Key] = updatedValue;
-                }
+            foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
+              var updatedValue = propertyInfo.GetValue(existingEntity);
+              if (
+                !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
+                !Equals(updatedValue, originalValue)
+              ) {
+                conflictingFields[propertyInfo.Name] = updatedValue;
               }
             }
 
             return conflictingFields;
           }
-        }
-        catch (Exception) {
+        } catch (Exception) {
           // Ignore exceptions and return null
         }
 
@@ -1399,16 +1428,14 @@ namespace System.Data.Fuse.Sql {
 
                   transaction.Commit();
                   return true;
-                }
-                catch {
+                } catch {
                   transaction.Rollback();
                   throw;
                 }
               }
             }
           }
-        }
-        catch (Exception) {
+        } catch (Exception) {
           // Ignore exceptions and return false
         }
 
