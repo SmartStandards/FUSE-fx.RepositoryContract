@@ -12,6 +12,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 0.6.1
+released **2025-12-06**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.6.0
 released **2025-12-05**, including:
  - Breaking Change: Refactored ModelVsEntityRepository
