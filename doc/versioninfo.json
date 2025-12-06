@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.5.16",
-  "currentVersionWithSuffix": "0.5.16",
+  "currentVersion": "0.6.0",
+  "currentVersionWithSuffix": "0.6.0",
   "releaseType": "",
-  "previousVersion": "0.5.15",
-  "changeGrade": "fix",
+  "previousVersion": "0.5.16",
+  "changeGrade": "major",
   "currentMajor": 0,
-  "currentMinor": 5,
-  "currentPatch": 16,
-  "versionDateInfo": "2025-12-02",
-  "versionTimeInfo": "21:57:59",
-  "versionNotes": "- new revision without significant changes\n"
+  "currentMinor": 6,
+  "currentPatch": 0,
+  "versionDateInfo": "2025-12-05",
+  "versionTimeInfo": "16:39:51",
+  "versionNotes": "- Breaking Change: Refactored ModelVsEntityRepository\n"
 }

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>FUSE-fx.RepositoryContract</id>
-		<version>0.5.16</version>
+		<version>0.6.0</version>
 		<title>FUSE-fx.RepositoryContract</title>
 		<authors>SmartStandards</authors>
 		<owners>SmartStandards</owners>
