@@ -323,12 +323,12 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_AddOrUpdateEntityFields_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       // Update existing
       var fields = new System.Collections.Generic.Dictionary<string, object>
       {
-            { "Id", 2 },
+            { "Id", highestKey },
             { "StringValue", "FieldUpdated" }
         };
       var diff = repository.AddOrUpdateEntityFields(fields);
@@ -340,7 +340,7 @@ namespace RepositoryTests {
       // Add new
       var newFields = new System.Collections.Generic.Dictionary<string, object>
       {
-            { "Id", 100 },
+            { "Id", highestKey+1 },
             { "StringValue", "FieldNew" }
         };
       var diffNew = repository.AddOrUpdateEntityFields(newFields);
