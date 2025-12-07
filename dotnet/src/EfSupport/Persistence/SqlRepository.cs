@@ -344,7 +344,7 @@ namespace System.Data.Fuse.Sql {
         //if (useAlias) {
         //  whereClause.Append("t0.");
         //}
-        whereClause.Append(PrimaryKeySet[i].Name).Append(" = @").Append(PrimaryKeySet[i].Name);
+        whereClause.Append(PrimaryKeySet[i].Name).Append(" = @").Append(PrimaryKeySet[i].Name + "0");
         first = false;
       }
 
@@ -400,7 +400,7 @@ namespace System.Data.Fuse.Sql {
 
       for (int i = 0; i < PrimaryKeySet.Count; i++) {
         var param = command.CreateParameter();
-        param.ParameterName = "@" + PrimaryKeySet[i].Name + suffix;
+        param.ParameterName = "@" + PrimaryKeySet[i].Name + suffix + "0";
         param.Value = keyValues[i] ?? DBNull.Value;
         command.Parameters.Add(param);
       }

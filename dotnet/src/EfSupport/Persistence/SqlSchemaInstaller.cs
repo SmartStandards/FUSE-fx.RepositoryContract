@@ -52,7 +52,7 @@ namespace System.Data.Fuse.Sql {
             var existingTables = GetExistingTables(connection, tx);
             foreach (var existing in existingTables) {
               if (!requiredTables.Contains(existing)) {
-                ExecuteNonQuery(connection, tx, $"DROP TABLE [dbo].[{SqlEscape(existing)}]");
+                //ExecuteNonQuery(connection, tx, $"DROP TABLE [dbo].[{SqlEscape(existing)}]"); //TODO
               }
             }
 
