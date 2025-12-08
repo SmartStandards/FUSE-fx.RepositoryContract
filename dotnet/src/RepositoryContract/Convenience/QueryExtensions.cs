@@ -470,7 +470,7 @@ namespace System.Data.Fuse.Convenience {
 
     public static TKey ToKey<TKey>(this object[] fieldValues) {
       if (typeof(ICompositeKey).IsAssignableFrom(typeof(TKey))) {
-        return (TKey)Activator.CreateInstance(typeof(TKey), new object[] { fieldValues });
+        return (TKey)Activator.CreateInstance(typeof(TKey),  fieldValues );
       } else {
         return (TKey)fieldValues[0];
       }

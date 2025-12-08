@@ -15,11 +15,11 @@ using System.Linq;
 namespace RepositoryTests {
 
   [TestClass]
-  public abstract class ModelVsEntityRepositoryTestsBase : RepositoryTestsBase {  
+  public abstract class ModelVsEntityRepositoryTestsBase : RepositoryTestsBase {
 
-    protected abstract IRepository<LeafEntity2, int> CreateLeafEntity2Repository();   
+    protected abstract IRepository<LeafEntity2, int> CreateLeafEntity2Repository();
 
-    protected abstract IDataStore CreateEntityDatastore();   
+    protected abstract IDataStore CreateEntityDatastore();
 
     private int SeedRepository1(
       IRepository<LeafEntity1, int> repo,
@@ -105,7 +105,8 @@ namespace RepositoryTests {
           new ModelVsEntityType<ChildModel1, ChildEntity1, int>(),
           new ModelVsEntityType<LeafModel2, LeafEntity2, int>(),
           new ModelVsEntityType<RootModel2, RootEntity2, int>(),
-          new ModelVsEntityType<ChildModel2, ChildEntity2, int>()
+          new ModelVsEntityType<ChildModel2, ChildEntity2, int>(),
+          new ModelVsEntityType<LeafModelWithCompositeKey, LeafEntityWithCompositeKey, int>(),
         }
       );
     }
@@ -113,9 +114,26 @@ namespace RepositoryTests {
     protected void SeedModelRepositories(
       IRepository<RootModel1, int> repository,
       IRepository<ChildModel1, int> childRepository,
+      IRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>> lmwckRepo,
       int numEntities,
       int highestKeyLeaf1
     ) {
+      var keyToDeleteLeafWithCk = lmwckRepo.GetEntityRefs(
+        ExpressionTree.Empty(), new string[] { }
+      ).Select(r => r.Key).ToArray();
+      lmwckRepo.TryDeleteEntities(keyToDeleteLeafWithCk);
+      lmwckRepo.AddOrUpdateEntity(new LeafModelWithCompositeKey() {
+        Field1 = 1,
+        Field2 = "A",
+        LongValue = 100,
+        StringValue = "Leaf With CK 1",
+        DateValue = DateTime.Now,
+        GuidValue = Guid.NewGuid(),
+        BoolValue = true,
+        FloatValue = 1.1f,
+        DoubleValue = 2.2,
+        DecimalValue = 3.3m
+      });
       var keyToDelete = repository.GetEntityRefs(
         ExpressionTree.Empty(), new string[] { }
       ).Select(r => r.Key).ToArray();
@@ -125,6 +143,8 @@ namespace RepositoryTests {
           Id = i,
           Name = "Entity " + i,
           Leaf1Id = highestKeyLeaf1 - (i - 1),
+          OtherField1 = 1,
+          OtherField2 = "A"
         };
         repository.AddOrUpdateEntity(entity);
       }
@@ -208,10 +228,11 @@ namespace RepositoryTests {
       IRepository<ChildModel1, int> childModel1Repository = this.CreateModelDatastore().GetRepository<ChildModel1, int>();
       IRepository<RootModel2, int> rootModel2Repository = this.CreateModelDatastore().GetRepository<RootModel2, int>();
       IRepository<ChildModel2, int> childModel2Repository = this.CreateModelDatastore().GetRepository<ChildModel2, int>();
+      IRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>> lmwckRepo = this.CreateModelDatastore().GetRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>>();
       int highestKeyLeaf1 = this.SeedRepository1(repository, childModel1Repository, rootModel1Repository);
       this.SeedRepositoryAlt2(repository2, childModel2Repository, rootModel2Repository);
 
-      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, 1, highestKeyLeaf1);
+      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, lmwckRepo, 1, highestKeyLeaf1);
 
       // Act
       var allEntities = rootModel1Repository.GetEntities(
@@ -230,10 +251,12 @@ namespace RepositoryTests {
       // Arrange
       IRepository<RootModel1, int> rootModel1Repository = this.CreateModelDatastore().GetRepository<RootModel1, int>();
       IRepository<ChildModel1, int> childModel1Repository = this.CreateModelDatastore().GetRepository<ChildModel1, int>();
+      IRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>> lmwckRepo = this.CreateModelDatastore().GetRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>>();
+
       var repository = this.CreateLeaf1EntityRepository();
       int highestKeyLeaf1 = this.SeedRepository1(repository, childModel1Repository, rootModel1Repository);
 
-      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, 1, highestKeyLeaf1);
+      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, lmwckRepo, 1, highestKeyLeaf1);
 
       // Act
       var allEntities = rootModel1Repository.GetEntities(

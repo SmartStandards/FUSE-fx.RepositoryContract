@@ -22,10 +22,14 @@ namespace RepositoryTests {
   [HasLookup(null, nameof(Leaf1Id), null, null, nameof(LeafEntity1))]
   [HasDependent(null, nameof(ChildEntity1.Root1Id), null, null, nameof(ChildEntity1))]
   [PropertyGroup(nameof(Leaf1Id), nameof(Leaf1Id))]
+  [PropertyGroup("OtherKey", nameof(OtherField1), nameof(OtherField2))]
+  [HasLookup(null, "OtherKey", null, null, nameof(LeafEntityWithCompositeKey))]
   public class RootEntity1 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public int Leaf1Id { get; set; }
+    public int OtherField1 { get; set; }
+    public string OtherField2 { get; set; } = string.Empty;
   }
 
   [UniquePropertyGroup("PrimaryKey", nameof(Id))]
@@ -72,10 +76,11 @@ namespace RepositoryTests {
     public RootEntity2 Root2 { get; set; } = null!;
   }
 
-  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
+  [UniquePropertyGroup("PrimaryKey", nameof(Field1), nameof(Field2))]
   [PrimaryIdentity("PrimaryKey")]
   public class LeafEntityWithCompositeKey {
-    public int Id { get; set; }
+    public int Field1 { get; set; }
+    public string Field2 { get; set; } = string.Empty;
     public long LongValue { get; set; }
     public string StringValue { get; set; } = string.Empty;
     public DateTime DateValue { get; set; } = new DateTime(1900, 1, 1);

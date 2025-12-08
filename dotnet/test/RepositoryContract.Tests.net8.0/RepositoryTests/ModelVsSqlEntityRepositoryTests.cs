@@ -19,7 +19,7 @@ namespace RepositoryTests {
 
     protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
       return new ModelVsEntityRepository<LeafEntity1, LeafEntity1, int>(
-        CreateSqlRepository(), 
+        CreateSqlRepository(),
         new ModelVsEntityParams<LeafEntity1, LeafEntity1>()
       );
     }
@@ -74,7 +74,7 @@ namespace RepositoryTests {
         schemaRoot
       );
     }
-    
+
     protected override IDataStore CreateEntityDatastore() {
       return new SqlDataStore(
         new ShortLivingDbConnectionInstanceProvider(
@@ -87,10 +87,11 @@ namespace RepositoryTests {
           Tuple.Create<Type, Type>(typeof(ChildEntity1), typeof(int)),
           Tuple.Create<Type, Type>(typeof(LeafEntity2), typeof(int)),
           Tuple.Create<Type, Type>(typeof(RootEntity2), typeof(int)),
-          Tuple.Create<Type, Type>(typeof(ChildEntity2), typeof(int))
+          Tuple.Create<Type, Type>(typeof(ChildEntity2), typeof(int)),
+          Tuple.Create<Type, Type>(typeof(LeafEntityWithCompositeKey), typeof(CompositeKey2<int,string>))
         }
       );
     }
-   
+
   }
 }
