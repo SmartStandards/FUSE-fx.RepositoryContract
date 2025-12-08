@@ -6,67 +6,26 @@ using System.Data.Fuse;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef;
 using System.Data.Fuse.Ef.InstanceManagement;
+using System.Data.Fuse.Sql;
+using System.Data.Fuse.Sql.InstanceManagement;
+using System.Data.ModelDescription;
+using System.Data.SqlClient;
 using System.Linq;
 
 namespace RepositoryTests {
 
   [TestClass]
-  public class ModelVsEfEntityRepositoryTests_o : RepositoryTestsBase {
+  public abstract class ModelVsEntityRepositoryTestsBase : RepositoryTestsBase {
 
-    protected override IRepository<LeafEntity1, int> CreateRepository() {
-      var options = new DbContextOptionsBuilder<TestDbContext>()
-                      .UseInMemoryDatabase(databaseName: "TestDb")
-                      .Options;
+    protected abstract IRepository<LeafEntity2, int> CreateLeafEntity2Repository();
 
-      using var context = new TestDbContext(options);
-
-      EfRepository<LeafEntity1, int> efRepo = new EfRepository<LeafEntity1, int>(
-        new ShortLivingDbContextInstanceProvider<TestDbContext>()
-      );
-
-      return new ModelVsEntityRepository<LeafEntity1, LeafEntity1, int>(
-        efRepo, new ModelVsEntityParams<LeafEntity1, LeafEntity1>()
-      );
-    }
-
-    protected IRepository<LeafEntity2, int> CreateRepository2() {
-      var options = new DbContextOptionsBuilder<TestDbContext>()
-                      .UseInMemoryDatabase(databaseName: "TestDb")
-                      .Options;
-
-      using var context = new TestDbContext(options);
-
-      EfRepository<LeafEntity2, int> efRepo = new EfRepository<LeafEntity2, int>(
-        new ShortLivingDbContextInstanceProvider<TestDbContext>()
-      );
-
-      return new ModelVsEntityRepository<LeafEntity2, LeafEntity2, int>(
-        efRepo, new ModelVsEntityParams<LeafEntity2, LeafEntity2>()
-      );
-    }
-
-    protected IDataStore CreateEntityDatastore() {
-      return new EfDataStore<TestDbContext>(new ShortLivingDbContextInstanceProvider<TestDbContext>());
-    }
-
-    protected IDataStore CreateModelDatastore() {
-      return new ModelVsEntityDataStore(CreateEntityDatastore(),
-        new ModelVsEntityType[] {
-          new ModelVsEntityType<LeafModel1, LeafEntity1, int>(),
-          new ModelVsEntityType<RootModel1, RootEntity1, int>(),
-          new ModelVsEntityType<ChildModel1, ChildEntity1, int>(),
-          new ModelVsEntityType<LeafModel2, LeafEntity2, int>(),
-          new ModelVsEntityType<RootModel2, RootEntity2, int>(),
-          new ModelVsEntityType<ChildModel2, ChildEntity2, int>()
-        }
-      );
-    }
+    protected abstract IDataStore CreateEntityDatastore();
 
     private int SeedRepository1(
-     IRepository<LeafEntity1, int> repo,
-     IRepository<ChildModel1, int> childModel1Repo,
-     IRepository<RootModel1, int> rootModel1Repo
-   ) {
+      IRepository<LeafEntity1, int> repo,
+      IRepository<ChildModel1, int> childModel1Repo,
+      IRepository<RootModel1, int> rootModel1Repo
+    ) {
       var keyToDeletChild1 = childModel1Repo.GetEntityRefs(
        ExpressionTree.Empty(), new string[] { }
      ).Select(r => r.Key).ToArray();
@@ -75,7 +34,7 @@ namespace RepositoryTests {
         ExpressionTree.Empty(), new string[] { }
       ).Select(r => r.Key).ToArray();
       rootModel1Repo.TryDeleteEntities(keyToDeleteRoot1);
-      return this.SeedRepository(repo, 10);
+      return this.SeedLeafEntity1Repository(repo, 10);
     }
 
     private int SeedRepositoryAlt2(
@@ -94,11 +53,87 @@ namespace RepositoryTests {
       return this.SeedRepository2(repo, 10);
     }
 
+    //protected IRepository<LeafEntity1, int> CreateSqlRepository() {
+    //  SchemaRoot schemaRoot = ModelReader.GetSchema(new Type[] {
+    //    typeof(RootEntity1),
+    //    typeof(LeafEntity1),
+    //    typeof(ChildEntity1)
+    //  }, false);
+    //  using (SqlConnection c = new SqlConnection(
+    //      "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=RepositoryContractTests;Integrated Security=True;"
+    //  )) {
+    //    SqlSchemaInstaller.EnsureSchemaIsInstalled(c, schemaRoot);
+    //  }
+    //  ;
+    //  return new SqlRepository<LeafEntity1, int>(
+    //    new ShortLivingDbConnectionInstanceProvider(
+    //      () => new SqlConnection(
+    //        "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=RepositoryContractTests;Integrated Security=True;"
+    //      )
+    //    ),
+    //    schemaRoot
+    //  );
+    //}
+
+    //protected IRepository<LeafEntity2, int> CreateSqlRepository2() {
+    //  SchemaRoot schemaRoot = ModelReader.GetSchema(new Type[] {
+    //    typeof(RootEntity2),
+    //    typeof(LeafEntity2),
+    //    typeof(ChildEntity2)
+    //  }, false);
+    //  using (SqlConnection c = new SqlConnection(
+    //      "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=RepositoryContractTests;Integrated Security=True;"
+    //  )) {
+    //    SqlSchemaInstaller.EnsureSchemaIsInstalled(c, schemaRoot);
+    //  }
+    //  ;
+    //  return new SqlRepository<LeafEntity2, int>(
+    //    new ShortLivingDbConnectionInstanceProvider(
+    //      () => new SqlConnection(
+    //        "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=RepositoryContractTests;Integrated Security=True;"
+    //      )
+    //    ),
+    //    schemaRoot
+    //  );
+    //}   
+
+    protected IDataStore CreateModelDatastore() {
+      return new ModelVsEntityDataStore(CreateEntityDatastore(),
+        new ModelVsEntityType[] {
+          new ModelVsEntityType<LeafModel1, LeafEntity1, int>(),
+          new ModelVsEntityType<RootModel1, RootEntity1, int>(),
+          new ModelVsEntityType<ChildModel1, ChildEntity1, int>(),
+          new ModelVsEntityType<LeafModel2, LeafEntity2, int>(),
+          new ModelVsEntityType<RootModel2, RootEntity2, int>(),
+          new ModelVsEntityType<ChildModel2, ChildEntity2, int>(),
+          new ModelVsEntityType<LeafModelWithCompositeKey, LeafEntityWithCompositeKey, int>(),
+        }
+      );
+    }
+
     protected void SeedModelRepositories(
       IRepository<RootModel1, int> repository,
       IRepository<ChildModel1, int> childRepository,
-      int numEntities, int highestLeaf1Key
+      IRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>> lmwckRepo,
+      int numEntities,
+      int highestKeyLeaf1
     ) {
+      var keyToDeleteLeafWithCk = lmwckRepo.GetEntityRefs(
+        ExpressionTree.Empty(), new string[] { }
+      ).Select(r => r.Key).ToArray();
+      lmwckRepo.TryDeleteEntities(keyToDeleteLeafWithCk);
+      lmwckRepo.AddOrUpdateEntity(new LeafModelWithCompositeKey() {
+        Field1 = 1,
+        Field2 = "A",
+        LongValue = 100,
+        StringValue = "Leaf With CK 1",
+        DateValue = DateTime.Now,
+        GuidValue = Guid.NewGuid(),
+        BoolValue = true,
+        FloatValue = 1.1f,
+        DoubleValue = 2.2,
+        DecimalValue = 3.3m
+      });
       var keyToDelete = repository.GetEntityRefs(
         ExpressionTree.Empty(), new string[] { }
       ).Select(r => r.Key).ToArray();
@@ -107,7 +142,9 @@ namespace RepositoryTests {
         var entity = new RootModel1() {
           Id = i,
           Name = "Entity " + i,
-          Leaf1Id = highestLeaf1Key - numEntities + i,
+          Leaf1Id = highestKeyLeaf1 - (i - 1),
+          OtherField1 = 1,
+          OtherField2 = "A"
         };
         repository.AddOrUpdateEntity(entity);
       }
@@ -118,7 +155,7 @@ namespace RepositoryTests {
         ChildModel1 child = new ChildModel1() {
           Id = i,
           Name = "Child " + i,
-          Root1Id =  i,
+          Root1Id = i,
         };
         childRepository.AddOrUpdateEntity(child);
       }
@@ -137,18 +174,18 @@ namespace RepositoryTests {
         var entity = new RootModel2() {
           Id = i,
           Name = "Entity " + i,
-          Leaf2Id = highestLeaf2Key - numEntities + i,
+          Leaf2Id = highestLeaf2Key - (numEntities + i),
         };
         repository.AddOrUpdateEntity(entity);
       }
       int highestKey = repository.GetEntityRefs(
-        ExpressionTree.Empty(), new string[] { nameof(RootModel1.Id) }
+        ExpressionTree.Empty(), new string[] { nameof(RootModel2.Id) }
       ).Max(r => r.Key);
-      for (int i = 1; i <= numEntities; i++) {
+      for (int i = highestKey - numEntities + 1; i <= highestKey; i++) {
         ChildModel2 child = new ChildModel2() {
           Id = i,
           Name = "Child " + i,
-          Root2Id = highestKey - numEntities + i,
+          Root2Id = i,
         };
         childRepository.AddOrUpdateEntity(child);
       }
@@ -185,14 +222,17 @@ namespace RepositoryTests {
     public void GetEntities_WithLookup_Works() {
 
       // Arrange
-      var repository = this.CreateRepository();
-      var repository2 = this.CreateRepository2();
-      int highestLeaf1Key = this.SeedRepository(repository, 10);
-      this.SeedRepository2(repository2, 10);
+      var repository = this.CreateLeaf1EntityRepository();
+      var repository2 = this.CreateLeafEntity2Repository();
       IRepository<RootModel1, int> rootModel1Repository = this.CreateModelDatastore().GetRepository<RootModel1, int>();
       IRepository<ChildModel1, int> childModel1Repository = this.CreateModelDatastore().GetRepository<ChildModel1, int>();
+      IRepository<RootModel2, int> rootModel2Repository = this.CreateModelDatastore().GetRepository<RootModel2, int>();
+      IRepository<ChildModel2, int> childModel2Repository = this.CreateModelDatastore().GetRepository<ChildModel2, int>();
+      IRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>> lmwckRepo = this.CreateModelDatastore().GetRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>>();
+      int highestKeyLeaf1 = this.SeedRepository1(repository, childModel1Repository, rootModel1Repository);
+      this.SeedRepositoryAlt2(repository2, childModel2Repository, rootModel2Repository);
 
-      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, 1, highestLeaf1Key);
+      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, lmwckRepo, 1, highestKeyLeaf1);
 
       // Act
       var allEntities = rootModel1Repository.GetEntities(
@@ -209,12 +249,14 @@ namespace RepositoryTests {
     public void GetEntities_With1ToNDependents_Works() {
 
       // Arrange
-      var repository = this.CreateRepository();
       IRepository<RootModel1, int> rootModel1Repository = this.CreateModelDatastore().GetRepository<RootModel1, int>();
       IRepository<ChildModel1, int> childModel1Repository = this.CreateModelDatastore().GetRepository<ChildModel1, int>();
-      int highestLeaf1Key = this.SeedRepository1(repository, childModel1Repository, rootModel1Repository);
+      IRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>> lmwckRepo = this.CreateModelDatastore().GetRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>>();
 
-      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, 1, highestLeaf1Key);
+      var repository = this.CreateLeaf1EntityRepository();
+      int highestKeyLeaf1 = this.SeedRepository1(repository, childModel1Repository, rootModel1Repository);
+
+      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, lmwckRepo, 1, highestKeyLeaf1);
 
       // Act
       var allEntities = rootModel1Repository.GetEntities(
@@ -232,8 +274,8 @@ namespace RepositoryTests {
     public void GetEntities_WithLookupAndNavsOnEntities_Works() {
 
       // Arrange
-      var repository = this.CreateRepository();
-      var repository2 = this.CreateRepository2();
+      var repository = this.CreateLeaf1EntityRepository();
+      var repository2 = this.CreateLeafEntity2Repository();
       IRepository<RootModel1, int> rootModel1Repository = this.CreateModelDatastore().GetRepository<RootModel1, int>();
       IRepository<ChildModel1, int> childModel1Repository = this.CreateModelDatastore().GetRepository<ChildModel1, int>();
       IRepository<RootModel2, int> rootModel2Repository = this.CreateModelDatastore().GetRepository<RootModel2, int>();
@@ -251,19 +293,19 @@ namespace RepositoryTests {
       // Assert
       Assert.AreEqual(1, allEntities.Length, "Expected 1 entities.");
       Assert.IsNotNull(allEntities[0].Leaf2, "Expected Leaf2 to be populated.");
-      Assert.IsTrue(allEntities[0].Leaf2.StringValue.StartsWith("Entity 1"), "Expected Name to match.");
+      Assert.IsTrue(allEntities[0].Leaf2.StringValue.StartsWith("Entity "), "Expected Name to match.");
     }
 
     [TestMethod]
     public void GetEntities_With1ToNDependentsAndNavsOnEntities_Works() {
 
       // Arrange
-      var repository = this.CreateRepository();
-      var repository2 = this.CreateRepository2();
-      IRepository<RootModel1, int> rootModel1Repository = this.CreateModelDatastore().GetRepository<RootModel1, int>();
-      IRepository<ChildModel1, int> childModel1Repository = this.CreateModelDatastore().GetRepository<ChildModel1, int>();
+      var repository = this.CreateLeaf1EntityRepository();
+      var repository2 = this.CreateLeafEntity2Repository();
       IRepository<RootModel2, int> rootModel2Repository = this.CreateModelDatastore().GetRepository<RootModel2, int>();
       IRepository<ChildModel2, int> childModel2Repository = this.CreateModelDatastore().GetRepository<ChildModel2, int>();
+      IRepository<RootModel1, int> rootModel1Repository = this.CreateModelDatastore().GetRepository<RootModel1, int>();
+      IRepository<ChildModel1, int> childModel1Repository = this.CreateModelDatastore().GetRepository<ChildModel1, int>();
       this.SeedRepository1(repository, childModel1Repository, rootModel1Repository);
       int highestLeaf2Key = this.SeedRepositoryAlt2(repository2, childModel2Repository, rootModel2Repository);
 
@@ -278,7 +320,7 @@ namespace RepositoryTests {
       Assert.AreEqual(1, allEntities.Length, "Expected 1 entities.");
       Assert.IsNotNull(allEntities[0].Children, "Expected Leaf1 to be populated.");
       Assert.AreEqual(1, allEntities[0].Children.Count(), "Expected 1 child entity.");
-      Assert.AreEqual("Child 1", allEntities[0].Children[0].Name, "Expected Child Name to match.");
+      Assert.IsTrue(allEntities[0].Children[0].Name.StartsWith("Child "), "Expected Child Name to match.");
     }
   }
 }

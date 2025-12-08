@@ -18,11 +18,12 @@ namespace RepositoryTests {
   [TestClass]
   public class SqlRepositoryTests : RepositoryTestsBase {
 
-    protected override IRepository<LeafEntity1, int> CreateRepository() {
+    protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
       SchemaRoot schemaRoot = ModelReader.GetSchema(new Type[] {
         typeof(RootEntity1),
-        typeof(LeafEntity1),        
-        typeof(ChildEntity1)
+        typeof(LeafEntity1),
+        typeof(ChildEntity1),
+        typeof(LeafEntityWithCompositeKey)
       }, false);
       using (SqlConnection c = new SqlConnection(
           "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=RepositoryContractTests;Integrated Security=True;"

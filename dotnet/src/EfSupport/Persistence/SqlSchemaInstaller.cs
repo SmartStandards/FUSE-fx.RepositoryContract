@@ -326,7 +326,8 @@ WHERE o.object_id = OBJECT_ID(@obj) AND fk.name = @name";
       if (f.MaxLength > 0 && f.MaxLength <= 4000) {
         return $"NVARCHAR({f.MaxLength})";
       }
-      return "NVARCHAR(MAX)";
+      //return "NVARCHAR(MAX)"; //TODO wieder zurück ändern
+      return "NVARCHAR(4000)";
     }
 
     private static void ExecuteNonQuery(DbConnection connection, DbTransaction tx, string sql) {

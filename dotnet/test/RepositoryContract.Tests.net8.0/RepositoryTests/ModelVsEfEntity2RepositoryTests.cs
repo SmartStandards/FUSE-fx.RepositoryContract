@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Convenience;
@@ -15,17 +16,17 @@ using System.Linq;
 namespace RepositoryTests {
 
   [TestClass]
-  public class ModelVsEfEntityRepositoryTests : ModelVsEntityRepositoryTestsBase {
+  public class ModelVsEfEntity2RepositoryTests : ModelVsEntityRepositoryTestsBase {
 
-    protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
-      var options = new DbContextOptionsBuilder<TestDbContext>()
-                      .UseInMemoryDatabase(databaseName: "TestDb")
-                      .Options;
+    protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {   
+      var options = new DbContextOptionsBuilder<TestDbContext2>().UseSqlServer(
+        "Server=(localdb)\\mssqllocaldb;Database=EfRepositoryTestsDb2;Trusted_Connection=True;MultipleActiveResultSets=true"
+      ).Options;
 
-      using var context = new TestDbContext(options);
+      using var context = new TestDbContext2(options);
 
       EfRepository<LeafEntity1, int> efRepo = new EfRepository<LeafEntity1, int>(
-        new ShortLivingDbContextInstanceProvider<TestDbContext>()
+        new ShortLivingDbContextInstanceProvider<TestDbContext2>()
       );
 
       return new ModelVsEntityRepository<LeafEntity1, LeafEntity1, int>(
@@ -34,14 +35,14 @@ namespace RepositoryTests {
     }
 
     protected override IRepository<LeafEntity2, int> CreateLeafEntity2Repository() {
-      var options = new DbContextOptionsBuilder<TestDbContext>()
+      var options = new DbContextOptionsBuilder<TestDbContext2>()
                       .UseInMemoryDatabase(databaseName: "TestDb")
                       .Options;
 
-      using var context = new TestDbContext(options);
+      using var context = new TestDbContext2(options);
 
       EfRepository<LeafEntity2, int> efRepo = new EfRepository<LeafEntity2, int>(
-        new ShortLivingDbContextInstanceProvider<TestDbContext>()
+        new ShortLivingDbContextInstanceProvider<TestDbContext2>()
       );
 
       return new ModelVsEntityRepository<LeafEntity2, LeafEntity2, int>(
@@ -50,8 +51,8 @@ namespace RepositoryTests {
     }
 
     protected override IDataStore CreateEntityDatastore() {
-      return new EfDataStore<TestDbContext>(
-        new ShortLivingDbContextInstanceProvider<TestDbContext>()
+      return new EfDataStore<TestDbContext2>(
+        new ShortLivingDbContextInstanceProvider<TestDbContext2>()
       );
     }
     

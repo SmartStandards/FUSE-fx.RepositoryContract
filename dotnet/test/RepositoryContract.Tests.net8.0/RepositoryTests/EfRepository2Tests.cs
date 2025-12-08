@@ -22,6 +22,7 @@ namespace RepositoryTests {
     public DbSet<LeafEntity2> LeafEntities2 { get; set; } = null!;
     public DbSet<RootEntity2> RootEntities2 { get; set; } = null!;
     public DbSet<ChildEntity2> ChildEntities2 { get; set; } = null!;
+    public DbSet<LeafEntityWithCompositeKey> LeafEntityWithCompositeKeys { get; set; } = null!;
     public TestDbContext2() : base() {
       TryEnsureDatabase();
     }
@@ -33,6 +34,12 @@ namespace RepositoryTests {
       // Use localdb for testing      
       optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=EfRepositoryTestsDb2;Trusted_Connection=True;MultipleActiveResultSets=true");
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+      base.OnModelCreating(modelBuilder);
+      modelBuilder.Entity<LeafEntityWithCompositeKey>().HasKey(e => new { e.Field1, e.Field2 });
+    }
+
     private void TryEnsureDatabase() {
       if (_IsInitialized) {
         return;
@@ -74,7 +81,7 @@ namespace RepositoryTests {
   [TestClass]
   public class EfRepository2Tests : RepositoryTestsBase {
 
-    protected override IRepository<LeafEntity1, int> CreateRepository() {
+    protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
       return new EfRepository<LeafEntity1, int>(
         new ShortLivingDbContextInstanceProvider<TestDbContext2>()
       );
