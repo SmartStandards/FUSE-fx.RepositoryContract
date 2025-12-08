@@ -221,6 +221,7 @@ namespace System.Data.Fuse.LinqSupport {
       Expression fieldExpression = null;
       Expression valueExpression = null;
 
+      bool valueDeclarationIsReversed = false;
       if (leftIsField && right.NodeType == ExpressionType.Constant) {
         fieldExpression = leftMember;
         valueExpression = right;
@@ -228,6 +229,7 @@ namespace System.Data.Fuse.LinqSupport {
       else if (rightIsField && left.NodeType == ExpressionType.Constant) {
         fieldExpression = rightMember;
         valueExpression = left;
+        valueDeclarationIsReversed = true;
       }
       else {
         return false;
@@ -246,19 +248,39 @@ namespace System.Data.Fuse.LinqSupport {
           return true;
 
         case ExpressionType.GreaterThan:
-          predicate = FieldPredicate.Greater(fieldName, value);
+          if (valueDeclarationIsReversed) {
+            predicate = FieldPredicate.Less(fieldName, value);
+          }
+          else {
+            predicate = FieldPredicate.Greater(fieldName, value);
+          }
           return true;
 
         case ExpressionType.GreaterThanOrEqual:
-          predicate = FieldPredicate.GreaterOrEqual(fieldName, value);
+          if (valueDeclarationIsReversed) {
+            predicate = FieldPredicate.LessOrEqual(fieldName, value);
+          }
+          else {
+            predicate = FieldPredicate.GreaterOrEqual(fieldName, value);
+          }
           return true;
 
         case ExpressionType.LessThan:
-          predicate = FieldPredicate.Less(fieldName, value);
+          if (valueDeclarationIsReversed) {
+            predicate = FieldPredicate.Greater(fieldName, value);
+          }
+          else {
+            predicate = FieldPredicate.Less(fieldName, value);
+          }
           return true;
 
         case ExpressionType.LessThanOrEqual:
-          predicate = FieldPredicate.LessOrEqual(fieldName, value);
+          if (valueDeclarationIsReversed) {
+            predicate = FieldPredicate.GreaterOrEqual(fieldName, value);
+          }
+          else {
+            predicate = FieldPredicate.LessOrEqual(fieldName, value);
+          }
           return true;
       }
 

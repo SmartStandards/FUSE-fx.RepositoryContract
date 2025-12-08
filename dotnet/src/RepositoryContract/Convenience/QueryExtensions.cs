@@ -199,22 +199,23 @@ namespace System.Data.Fuse.Convenience {
           } else {
             serializedValue = $"DateTime({date.Year}, {date.Month}, {date.Day}, {date.Hour}, {date.Minute}, {date.Second}, {date.Millisecond})";
           }
-        } else if (fieldType == "String" || fieldType == "Guid") {
+        } else if (fieldType.Equals("String", StringComparison.CurrentCultureIgnoreCase)) {
 #if NETCOREAPP
-          if (
-            fieldType == "Guid" &&
-            (relationElementValue.Contains("\""))
-          ) {
-            relationElementValue = JsonSerializer.Deserialize<Guid>(relationElementValue).ToString();
-          }
-          if (
-            fieldType == "String" &&
-            (relationElementValue.Contains("\""))
-          ) {
+          if (relationElementValue.Contains("\"")) {
             relationElementValue = JsonSerializer.Deserialize<string>(relationElementValue) ?? "";
           }
 #endif
-
+          serializedValue = ResolveStringField(
+            relationElementValue, relationElement.FieldName, mode, prefix,
+            ref fieldName, ref @operator
+          );
+        }
+        else if (fieldType == "Guid") {
+#if NETCOREAPP
+          if (relationElementValue.Contains("\"")) {
+            relationElementValue = JsonSerializer.Deserialize<Guid>(relationElementValue).ToString();
+          }
+#endif
           serializedValue = ResolveStringField(
             relationElementValue, relationElement.FieldName, mode, prefix,
             ref fieldName, ref @operator
@@ -300,7 +301,17 @@ namespace System.Data.Fuse.Convenience {
           serializedValue = $"(\"{valueSerialized}\")";
         }
       }
-
+      if (endsWithRelations.Contains(@operator)) {
+        fieldName = prefix + predicateFieldName;
+        if (mode == "sql") {
+          @operator = " like ";
+          serializedValue = $"'%{valueSerialized}'";
+        }
+        else {
+          @operator = ".EndsWith";
+          serializedValue = $"(\"{valueSerialized}\")";
+        }
+      }
       return serializedValue;
     }
 

@@ -8,7 +8,7 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-*(none)*
+* Fixed some query-issues for StartsWith and swapped operators
 
 
 
