@@ -8,7 +8,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* **new Feature**: Added 'RepositoryExpressionExtensions' (Linq-Support)
+*(none)*
+
+
+
+## v 0.7.0
+released **2025-12-08**, including:
+ - **new Feature**: Added 'RepositoryExpressionExtensions' (Linq-Support)
 
 
 

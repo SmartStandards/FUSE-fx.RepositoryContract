@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.6.3",
-  "currentVersionWithSuffix": "0.6.3",
+  "currentVersion": "0.7.0",
+  "currentVersionWithSuffix": "0.7.0",
   "releaseType": "",
-  "previousVersion": "0.6.2",
-  "changeGrade": "fix",
+  "previousVersion": "0.6.3",
+  "changeGrade": "minor",
   "currentMajor": 0,
-  "currentMinor": 6,
-  "currentPatch": 3,
-  "versionDateInfo": "2025-12-07",
-  "versionTimeInfo": "13:28:11",
-  "versionNotes": "- new revision without significant changes\n"
+  "currentMinor": 7,
+  "currentPatch": 0,
+  "versionDateInfo": "2025-12-08",
+  "versionTimeInfo": "11:33:03",
+  "versionNotes": "- new Feature: Added 'RepositoryExpressionExtensions' (Linq-Support)\n"
 }
