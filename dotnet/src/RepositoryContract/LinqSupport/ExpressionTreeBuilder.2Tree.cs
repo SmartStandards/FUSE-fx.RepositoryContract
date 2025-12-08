@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace System.Data.Fuse.LinqSupport {
 
-  internal static class ExpressionTreeMapper {
+  internal static partial class ExpressionTreeMapper {
 
     /// <summary>
     /// Builds a FUSE ExpressionTree from a given lambda predicate.
@@ -14,7 +14,7 @@ namespace System.Data.Fuse.LinqSupport {
     /// <typeparam name="TEntity">The entity type of the predicate.</typeparam>
     /// <param name="predicate">The LINQ expression to translate.</param>
     /// <returns>A corresponding ExpressionTree instance.</returns>
-    public static ExpressionTree Build<TEntity>(Expression<Func<TEntity, bool>> predicate) {
+    public static ExpressionTree BuildTreeFromLinqExpression<TEntity>(Expression<Func<TEntity, bool>> predicate) {
       if (predicate == null) {
         throw new ArgumentNullException("predicate");
       }

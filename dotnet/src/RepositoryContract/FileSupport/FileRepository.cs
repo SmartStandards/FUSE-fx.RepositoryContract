@@ -276,6 +276,7 @@ namespace System.Data.Fuse.FileSupport {
       ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     ) {
       return this.GetEntityRefsBySearchExpression(
+        //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
         filter.CompileToDynamicLinq(_SchemaRoot.GetSchema(typeof(TEntity).Name)),
         sortedBy, limit, skip
       );
@@ -300,6 +301,7 @@ namespace System.Data.Fuse.FileSupport {
 
     public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
       return this.SearchEntities(
+        //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
         filter.CompileToDynamicLinq(_SchemaRoot.GetSchema(typeof(TEntity).Name)), sortedBy, limit, skip
       ).ToArray();
     }
@@ -321,6 +323,7 @@ namespace System.Data.Fuse.FileSupport {
 
     public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
       return GetEntityFieldsBySearchExpression(
+        //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
         filter.CompileToDynamicLinq(_SchemaRoot.GetSchema(typeof(TEntity).Name)),
         includedFieldNames, sortedBy, limit, skip
       );
@@ -361,6 +364,7 @@ namespace System.Data.Fuse.FileSupport {
 
     public int Count(ExpressionTree filter) {
       return CountBySearchExpression(
+        //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
         filter.CompileToDynamicLinq(_SchemaRoot.GetSchema(typeof(TEntity).Name))
       );
     }

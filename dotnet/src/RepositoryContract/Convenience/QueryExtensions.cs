@@ -19,6 +19,7 @@ namespace System.Data.Fuse.Convenience {
   /// </summary>
   public static class QueryExtensions {
 
+    [Obsolete("Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'")]     
     public static string CompileToDynamicLinq(this ExpressionTree tree, EntitySchema entitySchema) {
       if (tree == null) return null;
       return tree.CompileToWhereStatement(entitySchema, "dynamic linq", "");

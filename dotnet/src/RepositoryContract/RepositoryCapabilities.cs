@@ -34,6 +34,15 @@ namespace System.Data.Fuse {
     public bool CanDeleteEntities { get; set; } = false;
     public bool SupportsMassupdate { get; set; } = false;
     public bool SupportsKeyUpdate { get; set; } = false;
+
+    /// <summary>
+    /// Server side Content-Search over multiple fields.
+    /// Depending on the concrete implementation this should be a mixture of
+    /// A) fulltext-seach (on fields with 'content' semantics) and/or 
+    /// B) exact-match (on fields with 'Identifier' semantics.
+    /// Potentially the results are based on an external index-db.
+    /// This is optimized for the usecase, where the consumer ui offers just a single 'Search'-Textbox,
+    /// </summary>
     public bool SupportsStringBasedSearchExpressions { get; set; } = false;
 
     /// <summary> 

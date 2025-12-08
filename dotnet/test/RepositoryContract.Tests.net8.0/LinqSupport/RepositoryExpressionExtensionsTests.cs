@@ -32,7 +32,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_EqualOperator_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Age == 30;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
@@ -46,7 +46,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_NotEqualOperator_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Age != 10;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
@@ -60,7 +60,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_GreaterThan_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Age > 18;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
@@ -74,7 +74,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_GreaterOrEqual_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Age >= 21;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
@@ -88,7 +88,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_LessThan_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Age < 99;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
@@ -102,7 +102,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_LessOrEqual_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Age <= 40;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
@@ -116,7 +116,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_StringContains_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Name.Contains("abc");
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Name", pred.FieldName);
@@ -130,7 +130,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_StartsWith_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Name.StartsWith("Jo");
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Name", pred.FieldName);
@@ -144,7 +144,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_EndsWith_IsTranslated() {
       Expression<Func<Person, bool>> expr = p => p.Name.EndsWith("son");
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Name", pred.FieldName);
@@ -162,7 +162,7 @@ namespace System.Data.Fuse.LinqSupport {
       Expression<Func<Person, bool>> expr =
           p => countries.Contains(p.Country);
 
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Country", pred.FieldName);
@@ -179,7 +179,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_BoolMember_IsTranslatedTo_EqualTrue() {
       Expression<Func<Person, bool>> expr = p => p.IsActive;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("IsActive", pred.FieldName);
@@ -193,7 +193,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_NotExpression_FlipsNegate() {
       Expression<Func<Person, bool>> expr = p => !p.IsActive;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("IsActive", pred.FieldName);
@@ -207,7 +207,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_AndAlso_Builds_MatchAll_Tree() {
       Expression<Func<Person, bool>> expr = p => p.Age > 10 && p.Age < 20;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       Assert.IsTrue(tree.MatchAll);
       Assert.IsNotNull(tree.Predicates);
@@ -217,7 +217,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_OrElse_Builds_MatchAny_Tree() {
       Expression<Func<Person, bool>> expr = p => p.Age < 5 || p.Age > 50;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       Assert.IsFalse(tree.MatchAll);
       Assert.IsNotNull(tree.Predicates);
@@ -233,7 +233,7 @@ namespace System.Data.Fuse.LinqSupport {
           p => (p.Age > 18 && p.Name.StartsWith("A"))
               || (!p.IsActive && p.Country == "DE");
 
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       Assert.IsFalse(tree.MatchAll); // top-level OR
       Assert.IsNotNull(tree.SubTree);
@@ -246,7 +246,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_ConstantTrue_Returns_EmptyTree() {
       Expression<Func<Person, bool>> expr = p => true;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       Assert.IsNotNull(tree);
       Assert.IsFalse(tree.Negate);
@@ -255,7 +255,7 @@ namespace System.Data.Fuse.LinqSupport {
     [TestMethod]
     public void LinqSupp_ConstantFalse_Returns_NegatedTree() {
       Expression<Func<Person, bool>> expr = p => false;
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       Assert.IsTrue(tree.Negate);
     }
@@ -268,7 +268,7 @@ namespace System.Data.Fuse.LinqSupport {
       Expression<Func<Person, bool>> expr =
           p => (int)p.Age > 10;
 
-      ExpressionTree tree = ExpressionTreeMapper.Build(expr);
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
 
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual(FieldOperators.Greater, pred.Operator);

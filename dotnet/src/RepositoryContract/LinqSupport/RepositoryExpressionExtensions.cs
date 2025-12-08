@@ -47,7 +47,7 @@ namespace System.Data.Fuse.LinqSupport {
         throw new ArgumentNullException("predicate");
       }
 
-      ExpressionTree filter = ExpressionTreeMapper.Build<TEntity>(predicate);
+      ExpressionTree filter = ExpressionTreeMapper.BuildTreeFromLinqExpression<TEntity>(predicate);
       if (sortedBy == null) {
         sortedBy = new string[0];
       }
@@ -94,7 +94,7 @@ namespace System.Data.Fuse.LinqSupport {
         throw new ArgumentNullException("predicate");
       }
 
-      ExpressionTree filter = ExpressionTreeMapper.Build<TEntity>(predicate);
+      ExpressionTree filter = ExpressionTreeMapper.BuildTreeFromLinqExpression<TEntity>(predicate);
       if(sortedBy == null) {
         sortedBy = new string[0];
       }
@@ -143,7 +143,7 @@ namespace System.Data.Fuse.LinqSupport {
       // Build filter using provided expression
       ExpressionTree filter = ExpressionTree.Empty();
       if (where != null) {
-        filter = ExpressionTreeMapper.Build<TEntity>(where);
+        filter = ExpressionTreeMapper.BuildTreeFromLinqExpression<TEntity>(where);
       }
 
       if (sortedBy == null) {
@@ -188,7 +188,7 @@ namespace System.Data.Fuse.LinqSupport {
         throw new ArgumentNullException("predicate");
       }
 
-      ExpressionTree filter = ExpressionTreeMapper.Build<TEntity>(predicate);
+      ExpressionTree filter = ExpressionTreeMapper.BuildTreeFromLinqExpression<TEntity>(predicate);
 
       int result = repository.Count(filter);
 
@@ -225,7 +225,7 @@ namespace System.Data.Fuse.LinqSupport {
         throw new ArgumentNullException("predicate");
       }
 
-      ExpressionTree filter = ExpressionTreeMapper.Build<TEntity>(predicate);
+      ExpressionTree filter = ExpressionTreeMapper.BuildTreeFromLinqExpression<TEntity>(predicate);
 
       TSelectedFields subsetOfEntity = fieldsSelector.Invoke(entity);
 

@@ -265,6 +265,7 @@ namespace System.Data.Fuse.Ef {
 
     public int Count(ExpressionTree filter) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
         return dbContext.Set<TEntity>().Count(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
       });
     }
@@ -294,6 +295,7 @@ namespace System.Data.Fuse.Ef {
         if (filter == null) {
           entities = dbContext.Set<TEntity>();
         } else {
+          //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
           entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
         }
 
@@ -331,6 +333,7 @@ namespace System.Data.Fuse.Ef {
       string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
         IQueryable<TEntity> entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
 
         entities = ApplySorting(sortedBy, entities);
@@ -466,6 +469,7 @@ namespace System.Data.Fuse.Ef {
     /// </param>
     /// <returns></returns>
     public TKey[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
+      //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
       return MassupdateBySearchExpression(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)), fields);
     }
 
