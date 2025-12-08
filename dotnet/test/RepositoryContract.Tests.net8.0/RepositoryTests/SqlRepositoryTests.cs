@@ -18,7 +18,7 @@ namespace RepositoryTests {
   [TestClass]
   public class SqlRepositoryTests : RepositoryTestsBase {
 
-    protected override IRepository<LeafEntity1, int> CreateRepository() {
+    protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
       SchemaRoot schemaRoot = ModelReader.GetSchema(new Type[] {
         typeof(RootEntity1),
         typeof(LeafEntity1),        

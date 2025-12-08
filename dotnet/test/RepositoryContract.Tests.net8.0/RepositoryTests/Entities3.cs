@@ -72,4 +72,18 @@ namespace RepositoryTests {
     public RootEntity2 Root2 { get; set; } = null!;
   }
 
+  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
+  [PrimaryIdentity("PrimaryKey")]
+  public class LeafEntityWithCompositeKey {
+    public int Id { get; set; }
+    public long LongValue { get; set; }
+    public string StringValue { get; set; } = string.Empty;
+    public DateTime DateValue { get; set; } = new DateTime(1900, 1, 1);
+    public Guid GuidValue { get; set; }
+    public bool BoolValue { get; set; }
+    public float FloatValue { get; set; }
+    public double DoubleValue { get; set; }
+    public decimal DecimalValue { get; set; }
+  }
+
 }

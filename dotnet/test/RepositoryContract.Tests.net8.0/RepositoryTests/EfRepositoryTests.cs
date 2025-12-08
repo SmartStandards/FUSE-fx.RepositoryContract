@@ -29,7 +29,7 @@ namespace RepositoryTests {
   [TestClass]
   public class EfRepositoryTests : RepositoryTestsBase {
 
-    protected override IRepository<LeafEntity1, int> CreateRepository() {
+    protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
       return new EfRepository<LeafEntity1, int>(
         new ShortLivingDbContextInstanceProvider<TestDbContext>()
       );

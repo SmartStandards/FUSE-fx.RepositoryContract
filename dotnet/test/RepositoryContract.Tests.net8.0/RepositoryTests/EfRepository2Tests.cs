@@ -74,7 +74,7 @@ namespace RepositoryTests {
   [TestClass]
   public class EfRepository2Tests : RepositoryTestsBase {
 
-    protected override IRepository<LeafEntity1, int> CreateRepository() {
+    protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
       return new EfRepository<LeafEntity1, int>(
         new ShortLivingDbContextInstanceProvider<TestDbContext2>()
       );
