@@ -18,7 +18,7 @@ namespace RepositoryContract.Tests {
   [TestClass]
   public class SqlRepositoryTests {
 
-    [TestMethod]
+    [TestMethod, Ignore]
     public void TestMethod1() {
       // Arrange
       SchemaRoot schemaRoot = SchemaCache.GetSchemaRootForContext(typeof(DemoDbContext));

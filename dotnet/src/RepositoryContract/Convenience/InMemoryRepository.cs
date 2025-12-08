@@ -170,7 +170,9 @@ namespace System.Data.Fuse.Convenience {
     public TEntity[] GetEntities(
       ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
     ) {
-      var entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+
+      string stringbasedDynamicLinqExpression = filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name));
+      IQueryable<TEntity> entities = _Entities.AsQueryable().Where(stringbasedDynamicLinqExpression);
 
       entities = ApplySorting(sortedBy, entities);
       entities = ApplyPaging(limit, skip, entities);

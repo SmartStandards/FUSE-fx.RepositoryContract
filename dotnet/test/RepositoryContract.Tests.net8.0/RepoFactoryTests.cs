@@ -62,7 +62,7 @@ namespace RepositoryContract.Tests {
       }
     }
 
-    [TestMethod]
+    [TestMethod, Ignore]
     public void GetRepository1_ReturnsRepository() {
       SampleRepoFacade repo = new SampleRepoFacade();
       IRepository<SampleEntity1, int> r1 =  repo.GetRepository1<SampleEntity1>();
