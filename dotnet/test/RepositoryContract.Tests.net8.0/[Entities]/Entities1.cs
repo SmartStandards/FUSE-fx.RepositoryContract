@@ -25,7 +25,9 @@ namespace RepositoryContract.Tests {
     public ICollection<AddressEntity> Addresses { get; set; } = new ObservableCollection<AddressEntity>();
   }
 
-  public class NationEntity {
+  [PrimaryIdentity(nameof(Id))]
+  [PropertyGroup(nameof(Id), nameof(Id))]
+  public class NationEntity {    
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
   }
@@ -44,6 +46,8 @@ namespace RepositoryContract.Tests {
     public int PersonId { get; set; }
   }
 
+  [PrimaryIdentity(nameof(Id))]
+  [PropertyGroup(nameof(Id), nameof(Id))]
   public class PetEntity {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;

@@ -25,8 +25,8 @@ namespace System.Data.Fuse.Convenience {
       where TEntity : class
       where TModel : class {
 
-      Func<string, object[], EntityRef[]> getEntityRefsByKey = (string entityName, object[] keys) => {
-        return GetEntityRefs(entityName, keys, typeof(TEntity), entityDataStore, entityDataStore.GetSchemaRoot());
+      Func<string, object[], EntityRef[]> getModelRefsByKey = (string modelTypeName, object[] keys) => {
+        return GetEntityRefs(modelTypeName, keys, typeof(TModel), modelDataStore, modelDataStore.GetSchemaRoot());
       };
 
       Func<Type, object[], object[]> getModelsByKey = (Type modelType, object[] keys) => {
@@ -34,7 +34,7 @@ namespace System.Data.Fuse.Convenience {
       };
 
       Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression = (string entityName, ExpressionTree searchExpression) => {
-        return GetEntityRefsBySearchExpression(entityName, searchExpression, typeof(TEntity), entityDataStore, entityDataStore.GetSchemaRoot());
+        return GetEntityRefsBySearchExpression(entityName, searchExpression, typeof(TModel), modelDataStore, modelDataStore.GetSchemaRoot());
       };
 
       Func<Type, ExpressionTree, object[]> getModelsBySearchExpression = (Type modelType, ExpressionTree searchExpression) => {
@@ -46,8 +46,10 @@ namespace System.Data.Fuse.Convenience {
         (x, y) => { }, (x, y) => { },
         ConversionHelper.ResolveNavigations<TEntity>(entityDataStore.GetSchemaRoot()),
         ConversionHelper.LoadNavigations<TEntity, TModel>(
-          entityDataStore.GetSchemaRoot(),
-          getEntityRefsByKey,
+          modelDataStore.GetSchemaRoot(),
+          getModelRefsByKey,
+          getModelsBySearchExpression,
+          getEntityRefsBySearchExpression,
           getModelsByKey,
           getEntityRefsBySearchExpression,
           getModelsBySearchExpression,
@@ -75,7 +77,7 @@ namespace System.Data.Fuse.Convenience {
       return new DictVsEntityRepository<TEntity, TKey>(
         entityRepository,
         ConversionHelper.ResolveNavigations<TEntity>(schemaRoot),
-        ConversionHelper.LoadNavigations<TEntity>(
+        ConversionHelper.LoadNavigationsDict<TEntity>(
           schemaRoot,
           getEntityRefsByKey,
           null,
@@ -90,7 +92,7 @@ namespace System.Data.Fuse.Convenience {
 
     #region EntityToModel
 
-    public static Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> LoadNavigations<TEntity, TModel>(
+    public static Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> LoadNavigationsDict<TEntity, TModel>(
       SchemaRoot schema,
       Func<string, object[], EntityRef[]> getEntityRefsByKey,
       Func<Type, object[], object[]> getModelsByKey,
@@ -99,7 +101,7 @@ namespace System.Data.Fuse.Convenience {
       NavigationRole navigationRoleFlags,
       bool loadMultipleNavigations
     ) {
-      return LoadNavigations<TEntity>(
+      return LoadNavigationsDict<TEntity>(
         schema,
         getEntityRefsByKey,
         getModelsByKey,
@@ -112,6 +114,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     internal static AsyncLocal<List<string>> _VisitedTypeNames;
+    internal static AsyncLocal<List<RelationSchema>> _VisitedRelations;
     internal static object _VisitedTypeNamesLock = new object();
 
     public static Func<PropertyInfo, object, Dictionary<string, object>, bool> DismissNavigations(SchemaRoot schema) {
@@ -120,7 +123,278 @@ namespace System.Data.Fuse.Convenience {
       };
     }
 
-    public static Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> LoadNavigations<TEntity>(
+    public static Func<TEntity, TModel, PropertyInfo, bool> LoadNavigations<TEntity, TModel>(
+      SchemaRoot schema,
+      Func<string, object[], EntityRef[]> getModelRefsByKey,
+      Func<Type, ExpressionTree, object[]> getModels,
+      Func<string, ExpressionTree, EntityRef[]> getModelRefs,
+      Func<Type, object[], object[]> getModelsByKey,
+      Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression,
+      Func<Type, ExpressionTree, object[]> getModelsBySearchExpression,
+      NavigationRole navigationRoleFlags,
+      bool loadMultipleNavigations
+    ) {
+
+      // TODO prevent circular references (Dependent -> Principal -> Dependent)
+
+      bool includeLookups = (navigationRoleFlags & NavigationRole.Lookup) == NavigationRole.Lookup;
+      bool includePrincipals = (navigationRoleFlags & NavigationRole.Principal) == NavigationRole.Principal;
+      bool includeDependents = (navigationRoleFlags & NavigationRole.Dependent) == NavigationRole.Dependent;
+      bool includeReferrers = (navigationRoleFlags & NavigationRole.Referrer) == NavigationRole.Referrer;
+
+      //bool checkedPrimaryNavigatoinsWithoutProperties = false;
+
+      //List<string> visitedTypeNames = new List<string>();
+      //AsyncLocal<List<string>> visitedTypeNames = new AsyncLocal<List<string>>();
+      //if (_VisitedTypeNames == null) {
+      //  _VisitedTypeNames = new AsyncLocal<List<string>>();
+      //}
+      //if (_VisitedTypeNames.Value == null) {
+      //  _VisitedTypeNames.Value = new List<string>();
+      //}
+
+      return (TEntity entity, TModel model, PropertyInfo pi) => {
+        // TODO support multiple key fields
+
+        //PropertyInfo propertyInfoOnEntity = typeof(TEntity).GetProperty(pi.Name);
+        //if (propertyInfoOnEntity != null) {
+        //  // property exists on entity, so we dont have to handle it here
+        //  return false;
+        //}
+
+        if (
+          _VisitedTypeNames != null &&
+          _VisitedTypeNames.Value != null &&
+          _VisitedTypeNames.Value.Count == 0
+        ) {
+          // TModel is primary entity
+          RelationSchema relationSchema = schema.Relations.FirstOrDefault(
+            r => r.PrimaryNavigationName == pi.Name &&
+            r.PrimaryEntityName == typeof(TModel).Name
+          );
+          if (relationSchema != null) {
+            if (_VisitedRelations?.Value?.Any(
+              (r) => r.ForeignEntityName == relationSchema.ForeignEntityName &&
+              r.ForeignKeyIndexName == relationSchema.ForeignKeyIndexName &&
+              r.PrimaryEntityName == relationSchema.PrimaryEntityName
+            ) == true) {
+              return true;
+            }
+            string foreignTypename = relationSchema.ForeignEntityName;
+
+            // Determine the target model type for the navigation property:
+            // - If the property is an array, use the element type
+            // - If the property implements IEnumerable<T>, use T
+            // - Otherwise use the property type itself (singular)
+            Type propertyType = pi.PropertyType;
+            Type foreignType;
+            if (propertyType.IsArray) {
+              foreignType = propertyType.GetElementType();
+            } else {
+              var enumerableInterface = propertyType.GetInterfaces().FirstOrDefault(i =>
+                i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+              );
+              if (enumerableInterface != null) {
+                foreignType = enumerableInterface.GetGenericArguments()[0];
+              } else {
+                foreignType = propertyType;
+              }
+            }
+            bool isRef = typeof(EntityRef).IsAssignableFrom(foreignType);
+            if (!isRef && foreignTypename != foreignType.Name) {
+              return false; // Type mismatch, cannot load navigation
+            }
+            _VisitedRelations?.Value?.Add(relationSchema);
+            object[] foreignModels;
+            string foreignKeyIndexName = relationSchema.ForeignKeyIndexName; //TODO support multiple key fields
+            if (isRef) {
+              foreignModels = getModelRefs(
+                foreignTypename,
+                ExpressionTree.And(FieldPredicate.Equal(foreignKeyIndexName, GetKey(model, schema)))
+              );
+            } else {
+              foreignModels = getModels(
+                foreignType,
+                ExpressionTree.And(FieldPredicate.Equal(foreignKeyIndexName, GetKey(model, schema)))
+              );
+            }
+            if (relationSchema.ForeignEntityIsMultiple) {
+              SetMultiple(model, pi, foreignModels);
+            } else {
+              pi.SetValue(
+                model,
+                foreignModels.FirstOrDefault()
+              );
+            }
+            return true;
+          }
+
+          // TModel is foreign entity
+          RelationSchema foreignRelationSchema = schema.Relations.FirstOrDefault(
+            r => r.ForeignNavigationName == pi.Name
+            && r.ForeignEntityName == typeof(TModel).Name
+          );
+          if (foreignRelationSchema != null) {
+            if (_VisitedRelations?.Value?.Any(
+              (r) => r.ForeignEntityName == foreignRelationSchema.ForeignEntityName &&
+              r.ForeignKeyIndexName == foreignRelationSchema.ForeignKeyIndexName &&
+              r.PrimaryEntityName == foreignRelationSchema.PrimaryEntityName
+            ) == true) {
+              return true;
+            }
+            string primaryTypename = foreignRelationSchema.PrimaryEntityName;
+            // Determine the target model type for the navigation property:
+            // - If the property is an array, use the element type
+            // - If the property implements IEnumerable<T>, use T
+            // - Otherwise use the property type itself (singular)
+            Type propertyType = pi.PropertyType;
+            Type primaryType = propertyType;
+
+
+            bool isRef = typeof(EntityRef).IsAssignableFrom(primaryType);
+            if (!isRef && primaryTypename != primaryType.Name) {
+              return false; // Type mismatch, cannot load navigation
+            }
+            _VisitedRelations?.Value?.Add(foreignRelationSchema);
+            string foreignKeyIndexName = foreignRelationSchema.ForeignKeyIndexName; //TODO support multiple key fields
+
+            object[] primaryModelss;
+            if (isRef) {
+              primaryModelss = getModelRefsByKey(
+                primaryTypename,
+                new object[] { GetValue(entity, foreignKeyIndexName) }
+              );
+            } else {
+              primaryModelss = getModelsByKey(
+                primaryType,
+                new object[] { GetValue(entity, foreignKeyIndexName) }
+              );
+            }
+
+            pi.SetValue(
+              model,
+              primaryModelss.FirstOrDefault()
+            );
+
+            return true;
+          }
+        }
+        return false;
+      };
+    }
+
+    private static void SetMultiple<TModel>(TModel model, PropertyInfo pi, object[] foreignModels) {
+      // Safely set collection-typed navigation properties (arrays, IEnumerable<T>, List<T>, concrete collections, ...)
+      if (foreignModels == null) {
+        pi.SetValue(model, null);
+        return;
+      }
+
+      Type propType = pi.PropertyType;
+
+      object ConvertValue(object val, Type target) {
+        if (val == null) return null;
+        Type valType = val.GetType();
+        if (target.IsAssignableFrom(valType)) return val;
+
+        try {
+          if (target.IsEnum) {
+            if (val is string s) return Enum.Parse(target, s, true);
+            return Enum.ToObject(target, val);
+          }
+          // handle nullable
+          if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof(Nullable<>)) {
+            target = Nullable.GetUnderlyingType(target);
+          }
+          return Convert.ChangeType(val, target);
+        } catch {
+          // fallback: if conversion fails, try to return original value
+          return val;
+        }
+      }
+
+      // Handle array target
+      if (propType.IsArray) {
+        Type elemType = propType.GetElementType();
+        Array arr = Array.CreateInstance(elemType, foreignModels.Length);
+        for (int i = 0; i < foreignModels.Length; i++) {
+          arr.SetValue(ConvertValue(foreignModels[i], elemType), i);
+        }
+        pi.SetValue(model, arr);
+        return;
+      }
+
+      // Try to determine element type for generic collections (IEnumerable<T>, List<T>, ICollection<T>, ...)
+      Type elementType = null;
+      if (propType.IsGenericType) {
+        var genArgs = propType.GetGenericArguments();
+        if (genArgs.Length >= 1) {
+          elementType = genArgs[0];
+        }
+      }
+      if (elementType == null) {
+        var enumInterface = propType.GetInterfaces()
+          .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+        if (enumInterface != null) {
+          elementType = enumInterface.GetGenericArguments()[0];
+        }
+      }
+
+      if (elementType != null) {
+        // Build a List<elementType> and populate it
+        Type listType = typeof(List<>).MakeGenericType(elementType);
+        var listInstance = (System.Collections.IList)Activator.CreateInstance(listType);
+        foreach (var v in foreignModels) {
+          listInstance.Add(ConvertValue(v, elementType));
+        }
+
+        // If property can accept List<T> or interfaces it implements, set it directly
+        if (propType.IsAssignableFrom(listType)) {
+          pi.SetValue(model, listInstance);
+          return;
+        }
+
+        // If property is an interface that List<T> implements (e.g., IEnumerable<T>, ICollection<T>, IList<T>) assign list
+        if (propType.IsAssignableFrom(listInstance.GetType())) {
+          pi.SetValue(model, listInstance);
+          return;
+        }
+
+        // Try to instantiate concrete collection type and add items using Add method
+        try {
+          var targetCollection = Activator.CreateInstance(propType);
+          var addMethod = propType.GetMethod("Add");
+          if (addMethod != null) {
+            foreach (var v in foreignModels) {
+              addMethod.Invoke(targetCollection, new[] { ConvertValue(v, elementType) });
+            }
+            pi.SetValue(model, targetCollection);
+            return;
+          }
+        } catch {
+          // ignore and fallback
+        }
+
+        // Fallback: try to set an array if the property accepts it
+        Array arrFallback = Array.CreateInstance(elementType, foreignModels.Length);
+        for (int i = 0; i < foreignModels.Length; i++) {
+          arrFallback.SetValue(ConvertValue(foreignModels[i], elementType), i);
+        }
+        if (propType.IsAssignableFrom(arrFallback.GetType())) {
+          pi.SetValue(model, arrFallback);
+          return;
+        }
+
+        // Last resort: set the List<T> instance (most compatible)
+        pi.SetValue(model, listInstance);
+        return;
+      }
+
+      // Non-generic IEnumerable/unknown collection: set object[] (best-effort)
+      pi.SetValue(model, foreignModels);
+    }
+
+    public static Func<PropertyInfo, TEntity, Dictionary<string, object>, bool> LoadNavigationsDict<TEntity>(
       SchemaRoot schema,
       Func<string, object[], EntityRef[]> getEntityRefsByKey,
       Func<Type, object[], object[]> getModelsByKey,
@@ -417,7 +691,10 @@ namespace System.Data.Fuse.Convenience {
       if (sourceProperty != null) {
         navigationValueOnEntity = sourceProperty.GetValue(entity, null);
       } else {
-        return false;
+        //navigationValueOnEntity = getEntityByKey(
+        //  foreignKeyRelation.PrimaryEntityName,
+        //  pi.GetValue(entity, null)
+        //);       
       }
       if (navigationValueOnEntity != null) {
         if (typeof(EntityRef).IsAssignableFrom(targetPropertyType)) {
@@ -662,6 +939,18 @@ namespace System.Data.Fuse.Convenience {
       List<PropertyInfo> keyProperties = schemaRoot.GetPrimaryKeyProperties(o.GetNonDynamicType());
       object[] keyValues = o.GetValues(keyProperties);
       return GetKey(keyProperties, keyValues);
+    }
+
+    public static object GetValue(object entity,  string propertyGroupName) {
+      if (entity == null) {
+        return null;
+      }
+      Type type = entity.GetNonDynamicType();
+      PropertyInfo property = type.GetProperty(propertyGroupName); // TODO support property groups
+      if (property != null) {
+        return property.GetValue(entity);
+      }
+      return null;
     }
 
     public static string GetLabel(object o, SchemaRoot schemaRoot) {

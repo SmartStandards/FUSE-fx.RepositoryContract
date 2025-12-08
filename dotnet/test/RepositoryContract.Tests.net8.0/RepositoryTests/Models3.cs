@@ -5,41 +5,7 @@ namespace RepositoryTests {
 
   [UniquePropertyGroup("PrimaryKey", nameof(Id))]
   [PrimaryIdentity("PrimaryKey")]
-  public class LeafEntity1 {
-    public int Id { get; set; }
-    public long LongValue { get; set; }
-    public string StringValue { get; set; } = string.Empty;
-    public DateTime DateValue { get; set; } = new DateTime(1900, 1, 1);
-    public Guid GuidValue { get; set; }
-    public bool BoolValue { get; set; }
-    public float FloatValue { get; set; }
-    public double DoubleValue { get; set; }
-    public decimal DecimalValue { get; set; }
-  }
-
-  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
-  [PrimaryIdentity("PrimaryKey")]
-  [HasLookup(null, nameof(Leaf1Id), null, null, nameof(LeafEntity1))]
-  [HasDependent(null, nameof(ChildEntity1.Root1Id), null, null, nameof(ChildEntity1))]
-  [PropertyGroup(nameof(Leaf1Id), nameof(Leaf1Id))]
-  public class RootEntity1 {
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public int Leaf1Id { get; set; }
-  }
-
-  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
-  [PrimaryIdentity("PrimaryKey")]
-  [PropertyGroup(nameof(Root1Id), nameof(Root1Id))]
-  public class ChildEntity1 {
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public int Root1Id { get; set; }
-  }
-
-  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
-  [PrimaryIdentity("PrimaryKey")]
-  public class LeafEntity2 {
+  public class LeafModel1 {
     public int Id { get; set; }
     public long LongValue { get; set; }
     public string StringValue { get; set; } = string.Empty;
@@ -53,23 +19,64 @@ namespace RepositoryTests {
 
   [UniquePropertyGroup("PrimaryKey", nameof(Id))]
   [PrimaryIdentity("PrimaryKey")]
-  [HasLookup(nameof(Leaf2), nameof(Leaf2Id), null, null, nameof(LeafEntity2))]
-  [HasDependent(nameof(Children2), nameof(ChildEntity2.Root2Id), null, null, nameof(ChildEntity2))]
-  public class RootEntity2 {
+  [HasLookup(nameof(Leaf1), nameof(Leaf1Id), null, null, nameof(LeafModel1))]
+  [HasDependent(nameof(Children), nameof(ChildModel1.Root1Id), nameof(ChildModel1.Root1), null, nameof(ChildModel1))]
+  public class RootModel1 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public int Leaf2Id { get; set; }
-    public LeafEntity2 Leaf2 { get; set; } = null!;
-    public ChildEntity2[] Children2 { get; set; } = Array.Empty<ChildEntity2>();
+    public int Leaf1Id { get; set; }
+    public ChildModel1[] Children { get; set; } = Array.Empty<ChildModel1>();
+    public LeafModel1 Leaf1 { get; set; } = null!;
   }
 
   [UniquePropertyGroup("PrimaryKey", nameof(Id))]
   [PrimaryIdentity("PrimaryKey")]
-  public class ChildEntity2 {
+  public class ChildModel1 {
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int Root1Id { get; set; }
+    public RootModel1 Root1 { get; set; } = null!;
+  }
+
+
+
+
+
+
+
+  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
+  [PrimaryIdentity("PrimaryKey")]
+  public class LeafModel2 {
+    public int Id { get; set; }
+    public long LongValue { get; set; }
+    public string StringValue { get; set; } = string.Empty;
+    public DateTime DateValue { get; set; }
+    public Guid GuidValue { get; set; }
+    public bool BoolValue { get; set; }
+    public float FloatValue { get; set; }
+    public double DoubleValue { get; set; }
+    public decimal DecimalValue { get; set; }
+  }
+
+  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
+  [PrimaryIdentity("PrimaryKey")]
+  [HasLookup(nameof(Leaf2), nameof(Leaf2Id), null, null, nameof(LeafModel2))]
+  [HasDependent(nameof(Children), nameof(ChildModel2.Root2Id), nameof(ChildModel2.Root2), null, nameof(ChildModel2))]
+  public class RootModel2 {
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int Leaf2Id { get; set; }
+    public ChildModel2[] Children { get; set; } = Array.Empty<ChildModel2>();
+    public LeafModel2 Leaf2 { get; set; } = null!;
+  }
+
+  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
+  [PrimaryIdentity("PrimaryKey")]
+  public class ChildModel2 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public int Root2Id { get; set; }
-    public RootEntity2 Root2 { get; set; } = null!;
+    public RootModel2 Root2 { get; set; } = null!;
   }
 
 }

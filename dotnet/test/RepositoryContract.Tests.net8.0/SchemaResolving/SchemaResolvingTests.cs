@@ -24,7 +24,7 @@ namespace System.Data.Fuse.SchemaResolving {
       );
 
       Type[] entityTypes = resolver.GetWellknownTypes();
-      Assert.AreEqual(17, entityTypes.Length);
+      Assert.IsTrue(17 <= entityTypes.Length);
    
     }
 

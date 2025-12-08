@@ -16,14 +16,14 @@ namespace System.Data.Fuse.Convenience {
     private readonly Action<object, object> _OnAfterEntityToModel;
 
     private readonly Func<PropertyInfo, Dictionary<string, object>, object, bool> _HandlePropertyModelToEntity;
-    private readonly Func<PropertyInfo, object, Dictionary<string, object>, bool> _HandlePropertyEntityToModel;
+    private readonly Func<object, object, PropertyInfo, bool> _HandlePropertyEntityToModel;
 
     public InMemoryModelVsEntityDataStore(
       SchemaRoot schemaRoot,
       Action<object, object> onAfterModelToEntity,
       Action<object, object> onAfterEntityToModel,
       Func<PropertyInfo, Dictionary<string, object>, object, bool> handlePropertyModelToEntity,
-      Func<PropertyInfo, object, Dictionary<string, object>, bool> handlePropertyEntityToModel) {
+      Func<object, object, PropertyInfo, bool> handlePropertyEntityToModel) {
       _SchemaRoot = schemaRoot;
       _OnAfterModelToEntity = onAfterModelToEntity;
       _OnAfterEntityToModel = onAfterEntityToModel;

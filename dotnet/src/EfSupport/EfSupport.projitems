@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Persistence\EfUniversalRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\SchemaCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)persistence\SqlRepository.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)persistence\SqlSchemaInstaller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)playground\SqlReportService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)QuerableSupport\RepositoryQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SchemaResolving\DbContextDeclaratedEntityResolver.cs" />

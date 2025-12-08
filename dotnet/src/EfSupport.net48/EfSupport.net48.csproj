@@ -45,14 +45,14 @@
     <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>..\..\vendor\nuget\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
-    <Reference Include="FUSE-fx.EntityAnnotations, Version=999.0.0.25205, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.EntityAnnotations.4.1.2\lib\net48\FUSE-fx.EntityAnnotations.dll</HintPath>
+    <Reference Include="FUSE-fx.EntityAnnotations, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.EntityAnnotations.4.2.0\lib\net48\FUSE-fx.EntityAnnotations.dll</HintPath>
     </Reference>
-    <Reference Include="FUSE-fx.ModelDescription, Version=1.0.0.18376, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelDescription.2.0.21\lib\net48\FUSE-fx.ModelDescription.dll</HintPath>
+    <Reference Include="FUSE-fx.ModelDescription, Version=2.0.22.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelDescription.2.0.22\lib\net48\FUSE-fx.ModelDescription.dll</HintPath>
     </Reference>
-    <Reference Include="FUSE-fx.ModelReader, Version=0.1.0.25578, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.14\lib\net48\FUSE-fx.ModelReader.dll</HintPath>
+    <Reference Include="FUSE-fx.ModelReader, Version=0.2.17.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\vendor\nuget\FUSE-fx.ModelReader.0.2.17\lib\net48\FUSE-fx.ModelReader.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />

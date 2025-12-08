@@ -14,6 +14,11 @@ namespace RepositoryTests {
 
   public class TestDbContext : DbContext {
     public DbSet<LeafEntity1> LeafEntities1 { get; set; } = null!;
+    public DbSet<RootEntity1> RootEntities1 { get; set; } = null!;
+    public DbSet<ChildEntity1> ChildEntities1 { get; set; } = null!;
+    public DbSet<LeafEntity2> LeafEntities2 { get; set; } = null!;
+    public DbSet<RootEntity2> RootEntities2 { get; set; } = null!;
+    public DbSet<ChildEntity2> ChildEntities2 { get; set; } = null!;
     public TestDbContext() : base() { }
     public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
@@ -25,13 +30,9 @@ namespace RepositoryTests {
   public class EfRepositoryTests : RepositoryTestsBase {
 
     protected override IRepository<LeafEntity1, int> CreateRepository() {
-      var options = new DbContextOptionsBuilder<TestDbContext>()
-                      .UseInMemoryDatabase(databaseName: "TestDb")
-                      .Options;
-
-      using var context = new TestDbContext(options);
-
-      return new EfRepository<LeafEntity1, int>(new ShortLivingDbContextInstanceProvider<TestDbContext>());
+      return new EfRepository<LeafEntity1, int>(
+        new ShortLivingDbContextInstanceProvider<TestDbContext>()
+      );
     }
 
   }

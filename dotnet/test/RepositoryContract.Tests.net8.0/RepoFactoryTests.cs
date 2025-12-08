@@ -62,11 +62,11 @@ namespace RepositoryContract.Tests {
       }
     }
 
-    [TestMethod, Ignore]
-    public void GetRepository1_ReturnsRepository() {
-      SampleRepoFacade repo = new SampleRepoFacade();
-      IRepository<SampleEntity1, int> r1 =  repo.GetRepository1<SampleEntity1>();
-    }
+    //[TestMethod]
+    //public void GetRepository1_ReturnsRepository() {
+    //  SampleRepoFacade repo = new SampleRepoFacade();
+    //  IRepository<SampleEntity1, int> r1 =  repo.GetRepository1<SampleEntity1>();
+    //}
 
   }
 }

@@ -8,16 +8,42 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 
 namespace System.Convenience {
-  public class ModelVsEntityDataStore : IDataStore {
+
+  public abstract class ModelVsEntityType {
+    public abstract Type ModelType { get; }
+    public abstract Type EntityType { get; }
+    public abstract Type KeyType { get; }
+  }
+
+  public class ModelVsEntityType<TModel, TEntity, TKey> : ModelVsEntityType {
+    public override Type ModelType => typeof(TModel);
+
+    public override Type EntityType => typeof(TEntity);
+
+    public override Type KeyType => typeof(TKey);
+  }
+
+  public class ModelVsEntityDataStore : IDataStore {    
 
     IDataStore _InnerStore;
     private readonly Tuple<Type, Type>[] _ManagedTypes;
+    private readonly ModelVsEntityType[] _ModelVsEntityTypes;
     private readonly SchemaRoot _SchemaRoot;
 
-    public ModelVsEntityDataStore(IDataStore innerStore, Tuple<Type, Type>[] managedTypes) {
+    public ModelVsEntityDataStore(
+      IDataStore innerStore, Tuple<Type, Type>[] managedTypes
+    ) {
       _InnerStore = innerStore;
       _ManagedTypes = managedTypes;
       _SchemaRoot = ModelReader.GetSchema(managedTypes.Select((mt) => mt.Item1).ToArray(), true);
+    }
+
+    public ModelVsEntityDataStore(
+      IDataStore innerStore, ModelVsEntityType[] managedTypes
+    ) {
+      _InnerStore = innerStore;
+      _ModelVsEntityTypes = managedTypes;
+      _SchemaRoot = ModelReader.GetSchema(managedTypes.Select((mt) => mt.ModelType).ToArray(), true);
     }
 
     public void BeginTransaction() {
@@ -34,11 +60,19 @@ namespace System.Convenience {
       Tuple<Type, Type>[] managedTypes = _InnerStore.GetManagedTypes();
 
       // Find the entity type that matches the TModel name or TModel + "Entity"
-      var entityType = Array.Find(
-        managedTypes, (type) =>
-          type.Item1.Name == typeof(TModel).Name ||
-          type.Item1.Name == $"{typeof(TModel).Name}Entity"
-      );
+      Type entityType = null;
+      if (this._ModelVsEntityTypes == null) {
+        entityType = Array.Find(
+          managedTypes, (type) =>
+            type.Item1.Name == typeof(TModel).Name ||
+            type.Item1.Name == $"{typeof(TModel).Name}Entity"
+        )?.Item1;
+      } else {
+        entityType = Array.Find(
+          this._ModelVsEntityTypes, (type) =>
+            type.ModelType == typeof(TModel)
+        )?.EntityType;
+      }
 
       if (entityType == null) {
         throw new InvalidOperationException($"No matching entity type found for model {typeof(TModel).Name}");
@@ -46,7 +80,7 @@ namespace System.Convenience {
 
       var getRepositoryMethod = typeof(ModelVsEntityDataStore)
         .GetMethod(nameof(GetRepositoryInternal))
-        .MakeGenericMethod(typeof(TModel), entityType.Item1, typeof(TKey));
+        .MakeGenericMethod(typeof(TModel), entityType, typeof(TKey));
 
       return getRepositoryMethod.Invoke(this, null) as IRepository<TModel, TKey>;
     }
@@ -55,7 +89,7 @@ namespace System.Convenience {
       where TEntity : class
       where TModel : class {
       IRepository<TEntity, TKey> innerRepository = _InnerStore.GetRepository<TEntity, TKey>();
-      ModelVsEntityParams<TModel, TEntity> modelVsEntityParams = new ModelVsEntityParams<TModel, TEntity>();
+      //ModelVsEntityParams<TModel, TEntity> modelVsEntityParams = new ModelVsEntityParams<TModel, TEntity>();
 
       Func<string, object[], EntityRef[]> getEntityRefsByKey = (string entityName, object[] keys) => {
         return ConversionHelper.GetEntityRefs(entityName, keys, typeof(TEntity), _InnerStore, _InnerStore.GetSchemaRoot());
@@ -66,7 +100,7 @@ namespace System.Convenience {
       };
 
       Func<string, ExpressionTree, EntityRef[]> getEntityRefsBySearchExpression = (string entityName, ExpressionTree searchExpression) => {
-        return ConversionHelper.GetEntityRefsBySearchExpression(entityName, searchExpression, typeof(TEntity), _InnerStore, _InnerStore.GetSchemaRoot());
+        return ConversionHelper.GetEntityRefsBySearchExpression(entityName, searchExpression, typeof(TModel), this, this.GetSchemaRoot());
       };
 
       Func<Type, ExpressionTree, object[]> getModelsBySearchExpression = (Type modelType, ExpressionTree searchExpression) => {
@@ -78,8 +112,10 @@ namespace System.Convenience {
         (x, y) => { }, (x, y) => { },
         ConversionHelper.ResolveNavigations<TEntity>(_InnerStore.GetSchemaRoot()),
         ConversionHelper.LoadNavigations<TEntity, TModel>(
-          _InnerStore.GetSchemaRoot(),
+          this.GetSchemaRoot(),
           getEntityRefsByKey,
+          getModelsBySearchExpression,
+          getEntityRefsBySearchExpression,
           getModelsByKey,
           getEntityRefsBySearchExpression,
           getModelsBySearchExpression,
@@ -100,6 +136,11 @@ namespace System.Convenience {
     }
 
     public Tuple<Type, Type>[] GetManagedTypes() {
+      if (_ManagedTypes == null) {
+        return _ModelVsEntityTypes
+          .Select(mvet => Tuple.Create(mvet.ModelType, mvet.KeyType))
+          .ToArray();
+      }
       return _ManagedTypes;
     }
   }

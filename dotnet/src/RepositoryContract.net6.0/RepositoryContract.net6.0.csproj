@@ -13,12 +13,12 @@
     <Product>FUSE-fx.RepositoryContract</Product>
     <Company>(public domain)</Company>
     <Copyright>SmartStandards</Copyright>
-    <Version>0.5.16</Version>
-    <AssemblyVersion>0.5.16</AssemblyVersion>
+    <Version>0.6.3</Version>
+    <AssemblyVersion>0.6.3</AssemblyVersion>
     <Authors>SmartStandards</Authors>
-    <FileVersion>0.5.16</FileVersion>
+    <FileVersion>0.6.3</FileVersion>
     <PackageTags>UID64 Salted Timestamp UUID BigInt Long</PackageTags>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -41,7 +41,7 @@
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
-    <PackageReference Include="FUSE-fx.ModelReader" Version="0.2.14" />
+    <PackageReference Include="FUSE-fx.ModelReader" Version="0.2.17" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.3" />
   </ItemGroup>
 

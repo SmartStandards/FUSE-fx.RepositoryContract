@@ -218,6 +218,19 @@ namespace System.Data.Fuse.Convenience {
             relationElementValue, relationElement.FieldName, mode, prefix,
             ref fieldName, ref @operator
           );
+        } else if (fieldType == "bool" || fieldType == "Boolean") {
+          if (mode == "sql") {
+            if (
+              relationElementValue.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+              relationElementValue.Equals("1")
+            ) {
+              serializedValue = "1";
+            } else {
+              serializedValue = "0";
+            }
+          } else {
+            serializedValue = relationElementValue;
+          }
         } else {
           serializedValue = relationElementValue;
         }
@@ -321,6 +334,17 @@ namespace System.Data.Fuse.Convenience {
       List<object> values = new List<object>();
       foreach (PropertyInfo propertyInfo in properties) {
         values.Add(propertyInfo.GetValue(entity, null));
+      }
+      return values.ToArray();
+    }
+
+    public static object[] GetValuesFromDictionary(
+      this Dictionary<string, object> entity,
+      List<PropertyInfo> properties
+    ) {
+      List<object> values = new List<object>();
+      foreach (PropertyInfo propertyInfo in properties) {
+        values.Add(entity[propertyInfo.Name]);
       }
       return values.ToArray();
     }

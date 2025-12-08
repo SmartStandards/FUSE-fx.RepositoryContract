@@ -102,7 +102,7 @@ namespace System.Data.Fuse.Convenience {
       // If not found by primary key, check for existing entity by unique keysets
       if (existingEntity == null) {
         foreach (var keyset in Keysets) {
-          object[] keysetValues = fields.GetValues(keyset);
+          object[] keysetValues = fields.GetValuesFromDictionary(keyset);
           existingEntity = (keysetValues == null)
             ? null : _Entities.FindMatchByValues(keysetValues, keyset.ToArray());
           if (existingEntity != null) {
@@ -490,7 +490,7 @@ namespace System.Data.Fuse.Convenience {
       // If not found by primary key, check for existing entity by unique keysets
       if (existingEntity == null) {
         foreach (var keyset in Keysets) {
-          object[] keysetValues = fields.GetValues(keyset);
+          object[] keysetValues = fields.GetValuesFromDictionary(keyset);
           existingEntity = (keysetValues == null)
             ? null : _Entities.FindMatchByValues(keysetValues, keyset.ToArray());
           if (existingEntity != null) {

@@ -13,7 +13,7 @@ namespace RepositoryTests {
 
     protected abstract IRepository<LeafEntity1, int> CreateRepository();
 
-    private void SeedRepository(
+    protected int SeedRepository(
       IRepository<LeafEntity1, int> repository, int numEntities
     ) {
       var keyToDelete = repository.GetEntityRefs(
@@ -34,6 +34,10 @@ namespace RepositoryTests {
         };
         repository.AddOrUpdateEntity(entity);
       }
+      int highestKey = repository.GetEntityRefs(
+        ExpressionTree.Empty(), new string[] { nameof(LeafEntity1.Id) }
+      ).Max(r => r.Key);
+      return highestKey;
     }
 
     [TestMethod]
@@ -42,18 +46,18 @@ namespace RepositoryTests {
       // Arrange
       IRepository<LeafEntity1, int> repository = this.CreateRepository();
 
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       // Act
       EntityRef<int>[] result = repository.GetEntityRefs(
-        ExpressionTree.Empty(), new string[] { nameof(LeafEntity1.Id) }
+        ExpressionTree.Empty(), new string[] { $"^{nameof(LeafEntity1.Id)}" }
       );
 
       // Assert
       Assert.AreEqual(10, result.Length, "Expected 10 entities to be returned.");
       Assert.IsTrue(result.All(r => r.Key > 0), "All entity refs should have a valid Id.");
 
-      Assert.AreEqual(1, result[0].Key, "First entity ref should have a Key of 1.");
+      Assert.AreEqual(highestKey, result[0].Key, "First entity ref should have a Key of 1.");
 
       // Act - with filter
       ExpressionTree filterLongGreater = ExpressionTree.And(
@@ -152,7 +156,7 @@ namespace RepositoryTests {
         MatchAll = true,
         Negate = true,
         Predicates = new System.Collections.Generic.List<FieldPredicate> {
-          FieldPredicate.Equal(nameof(LeafEntity1.Id), 1)
+          FieldPredicate.Equal(nameof(LeafEntity1.Id), highestKey)
         }
       };
       var filteredResultIdNot1 = repository.GetEntityRefs(filterIdNot1, new string[] { });
@@ -205,26 +209,26 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_GetEntitiesByKey_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       // Act
-      var result = repository.GetEntitiesByKey(new[] { 1, 3, 5 });
+      var result = repository.GetEntitiesByKey(new[] { highestKey, highestKey - 1, highestKey - 2 });
 
       // Assert
       Assert.AreEqual(3, result.Length, "Expected 3 entities for keys 1, 3, 5.");
-      Assert.IsTrue(result.Any(e => e.Id == 1));
-      Assert.IsTrue(result.Any(e => e.Id == 3));
-      Assert.IsTrue(result.Any(e => e.Id == 5));
+      Assert.IsTrue(result.Any(e => e.Id == highestKey));
+      Assert.IsTrue(result.Any(e => e.Id == highestKey - 1));
+      Assert.IsTrue(result.Any(e => e.Id == highestKey - 2));
     }
 
     [TestMethod]
     public void Repository_GetEntityFields_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       // Act
       var fields = repository.GetEntityFields(
-          ExpressionTree.And(FieldPredicate.Greater(nameof(LeafEntity1.Id), 5)),
+          ExpressionTree.And(FieldPredicate.Greater(nameof(LeafEntity1.Id), highestKey - 5)),
           new[] { nameof(LeafEntity1.Id), nameof(LeafEntity1.StringValue) },
           new string[] { }
       );
@@ -241,10 +245,10 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_GetEntityFieldsBySearchExpression_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       var fields = repository.GetEntityFieldsBySearchExpression(
-          "Id <= 3",
+          $"Id >= {highestKey - 2}",
           new[] { nameof(LeafEntity1.Id), nameof(LeafEntity1.StringValue) },
           new string[] { }
       );
@@ -259,10 +263,10 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_GetEntityFieldsByKey_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       var fields = repository.GetEntityFieldsByKey(
-          new[] { 2, 4 },
+          new[] { highestKey, highestKey - 1 },
           new[] { nameof(LeafEntity1.Id), nameof(LeafEntity1.StringValue) }
       );
 
@@ -277,7 +281,7 @@ namespace RepositoryTests {
 
       Assert.AreEqual(10, repository.CountAll(), "Expected 10 entities in total.");
 
-      var count = repository.Count(ExpressionTree.And(FieldPredicate.Greater(nameof(LeafEntity1.Id), 5)));
+      var count = repository.Count(ExpressionTree.And(FieldPredicate.Greater(nameof(LeafEntity1.LongValue), 50)));
       Assert.AreEqual(5, count, "Expected 5 entities with Id > 5.");
     }
 
@@ -286,45 +290,45 @@ namespace RepositoryTests {
       var repository = this.CreateRepository();
       SeedRepository(repository, 10);
 
-      var count = repository.CountBySearchExpression("Id < 4");
+      var count = repository.CountBySearchExpression("LongValue < 40");
       Assert.AreEqual(3, count, "Expected 3 entities with Id < 4.");
     }
 
     [TestMethod]
     public void Repository_ContainsKey_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
-      Assert.IsTrue(repository.ContainsKey(1), "Repository should contain key 1.");
-      Assert.IsFalse(repository.ContainsKey(99), "Repository should not contain key 99.");
+      Assert.IsTrue(repository.ContainsKey(highestKey), $"Repository should contain key {highestKey}.");
+      Assert.IsFalse(repository.ContainsKey(highestKey + 1), $"Repository should not contain key {highestKey + 1}.");
     }
 
     [TestMethod]
     public void Repository_AddOrUpdateEntity_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       // Update existing
-      var entity = new LeafEntity1 { Id = 1, StringValue = "Updated", LongValue = 100 };
+      var entity = new LeafEntity1 { Id = highestKey, StringValue = "Updated", LongValue = 100 };
       var updated = repository.AddOrUpdateEntity(entity);
       Assert.AreEqual("Updated", updated.StringValue);
 
       // Add new
-      var newEntity = new LeafEntity1 { Id = 99, StringValue = "New", LongValue = 999 };
+      var newEntity = new LeafEntity1 { Id = highestKey + 1, StringValue = "New", LongValue = 999 };
       var added = repository.AddOrUpdateEntity(newEntity);
-      Assert.AreEqual(99, added.Id);
+      Assert.AreEqual(highestKey + 1, added.Id);
       Assert.AreEqual("New", added.StringValue);
     }
 
     [TestMethod]
     public void Repository_AddOrUpdateEntityFields_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       // Update existing
       var fields = new System.Collections.Generic.Dictionary<string, object>
       {
-            { "Id", 2 },
+            { "Id", highestKey },
             { "StringValue", "FieldUpdated" }
         };
       var diff = repository.AddOrUpdateEntityFields(fields);
@@ -336,7 +340,7 @@ namespace RepositoryTests {
       // Add new
       var newFields = new System.Collections.Generic.Dictionary<string, object>
       {
-            { "Id", 100 },
+            { "Id", highestKey+1 },
             { "StringValue", "FieldNew" }
         };
       var diffNew = repository.AddOrUpdateEntityFields(newFields);
@@ -347,14 +351,14 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_TryUpdateEntity_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
-      var entity = new LeafEntity1 { Id = 3, StringValue = "TryUpdate" };
+      var entity = new LeafEntity1 { Id = highestKey - 7, StringValue = "TryUpdate" };
       var updated = repository.TryUpdateEntity(entity);
       Assert.IsNotNull(updated);
       Assert.AreEqual("TryUpdate", updated.StringValue);
 
-      var nonExisting = new LeafEntity1 { Id = 999, StringValue = "Nope" };
+      var nonExisting = new LeafEntity1 { Id = highestKey + 1, StringValue = "Nope" };
       var result = repository.TryUpdateEntity(nonExisting);
       Assert.IsNull(result);
     }
@@ -362,11 +366,11 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_TryUpdateEntityFields_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       var fields = new System.Collections.Generic.Dictionary<string, object>
       {
-            { "Id", 4 },
+            { "Id", highestKey-6 },
             { "StringValue", "TryFieldUpdate" }
         };
       var diff = repository.TryUpdateEntityFields(fields);
@@ -375,7 +379,7 @@ namespace RepositoryTests {
 
       var nonExistingFields = new System.Collections.Generic.Dictionary<string, object>
       {
-            { "Id", 999 },
+            { "Id", highestKey+1 },
             { "StringValue", "Nope" }
         };
       var result = repository.TryUpdateEntityFields(nonExistingFields);
@@ -385,14 +389,14 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_TryAddEntity_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
-      var entity = new LeafEntity1 { Id = 101, StringValue = "TryAdd" };
+      var entity = new LeafEntity1 { Id = highestKey + 1, StringValue = "TryAdd" };
       var key = repository.TryAddEntity(entity);
-      Assert.AreEqual(101, key);
+      Assert.AreEqual(highestKey + 1, key);
 
       // Try to add existing
-      var existing = new LeafEntity1 { Id = 1, StringValue = "ShouldNotAdd" };
+      var existing = new LeafEntity1 { Id = highestKey, StringValue = "ShouldNotAdd" };
       var key2 = repository.TryAddEntity(existing);
       Assert.AreEqual(0, key2); // default(int) is 0
     }
@@ -400,9 +404,9 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_MassupdateByKeys_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
-      var keys = new[] { 1, 2, 3 };
+      var keys = new[] { highestKey - 1, highestKey - 2, highestKey - 3 };
       var fields = new System.Collections.Generic.Dictionary<string, object>
       {
             { "StringValue", "MassUpdated" }
@@ -417,9 +421,9 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_Massupdate_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
-      var filter = ExpressionTree.And(FieldPredicate.Greater(nameof(LeafEntity1.Id), 8));
+      var filter = ExpressionTree.And(FieldPredicate.Greater(nameof(LeafEntity1.Id), highestKey - 2));
       var fields = new System.Collections.Generic.Dictionary<string, object>
       {
             { "StringValue", "MassUpdateByFilter" }
@@ -434,13 +438,13 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_MassupdateBySearchExpression_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
       var fields = new System.Collections.Generic.Dictionary<string, object>
       {
             { "StringValue", "MassUpdateBySearch" }
         };
-      var updatedKeys = repository.MassupdateBySearchExpression("Id < 3", fields);
+      var updatedKeys = repository.MassupdateBySearchExpression($"Id < {highestKey - 7}", fields);
       Assert.AreEqual(2, updatedKeys.Length);
 
       var updatedEntities = repository.GetEntitiesByKey(updatedKeys);
@@ -450,29 +454,29 @@ namespace RepositoryTests {
     [TestMethod]
     public void Repository_TryDeleteEntities_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
-      var keysToDelete = new[] { 1, 2, 99 };
+      var keysToDelete = new[] { highestKey, highestKey - 1, highestKey + 1 };
       var deleted = repository.TryDeleteEntities(keysToDelete);
       Assert.AreEqual(2, deleted.Length, "Should delete 2 existing entities.");
 
-      Assert.IsFalse(repository.ContainsKey(1));
-      Assert.IsFalse(repository.ContainsKey(2));
-      Assert.IsTrue(repository.ContainsKey(3));
+      Assert.IsFalse(repository.ContainsKey(highestKey));
+      Assert.IsFalse(repository.ContainsKey(highestKey - 1));
+      Assert.IsTrue(repository.ContainsKey(highestKey - 2));
     }
 
     [TestMethod]
     public void Repository_TryUpdateKey_Works() {
       var repository = this.CreateRepository();
-      SeedRepository(repository, 10);
+      int highestKey = SeedRepository(repository, 10);
 
-      var result = repository.TryUpdateKey(1, 1000);
+      var result = repository.TryUpdateKey(highestKey, highestKey + 1);
       Assert.IsTrue(result, "Should update key from 1 to 1000.");
-      Assert.IsFalse(repository.ContainsKey(1));
-      Assert.IsTrue(repository.ContainsKey(1000));
+      Assert.IsFalse(repository.ContainsKey(highestKey));
+      Assert.IsTrue(repository.ContainsKey(highestKey + 1));
 
       // Try to update to an existing key
-      var result2 = repository.TryUpdateKey(2, 3);
+      var result2 = repository.TryUpdateKey(highestKey - 1, highestKey - 2);
       Assert.IsFalse(result2, "Should not update to an existing key.");
     }
   }

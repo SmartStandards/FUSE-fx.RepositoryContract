@@ -22,7 +22,7 @@ namespace System.Data.Fuse.Ef {
   /// <summary>
   /// (from 'FUSE-fx.RepositoryContract')
   /// </summary>
-  public class EfRepository<TEntity, TKey> 
+  public class EfRepository<TEntity, TKey>
     : IRepository<TEntity, TKey>
 #if !NETCOREAPP
     , IWcfRepository<TEntity, TKey>
@@ -122,6 +122,9 @@ namespace System.Data.Fuse.Ef {
         }
 
         if (existingEntity == null) {
+          // when adding a new entity, we have to unset the key fields that are identity fields
+          this.UnsetIdentityFields(entity);
+
           dbContext.Set<TEntity>().Add(entity);
           dbContext.SaveChanges();
           return entity;
@@ -132,6 +135,21 @@ namespace System.Data.Fuse.Ef {
         }
 
       });
+    }
+
+    private void UnsetIdentityFields(TEntity entity) {
+      EntitySchema schema = GetSchemaRoot().GetSchema(typeof(TEntity).Name);
+      foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
+        var fieldSchema = schema.Fields.FirstOrDefault(f => f.Name == propertyInfo.Name);
+        if (fieldSchema != null && fieldSchema.DbGeneratedIdentity) {
+          // Set the identity field to its default value
+          if (propertyInfo.PropertyType.IsValueType) {
+            propertyInfo.SetValue(entity, Activator.CreateInstance(propertyInfo.PropertyType));
+          } else {
+            propertyInfo.SetValue(entity, null);
+          }
+        }
+      }
     }
 
     //AI - minor adjustments
@@ -148,7 +166,7 @@ namespace System.Data.Fuse.Ef {
         // If not found by primary key, check for existing entity by unique keysets
         if (existingEntity == null) {
           foreach (var keyset in Keysets) {
-            object[] keysetValues = fields.GetValues(keyset);
+            object[] keysetValues = fields.GetValuesFromDictionary(keyset);
             existingEntity = (keysetValues == null)
               ? null : dbContext.Set<TEntity>().Find(keysetValues);
             if (existingEntity != null) {
@@ -166,6 +184,7 @@ namespace System.Data.Fuse.Ef {
           CopyFields2(fields, entity);
           existingEntity = entity;
           // If no existing entity found, add new entity
+          this.UnsetIdentityFields(entity);
           dbContext.Set<TEntity>().Add(entity);
         }
 
@@ -529,6 +548,7 @@ namespace System.Data.Fuse.Ef {
 
           // If the entity does not exist, add it
           if (existingEntity == null) {
+            this.UnsetIdentityFields(entity);
             dbContext.Set<TEntity>().Add(entity);
             dbContext.SaveChanges();
             return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
@@ -638,7 +658,7 @@ namespace System.Data.Fuse.Ef {
         // If not found by primary key, check for existing entity by unique keysets
         if (existingEntity == null) {
           foreach (var keyset in Keysets) {
-            object[] keysetValues = fields.GetValues(keyset);
+            object[] keysetValues = fields.GetValuesFromDictionary(keyset);
             existingEntity = (keysetValues == null)
               ? null : dbContext.Set<TEntity>().Find(keysetValues);
             if (existingEntity != null) {
@@ -705,6 +725,7 @@ namespace System.Data.Fuse.Ef {
               // Remove the old entity
               dbContext.Set<TEntity>().Remove(existingEntity);
               // Add the new entity
+              this.UnsetIdentityFields(updatedEntity);
               dbContext.Set<TEntity>().Add(updatedEntity);
 
               dbContext.SaveChanges();
