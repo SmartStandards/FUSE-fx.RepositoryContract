@@ -8,7 +8,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* Fixed some query-issues for StartsWith and swapped operators
+*(none)*
+
+
+
+## v 0.7.1
+released **2025-12-09**, including:
+ - Fixed some query-issues for StartsWith and swapped operators
 
 
 
