@@ -46,14 +46,18 @@ namespace System.Data.Fuse.Ef.InstanceManagement {
       if(_CurrentInstance == null && _Factory != null) {
         _CurrentInstance = _Factory.Invoke();
       }
-      visitorMethod.Invoke(_CurrentInstance);   
+      lock (_CurrentInstance) {
+        visitorMethod.Invoke(_CurrentInstance);
+      }
     }
 
     public TReturn VisitCurrentDbContext<TReturn>(Func<DbContext, TReturn> visitorMethod) {
       if (_CurrentInstance == null && _Factory != null) {
         _CurrentInstance = _Factory.Invoke();
       }
-      return visitorMethod.Invoke(_CurrentInstance);
+      lock (_CurrentInstance) {
+        return visitorMethod.Invoke(_CurrentInstance);
+      }
     }
 
     public void Dispose() {
