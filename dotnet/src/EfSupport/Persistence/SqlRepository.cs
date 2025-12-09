@@ -231,12 +231,12 @@ namespace System.Data.Fuse.Sql {
       }
 
       // Add pagination if supported by the database provider
-      if (limit.HasValue || offset.HasValue) {
+      if ((limit.HasValue && limit.Value > 0) || offset.HasValue) {
         // This is a simplified version - actual implementation should be database specific
         if (offset.HasValue) {
           sql.Append(" OFFSET ").Append(offset.Value).Append(" ROWS");
         }
-        if (limit.HasValue) {
+        if (limit.HasValue && limit.Value > 0) {
           sql.Append(" FETCH NEXT ").Append(limit.Value).Append(" ROWS ONLY");
         }
       }
