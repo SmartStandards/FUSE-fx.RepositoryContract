@@ -20,6 +20,8 @@ namespace RepositoryTests {
     public DbSet<RootEntity2> RootEntities2 { get; set; } = null!;
     public DbSet<ChildEntity2> ChildEntities2 { get; set; } = null!;
     public DbSet<LeafEntityWithCompositeKey> LeafEntityWithCompositeKeys { get; set; } = null!;
+    public DbSet<RootEntityWithCompositeKey> RootEntityWithCompositeKeys { get; set; } = null!;
+    public DbSet<ChildEntityOfRootEntityWithCompositeKey> ChildEntityOfRootEntityWithCompositeKeys { get; set; } = null!;
     public TestDbContext() : base() { }
     public TestDbContext(DbContextOptions<TestDbContext> options) : base(options) { }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
@@ -29,6 +31,7 @@ namespace RepositoryTests {
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
       base.OnModelCreating(modelBuilder);
       modelBuilder.Entity<LeafEntityWithCompositeKey>().HasKey(e => new { e.Field1, e.Field2 });
+      modelBuilder.Entity<RootEntityWithCompositeKey>().HasKey(e => new { e.KeyField1, e.KeyField2 });
     }
   }
 

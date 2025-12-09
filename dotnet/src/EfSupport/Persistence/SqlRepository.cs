@@ -192,7 +192,7 @@ namespace System.Data.Fuse.Sql {
       if (includeNavigations) {
         sql.Append($"SELECT t0.*");
       } else {
-        sql.Append("SELECT *");
+        sql.Append("SELECT t0.*");
       }
       int t = 1;
       if (includeNavigations) {
@@ -208,7 +208,7 @@ namespace System.Data.Fuse.Sql {
       if (includeNavigations) {
         sql.Append($" FROM {SchemaAndTableName} t0 ");
       } else {
-        sql.Append($" FROM {SchemaAndTableName}");
+        sql.Append($" FROM {SchemaAndTableName} t0 ");
       }
       if (includeNavigations) {
         foreach (var info in navigationInfos) {
@@ -246,7 +246,7 @@ namespace System.Data.Fuse.Sql {
 
     private string BuildSelectFieldsSql(string[] fieldNames, string whereClause = null, string orderByClause = null, int? limit = null, int? offset = null) {
       StringBuilder sql = new StringBuilder();
-      sql.Append("SELECT ").Append(string.Join(", ", fieldNames)).Append(" FROM ").Append(SchemaAndTableName);
+      sql.Append("SELECT ").Append(string.Join(", ", fieldNames)).Append(" FROM ").Append($"{SchemaAndTableName} t0");
 
       if (!string.IsNullOrEmpty(whereClause)) {
         sql.Append(" WHERE ").Append(whereClause);
@@ -272,7 +272,7 @@ namespace System.Data.Fuse.Sql {
 
     private string BuildCountSql(string whereClause = null) {
       StringBuilder sql = new StringBuilder();
-      sql.Append("SELECT COUNT(*) FROM ").Append(SchemaAndTableName);
+      sql.Append("SELECT COUNT(*) FROM ").Append($"{SchemaAndTableName} t0");
 
       if (!string.IsNullOrEmpty(whereClause)) {
         sql.Append(" WHERE ").Append(whereClause);
@@ -332,7 +332,7 @@ namespace System.Data.Fuse.Sql {
       return $"DELETE FROM {SchemaAndTableName} WHERE {whereClause}";
     }
 
-    private string BuildWhereClauseForKey(TKey key) {
+    private string BuildWhereClauseForKey(TKey key, bool forceAlias = true) {
       StringBuilder whereClause = new StringBuilder();
       object[] keyValues = key.GetKeyFieldValues();
 
@@ -344,14 +344,15 @@ namespace System.Data.Fuse.Sql {
         //if (useAlias) {
         //  whereClause.Append("t0.");
         //}
-        whereClause.Append(PrimaryKeySet[i].Name).Append(" = @").Append(PrimaryKeySet[i].Name + "0");
+        string propertyName = forceAlias ? $"t0.{PrimaryKeySet[i].Name}" : PrimaryKeySet[i].Name;
+        whereClause.Append(propertyName).Append(" = @").Append(PrimaryKeySet[i].Name + "0");
         first = false;
       }
 
       return whereClause.ToString();
     }
 
-    private string BuildWhereClauseForKeys(TKey[] keys) {
+    private string BuildWhereClauseForKeys(TKey[] keys, bool forceAlias = true) {
       if (keys.Length == 0) {
         return "1 = 0"; // No keys, no matches
       }
@@ -366,7 +367,8 @@ namespace System.Data.Fuse.Sql {
       // For multiple keys, use IN clause or composite key logic
       if (PrimaryKeySet.Count == 1) {
         // Simple primary key - use IN clause
-        whereClause.Append(PrimaryKeySet[0].Name).Append(" IN (");
+        string propertyName = forceAlias ? $"t0.{PrimaryKeySet[0].Name}" : PrimaryKeySet[0].Name;
+        whereClause.Append(propertyName).Append(" IN (");
         for (int i = 0; i < keys.Length; i++) {
           if (i > 0) whereClause.Append(", ");
           whereClause.Append("@").Append(PrimaryKeySet[0].Name).Append(i);
@@ -382,7 +384,8 @@ namespace System.Data.Fuse.Sql {
           bool first = true;
           for (int i = 0; i < PrimaryKeySet.Count; i++) {
             if (!first) whereClause.Append(" AND ");
-            whereClause.Append(PrimaryKeySet[i].Name).Append(" = @")
+            string propertyName = forceAlias ? $"t0.{PrimaryKeySet[i].Name}" : PrimaryKeySet[i].Name;
+            whereClause.Append(propertyName).Append(" = @")
                        .Append(PrimaryKeySet[i].Name).Append(keyIndex);
             first = false;
           }
@@ -752,7 +755,10 @@ namespace System.Data.Fuse.Sql {
           Dictionary<string, object> fields = ExtractNonKeyFieldsFromEntity(entity);
 
           using (var command = connection.CreateCommand()) {
-            command.CommandText = BuildUpdateSql(fields, BuildWhereClauseForKey(existingEntity.GetValues(PrimaryKeySet).ToKey<TKey>()));
+            command.CommandText = BuildUpdateSql(
+              fields,
+              BuildWhereClauseForKey(existingEntity.GetValues(PrimaryKeySet).ToKey<TKey>(), false)
+            );
             AddFieldParameters(command, fields);
             AddKeyParameters(command, existingEntity.GetValues(PrimaryKeySet).ToKey<TKey>());
 
@@ -867,7 +873,10 @@ namespace System.Data.Fuse.Sql {
 
           // Update existing entity
           using (var command = connection.CreateCommand()) {
-            command.CommandText = BuildUpdateSql(updateFields, BuildWhereClauseForKey(existingEntity.GetValues(PrimaryKeySet).ToKey<TKey>()));
+            command.CommandText = BuildUpdateSql(
+              updateFields,
+              BuildWhereClauseForKey(existingEntity.GetValues(PrimaryKeySet).ToKey<TKey>(), false)
+            );
             AddFieldParameters(command, updateFields);
             AddKeyParameters(command, existingEntity.GetValues(PrimaryKeySet).ToKey<TKey>());
 
@@ -1119,7 +1128,7 @@ namespace System.Data.Fuse.Sql {
 
         // Perform the update
         using (var command = connection.CreateCommand()) {
-          command.CommandText = BuildUpdateSql(fields, BuildWhereClauseForKeys(keysToUpdate));
+          command.CommandText = BuildUpdateSql(fields, BuildWhereClauseForKeys(keysToUpdate, false));
           AddFieldParameters(command, fields);
           AddKeysParameters(command, keysToUpdate);
 
@@ -1215,7 +1224,7 @@ namespace System.Data.Fuse.Sql {
             // If the entity exists, delete it
             if (entityExists) {
               using (var command = connection.CreateCommand()) {
-                command.CommandText = BuildDeleteSql(BuildWhereClauseForKey(key));
+                command.CommandText = BuildDeleteSql(BuildWhereClauseForKey(key, false));
                 AddKeyParameters(command, key);
 
                 command.ExecuteNonQuery();
@@ -1254,7 +1263,7 @@ namespace System.Data.Fuse.Sql {
             Dictionary<string, object> fields = ExtractNonKeyFieldsFromEntity(entity);
 
             using (var command = connection.CreateCommand()) {
-              command.CommandText = BuildUpdateSql(fields, BuildWhereClauseForKey(keySetValues.ToKey<TKey>()));
+              command.CommandText = BuildUpdateSql(fields, BuildWhereClauseForKey(keySetValues.ToKey<TKey>(), false));
               AddFieldParameters(command, fields);
               AddKeyParameters(command, keySetValues.ToKey<TKey>());
 
@@ -1313,7 +1322,7 @@ namespace System.Data.Fuse.Sql {
             }
 
             using (var command = connection.CreateCommand()) {
-              command.CommandText = BuildUpdateSql(updateFields, BuildWhereClauseForKey(keySetValues.ToKey<TKey>()));
+              command.CommandText = BuildUpdateSql(updateFields, BuildWhereClauseForKey(keySetValues.ToKey<TKey>(), false));
               AddFieldParameters(command, updateFields);
               AddKeyParameters(command, keySetValues.ToKey<TKey>());
 
@@ -1420,7 +1429,7 @@ namespace System.Data.Fuse.Sql {
                   // Delete the entity with the old key
                   using (var command = connection.CreateCommand()) {
                     command.Transaction = transaction;
-                    command.CommandText = BuildDeleteSql(BuildWhereClauseForKey(currentKey));
+                    command.CommandText = BuildDeleteSql(BuildWhereClauseForKey(currentKey, false));
                     AddKeyParameters(command, currentKey);
 
                     command.ExecuteNonQuery();

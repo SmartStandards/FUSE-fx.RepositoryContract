@@ -206,16 +206,26 @@ namespace System.Data.Fuse.Convenience {
             }
             _VisitedRelations?.Value?.Add(relationSchema);
             object[] foreignModels;
-            string foreignKeyIndexName = relationSchema.ForeignKeyIndexName; //TODO support multiple key fields
+            string foreignKeyIndexName = relationSchema.ForeignKeyIndexName;
+            EntitySchema foreignEntitySchema = schema.GetSchema(relationSchema.ForeignEntityName);
+            IndexSchema foreignKeyIndex = foreignEntitySchema.GetIndex(foreignKeyIndexName);
+            List<PropertyInfo> foreignKeyPropertyInfos = foreignKeyIndex.GetProperties(foreignType);            
+            IndexSchema primaryKeyIndex = schema.GetPrimaryIndex(typeof(TModel));
+            List<PropertyInfo> primaryKeyIndexProperties = primaryKeyIndex.GetProperties(typeof(TModel));
+            object[] primaryKeyValues = model.GetValues(primaryKeyIndexProperties);
+
+            ExpressionTree filter = QueryExtensions.GetExpressionTreeByValues(
+              primaryKeyValues, foreignKeyPropertyInfos.ToArray()
+            );
             if (isRef) {
               foreignModels = getModelRefs(
                 foreignTypename,
-                ExpressionTree.And(FieldPredicate.Equal(foreignKeyIndexName, GetKey(model, schema)))
+                filter
               );
             } else {
               foreignModels = getModels(
                 foreignType,
-                ExpressionTree.And(FieldPredicate.Equal(foreignKeyIndexName, GetKey(model, schema)))
+                filter
               );
             }
             if (relationSchema.ForeignEntityIsMultiple) {
@@ -256,18 +266,23 @@ namespace System.Data.Fuse.Convenience {
               return false; // Type mismatch, cannot load navigation
             }
             _VisitedRelations?.Value?.Add(foreignRelationSchema);
-            string foreignKeyIndexName = foreignRelationSchema.ForeignKeyIndexName; //TODO support multiple key fields
-
+            string foreignKeyIndexName = foreignRelationSchema.ForeignKeyIndexName;
+            EntitySchema foreignEntitySchema = schema.Entities.FirstOrDefault(
+              e => e.Name == foreignRelationSchema.ForeignEntityName
+            );
+            IndexSchema foreignKeyIndexPropertyGroup = foreignEntitySchema?.Indices.FirstOrDefault(
+              idx => idx.Name == foreignKeyIndexName
+            );
             object[] primaryModelss;
             if (isRef) {
               primaryModelss = getModelRefsByKey(
                 primaryTypename,
-                new object[] { GetValue(entity, foreignKeyIndexName) }
+                new object[] { GetValue(entity, foreignKeyIndexPropertyGroup) }
               );
             } else {
               primaryModelss = getModelsByKey(
                 primaryType,
-                new object[] { GetValue(entity, foreignKeyIndexName) }
+                new object[] { GetValue(entity, foreignKeyIndexPropertyGroup) }
               );
             }
 
@@ -941,16 +956,34 @@ namespace System.Data.Fuse.Convenience {
       return GetKey(keyProperties, keyValues);
     }
 
-    public static object GetValue(object entity,  string propertyGroupName) {
+    /// <summary>
+    /// returns singular value or null or ICompositeKey
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="propertyGroup"></param>
+    /// <returns></returns>
+    public static object GetValue(object entity, IndexSchema propertyGroup) {
       if (entity == null) {
         return null;
       }
       Type type = entity.GetNonDynamicType();
-      PropertyInfo property = type.GetProperty(propertyGroupName); // TODO support property groups
-      if (property != null) {
-        return property.GetValue(entity);
+
+      List<object> values = new List<object>();
+      foreach (string property in propertyGroup.MemberFieldNames) {
+        PropertyInfo pi = type.GetProperty(property);
+        if (pi != null) {
+          values.Add(pi.GetValue(entity));
+        }
       }
-      return null;
+     
+      return GetKey(
+        propertyGroup.MemberFieldNames
+          .Select(fn => type.GetProperty(fn))
+          .Where(p => p != null)
+          .ToList(),
+        values.ToArray()
+      );
+
     }
 
     public static string GetLabel(object o, SchemaRoot schemaRoot) {

@@ -158,7 +158,7 @@ namespace System.Data.Fuse.Convenience {
       List<PropertyInfo> foreignKeyPropertyInfos = foreignKeyIndex.GetProperties(typeof(TForeignEntity));
 
       IndexSchema primaryKeyIndex = schemaRoot.GetPrimaryIndex(typeof(TPrimaryEntity));
-      List<PropertyInfo> primaryKeyIndexProperties = primaryKeyIndex.GetProperties(typeof(TForeignEntity));
+      List<PropertyInfo> primaryKeyIndexProperties = primaryKeyIndex.GetProperties(typeof(TPrimaryEntity));
 
       object[] foreignKeyValues = foreignEntity.GetValues(foreignKeyPropertyInfos);
       ExpressionTree filter = QueryExtensions.GetExpressionTreeByValues(

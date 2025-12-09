@@ -106,7 +106,9 @@ namespace RepositoryTests {
           new ModelVsEntityType<LeafModel2, LeafEntity2, int>(),
           new ModelVsEntityType<RootModel2, RootEntity2, int>(),
           new ModelVsEntityType<ChildModel2, ChildEntity2, int>(),
-          new ModelVsEntityType<LeafModelWithCompositeKey, LeafEntityWithCompositeKey, int>(),
+          new ModelVsEntityType<LeafModelWithCompositeKey, LeafEntityWithCompositeKey, CompositeKey2<int, string>>(),
+          new ModelVsEntityType<RootModelWithCompositeKey, RootEntityWithCompositeKey, CompositeKey2<int, string>>(),
+          new ModelVsEntityType<ChildModelOfRootModelWithCompositeKey, ChildEntityOfRootEntityWithCompositeKey, int>(),
         }
       );
     }
@@ -321,6 +323,68 @@ namespace RepositoryTests {
       Assert.IsNotNull(allEntities[0].Children, "Expected Leaf1 to be populated.");
       Assert.AreEqual(1, allEntities[0].Children.Count(), "Expected 1 child entity.");
       Assert.IsTrue(allEntities[0].Children[0].Name.StartsWith("Child "), "Expected Child Name to match.");
+    }
+
+    [TestMethod]
+    public void GetEntities_WithCompositeKeyLookup_Works() {
+      // Arrange
+      IRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>> lmwckRepo =
+        this.CreateModelDatastore().GetRepository<LeafModelWithCompositeKey, CompositeKey2<int, string>>();
+      var repository = this.CreateLeaf1EntityRepository();
+      IRepository<ChildModel1, int> childModel1Repository = this.CreateModelDatastore().GetRepository<ChildModel1, int>();
+      IRepository<RootModel1, int> rootModel1Repository = this.CreateModelDatastore().GetRepository<RootModel1, int>();
+      int highestKeyLeaf1 = this.SeedRepository1(repository, childModel1Repository, rootModel1Repository);
+      this.SeedModelRepositories(rootModel1Repository, childModel1Repository, lmwckRepo, 1, highestKeyLeaf1);
+      // Act
+      var allEntities = rootModel1Repository.GetEntities(
+        ExpressionTree.Empty(), new string[] { }
+      );
+      // Assert
+      Assert.AreEqual(1, allEntities.Length, "Expected 1 entities.");
+
+      LeafModelWithCompositeKey? leafModelWithCompositeKey = allEntities[0].OtherLeaf;
+      Assert.IsNotNull(leafModelWithCompositeKey, "Expected OtherLeaf to be populated.");
+      Assert.AreEqual(1, leafModelWithCompositeKey.Field1, "Expected Field1 to match.");
+    }
+
+    [TestMethod]
+    public void GetEntities_WithCompositeKeyPrincipal_Works() {
+      CreateLeaf1EntityRepository();
+      IRepository<RootModelWithCompositeKey, CompositeKey2<int, string>> rmwckRepo =
+        this.CreateModelDatastore().GetRepository<RootModelWithCompositeKey, CompositeKey2<int, string>>();
+      IRepository<ChildModelOfRootModelWithCompositeKey, int> childModelRepo = 
+        this.CreateModelDatastore().GetRepository<ChildModelOfRootModelWithCompositeKey, int>();
+
+      var keyToDeleteRoot = rmwckRepo.GetEntityRefs(ExpressionTree.Empty(), new string[] { })
+        .Select(r => r.Key).ToArray();
+      rmwckRepo.TryDeleteEntities(keyToDeleteRoot);
+      rmwckRepo.AddOrUpdateEntity(new RootModelWithCompositeKey() {
+        KeyField1 = 1,
+        KeyField2 = "A",
+        Name = "Root With CK 1",
+      });
+
+      var keyToDeleteChild = childModelRepo.GetEntityRefs(ExpressionTree.Empty(), new string[] { })
+        .Select(r => r.Key).ToArray();
+      childModelRepo.TryDeleteEntities(keyToDeleteChild);
+      childModelRepo.AddOrUpdateEntity(new ChildModelOfRootModelWithCompositeKey() {
+        Id = 1,
+        Name = "Child of Root With CK 1",
+        Root1KeyField1 = 1,
+        Root1KeyField2 = "A"
+      });
+
+      // Act
+      var allEntities = rmwckRepo.GetEntities(
+        ExpressionTree.Empty(), new string[] { }
+      );
+
+      // Assert
+      Assert.AreEqual(1, allEntities.Length, "Expected 1 entities.");
+      Assert.IsNotNull(allEntities[0].Children, "Expected Children to be populated.");
+      Assert.AreEqual(1, allEntities[0].Children.Count(), "Expected 1 child entity.");
+      Assert.IsTrue(allEntities[0].Children[0].Name.StartsWith("Child "), "Expected Child Name to match.");
+
     }
   }
 }

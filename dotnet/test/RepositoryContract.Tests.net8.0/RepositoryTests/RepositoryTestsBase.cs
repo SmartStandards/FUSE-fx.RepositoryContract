@@ -479,5 +479,6 @@ namespace RepositoryTests {
       var result2 = repository.TryUpdateKey(highestKey - 1, highestKey - 2);
       Assert.IsFalse(result2, "Should not update to an existing key.");
     }
+    
   }
 }

@@ -28,7 +28,9 @@ namespace RepositoryTests {
       SchemaRoot schemaRoot = ModelReader.GetSchema(new Type[] {
         typeof(RootEntity1),
         typeof(LeafEntity1),
-        typeof(ChildEntity1)
+        typeof(ChildEntity1),
+        typeof(RootEntityWithCompositeKey),
+        typeof(ChildEntityOfRootEntityWithCompositeKey)
       }, false);
       using (SqlConnection c = new SqlConnection(
           "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=RepositoryContractTests;Integrated Security=True;"
@@ -88,7 +90,9 @@ namespace RepositoryTests {
           Tuple.Create<Type, Type>(typeof(LeafEntity2), typeof(int)),
           Tuple.Create<Type, Type>(typeof(RootEntity2), typeof(int)),
           Tuple.Create<Type, Type>(typeof(ChildEntity2), typeof(int)),
-          Tuple.Create<Type, Type>(typeof(LeafEntityWithCompositeKey), typeof(CompositeKey2<int,string>))
+          Tuple.Create<Type, Type>(typeof(LeafEntityWithCompositeKey), typeof(CompositeKey2<int,string>)),
+          Tuple.Create<Type, Type>(typeof(RootEntityWithCompositeKey), typeof(CompositeKey2<int,string>)),
+          Tuple.Create<Type, Type>(typeof(ChildEntityOfRootEntityWithCompositeKey), typeof(int))
         }
       );
     }

@@ -59,6 +59,7 @@ namespace RepositoryTests {
   [PrimaryIdentity("PrimaryKey")]
   [HasLookup(nameof(Leaf2), nameof(Leaf2Id), null, null, nameof(LeafEntity2))]
   [HasDependent(nameof(Children2), nameof(ChildEntity2.Root2Id), null, null, nameof(ChildEntity2))]
+  [PropertyGroup(nameof(Leaf2Id), nameof(Leaf2Id))]
   public class RootEntity2 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -69,6 +70,7 @@ namespace RepositoryTests {
 
   [UniquePropertyGroup("PrimaryKey", nameof(Id))]
   [PrimaryIdentity("PrimaryKey")]
+  [PropertyGroup(nameof(Root2Id), nameof(Root2Id))]
   public class ChildEntity2 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -91,4 +93,22 @@ namespace RepositoryTests {
     public decimal DecimalValue { get; set; }
   }
 
+  [UniquePropertyGroup("PrimaryKey", nameof(KeyField1), nameof(KeyField2))]
+  [PrimaryIdentity("PrimaryKey")]
+  [HasDependent(null, "Root1Key", null, null, nameof(ChildEntityOfRootEntityWithCompositeKey))]  
+  public class RootEntityWithCompositeKey {
+    public int KeyField1 { get; set; }
+    public string KeyField2 { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+  }
+
+  [UniquePropertyGroup("PrimaryKey", nameof(Id))]
+  [PrimaryIdentity("PrimaryKey")]
+  [PropertyGroup("Root1Key", nameof(Root1KeyField1), nameof(Root1KeyField2))]
+  public class    ChildEntityOfRootEntityWithCompositeKey {
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int Root1KeyField1 { get; set; }
+    public string Root1KeyField2 { get; set; } = string.Empty;
+  }
 }
