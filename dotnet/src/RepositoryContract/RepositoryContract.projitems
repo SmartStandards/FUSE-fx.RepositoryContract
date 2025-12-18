@@ -9,6 +9,10 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\Caching\[Configuration]\[Enums].cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\Caching\[Configuration]\CachedRepositoryOptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\Caching\CachedRepository.CacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\Caching\CachedRepository.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ConversionHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\DataStoreExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ModelVsEntityDataStore.cs" />
@@ -56,6 +60,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)[Store]\InMemoryModelVsEntityDataStore.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)convenience\Caching\[Configuration]\" />
     <Folder Include="$(MSBuildThisFileDirectory)[Move2EntityAnnotations]\" />
   </ItemGroup>
 </Project>
