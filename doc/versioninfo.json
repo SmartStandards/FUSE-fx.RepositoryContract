@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.7.1",
-  "currentVersionWithSuffix": "0.7.1",
+  "currentVersion": "0.7.2",
+  "currentVersionWithSuffix": "0.7.2",
   "releaseType": "",
-  "previousVersion": "0.7.0",
+  "previousVersion": "0.7.1",
   "changeGrade": "fix",
   "currentMajor": 0,
   "currentMinor": 7,
-  "currentPatch": 1,
-  "versionDateInfo": "2025-12-09",
-  "versionTimeInfo": "12:52:16",
-  "versionNotes": "- Fixed some query-issues for StartsWith and swapped operators\n"
+  "currentPatch": 2,
+  "versionDateInfo": "2026-01-22",
+  "versionTimeInfo": "10:27:09",
+  "versionNotes": "- fixed Linq-Support for variables within expressions\n"
 }
