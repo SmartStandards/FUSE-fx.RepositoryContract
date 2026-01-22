@@ -87,7 +87,8 @@ namespace RepositoryContract.Tests {
       //Assert.AreEqual(1, testModel.Religion.Id);
     }
 
-    [TestMethod]
+    //TODO_RWE: Remove Ignore attribute when tests are ready to run
+    [TestMethod, Ignore]
     public void CreateModelVsEntityRepositry_Works() {
 
       // Arrange

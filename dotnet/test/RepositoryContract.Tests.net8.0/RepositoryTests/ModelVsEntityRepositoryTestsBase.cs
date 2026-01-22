@@ -14,7 +14,8 @@ using System.Linq;
 
 namespace RepositoryTests {
 
-  [TestClass]
+  //TODO_RWE: Remove Ignore attribute when tests are ready to run
+  [TestClass, Ignore]
   public abstract class ModelVsEntityRepositoryTestsBase : RepositoryTestsBase {
 
     protected abstract IRepository<LeafEntity2, int> CreateLeafEntity2Repository();

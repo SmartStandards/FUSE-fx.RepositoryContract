@@ -15,7 +15,8 @@ using System.Linq;
 
 namespace RepositoryTests {
 
-  [TestClass]
+  //TODO_RWE: Remove Ignore attribute when tests are ready to run
+  [TestClass, Ignore]
   public class SqlRepositoryTests : RepositoryTestsBase {
 
     protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {

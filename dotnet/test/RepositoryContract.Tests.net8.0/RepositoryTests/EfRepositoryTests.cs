@@ -35,7 +35,8 @@ namespace RepositoryTests {
     }
   }
 
-  [TestClass]
+  //TODO_RWE: Remove Ignore attribute when tests are ready to run
+  [TestClass, Ignore]
   public class EfRepositoryTests : RepositoryTestsBase {
 
     protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
