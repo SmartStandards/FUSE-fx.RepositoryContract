@@ -97,9 +97,14 @@ namespace System.Data.Fuse.Convenience {
         object rawValues = relationElement.Value;
         IEnumerable values = (IEnumerable)rawValues;
 #endif
+        object[] valuesArray = values.OfType<object>().ToArray();
+        if (valuesArray.Length == 0) {
+          // represent an always-false condition
+          return "false";
+        }
 
         int count = 0;
-        foreach (object value in values) {
+        foreach (object value in valuesArray) {
           count++;
           FieldPredicate innerRelationElement = new FieldPredicate() {
             FieldName = relationElement.FieldName,

@@ -5,10 +5,7 @@ This files contains a version history including all changes relevant for semanti
 
 
 
-
-## Upcoming Changes
-
-*(none)*
+* fixed GetEntities can handle 'IN' (Contains) Expressions with Empty Arrays
 
 
 

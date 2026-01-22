@@ -216,6 +216,24 @@ namespace System.Data.Fuse.LinqSupport {
       Assert.AreEqual(3, arr.Length);
     }
 
+    [TestMethod]
+    public void LinqSupp_EnumerableContains_IsTranslatedTo_In_EmptyArray() {
+      string[] countries = new string[] {};
+
+      Expression<Func<Person, bool>> expr =
+          p => countries.Contains(p.Country);
+
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
+
+      FieldPredicate pred = SinglePredicate(tree);
+      Assert.AreEqual("Country", pred.FieldName);
+      Assert.AreEqual(FieldOperators.In, pred.Operator);
+
+      object[] arr = pred.Value as object[];
+      Assert.IsNotNull(arr);
+      Assert.AreEqual(0, arr.Length);
+    }
+
     // --------------------------------------------------------------------
     // BOOL MEMBER (x.IsActive)
     // --------------------------------------------------------------------
