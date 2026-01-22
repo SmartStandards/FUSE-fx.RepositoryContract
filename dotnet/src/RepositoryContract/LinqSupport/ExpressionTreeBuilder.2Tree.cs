@@ -171,7 +171,13 @@ namespace System.Data.Fuse.LinqSupport {
 
       BinaryExpression binaryExpression = cleaned as BinaryExpression;
       if (binaryExpression != null) {
-        if (TryBuildFieldPredicateFromBinary(binaryExpression, out predicate)) {
+
+        if (
+          binaryExpression.NodeType != ExpressionType.AndAlso &&
+          binaryExpression.NodeType != ExpressionType.OrElse &&
+          TryBuildFieldPredicateFromBinary(binaryExpression, out predicate)
+        ) {
+
           return true;
         }
 
@@ -222,11 +228,11 @@ namespace System.Data.Fuse.LinqSupport {
       Expression valueExpression = null;
 
       bool valueDeclarationIsReversed = false;
-      if (leftIsField && right.NodeType == ExpressionType.Constant) {
+      if (leftIsField) {  // && right.NodeType == ExpressionType.Constant) {
         fieldExpression = leftMember;
         valueExpression = right;
       }
-      else if (rightIsField && left.NodeType == ExpressionType.Constant) {
+      else if (rightIsField) { // && left.NodeType == ExpressionType.Constant) {
         fieldExpression = rightMember;
         valueExpression = left;
         valueDeclarationIsReversed = true;
@@ -450,9 +456,11 @@ namespace System.Data.Fuse.LinqSupport {
     /// <param name="expression">The expression to evaluate.</param>
     /// <returns>The evaluated value.</returns>
     private static object GetValueFromExpression(Expression expression) {
-      ConstantExpression constantExpression = expression as ConstantExpression;
-      if (constantExpression != null) {
-        return constantExpression.Value;
+
+      if (expression is ConstantExpression constantExpression) {
+        if (constantExpression != null) {
+          return constantExpression.Value;
+        }
       }
 
       Expression converted = Expression.Convert(expression, typeof(object));
