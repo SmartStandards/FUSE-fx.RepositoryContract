@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.7.2",
-  "currentVersionWithSuffix": "0.7.2",
+  "currentVersion": "0.7.3",
+  "currentVersionWithSuffix": "0.7.3",
   "releaseType": "",
-  "previousVersion": "0.7.1",
+  "previousVersion": "0.7.2",
   "changeGrade": "fix",
   "currentMajor": 0,
   "currentMinor": 7,
-  "currentPatch": 2,
+  "currentPatch": 3,
   "versionDateInfo": "2026-01-22",
-  "versionTimeInfo": "10:27:09",
-  "versionNotes": "- fixed Linq-Support for variables within expressions\n"
+  "versionTimeInfo": "11:39:27",
+  "versionNotes": "- new revision without significant changes\n"
 }

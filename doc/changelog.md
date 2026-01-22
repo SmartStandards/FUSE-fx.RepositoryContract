@@ -9,6 +9,18 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## Upcoming Changes
+
+*(none)*
+
+
+
+## v 0.7.3
+released **2026-01-22**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.7.2
 released **2026-01-22**, including:
  - fixed Linq-Support for variables within expressions
