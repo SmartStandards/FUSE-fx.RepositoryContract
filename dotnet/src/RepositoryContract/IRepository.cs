@@ -33,7 +33,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     EntityRef<TKey>[] GetEntityRefs(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -48,7 +48,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     EntityRef<TKey>[] GetEntityRefsBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     EntityRef<TKey>[] GetEntityRefsByKey(
@@ -65,7 +65,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     TEntity[] GetEntities(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -80,7 +80,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     TEntity[] GetEntitiesBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary> </summary>
@@ -103,7 +103,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     Dictionary<string, object>[] GetEntityFields(
-      ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -121,7 +121,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
-      string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     Dictionary<string, object>[] GetEntityFieldsByKey(

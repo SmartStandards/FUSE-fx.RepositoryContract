@@ -14,7 +14,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     public static EntityRef[] GetEntityRefs<TEntity>(
-      this IUniversalRepository repo, ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      this IUniversalRepository repo, ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return repo.GetEntityRefs(typeof(TEntity).Name, filter, sortedBy, limit, skip);
     }
@@ -31,7 +31,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     public static EntityRef[] GetEntityRefsBySearchExpression<TEntity>(
-      this IUniversalRepository repo, string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      this IUniversalRepository repo, string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return repo.GetEntityRefsBySearchExpression(
         typeof(TEntity).Name, searchExpression, sortedBy, limit, skip
@@ -54,7 +54,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     public static object[] GetEntities<TEntity>(
-      this IUniversalRepository repo, ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      this IUniversalRepository repo, ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return repo.GetEntities(
         typeof(TEntity).Name, filter, sortedBy, limit, skip
@@ -73,7 +73,7 @@ namespace System.Data.Fuse {
     /// <param name="skip"></param>
     /// <returns></returns>
     public static object[] GetEntitiesBySearchExpression<TEntity>(
-      this IUniversalRepository repo, string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      this IUniversalRepository repo, string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return repo.GetEntitiesBySearchExpression(
         typeof(TEntity).Name, searchExpression, sortedBy, limit, skip
@@ -104,7 +104,7 @@ namespace System.Data.Fuse {
     /// <returns></returns>
     public static Dictionary<string, object>[] GetEntityFields<TEntity>(
       this IUniversalRepository repo, string entityName, ExpressionTree filter,
-      string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return repo.GetEntityFields(typeof(TEntity).Name, filter, includedFieldNames, sortedBy, limit, skip);
     }
@@ -125,7 +125,7 @@ namespace System.Data.Fuse {
     /// <returns></returns>
     public static Dictionary<string, object>[] GetEntityFieldsBySearchExpression<TEntity>(
       this IUniversalRepository repo, string searchExpression, string[] includedFieldNames,
-      string[] sortedBy, int limit = 100, int skip = 0
+      string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return repo.GetEntityFieldsBySearchExpression(
         typeof(TEntity).Name, searchExpression, includedFieldNames, sortedBy, limit, skip

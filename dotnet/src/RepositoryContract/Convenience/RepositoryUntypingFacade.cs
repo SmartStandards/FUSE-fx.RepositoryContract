@@ -21,7 +21,7 @@ namespace System.Data.Fuse.Convenience.Internal {
     /// <param name="skip"></param>
     /// <returns></returns>
     public abstract EntityRef[] GetEntityRefs(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -36,7 +36,7 @@ namespace System.Data.Fuse.Convenience.Internal {
     /// <param name="skip"></param>
     /// <returns></returns>
     public abstract EntityRef[] GetEntityRefsBySearchExpression(
-       string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+       string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     public abstract EntityRef[] GetEntityRefsByKey(
@@ -53,7 +53,7 @@ namespace System.Data.Fuse.Convenience.Internal {
     /// <param name="skip"></param>
     /// <returns></returns>
     public abstract object[] GetEntities(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -68,7 +68,7 @@ namespace System.Data.Fuse.Convenience.Internal {
     /// <param name="skip"></param>
     /// <returns></returns>
     public abstract object[] GetEntitiesBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary> </summary>
@@ -91,7 +91,7 @@ namespace System.Data.Fuse.Convenience.Internal {
     /// <param name="skip"></param>
     /// <returns></returns>
     public abstract Dictionary<string, object>[] GetEntityFields(
-      ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -109,7 +109,7 @@ namespace System.Data.Fuse.Convenience.Internal {
     /// <param name="skip"></param>
     /// <returns></returns>
     public abstract Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
-      string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     public abstract Dictionary<string, object>[] GetEntityFieldsByKey(
@@ -291,6 +291,13 @@ namespace System.Data.Fuse.Convenience.Internal {
 
   public class DynamicRepositoryFacade<TEntity, TKey> : RepositoryUntypingFacade
     where TEntity : class {
+
+    public IRepository<TEntity, TKey> InnerRepository {
+      get {
+        return _InternalRepo;
+      }
+    }
+
     private IRepository<TEntity, TKey> _InternalRepo;
 
     public DynamicRepositoryFacade() {
@@ -300,11 +307,11 @@ namespace System.Data.Fuse.Convenience.Internal {
       this._InternalRepo = internalRepo;
     }
 
-    public override EntityRef[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public override EntityRef[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return _InternalRepo.GetEntityRefs(filter, sortedBy, limit, skip).ToArray();
     }
 
-    public override EntityRef[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public override EntityRef[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return _InternalRepo.GetEntityRefsBySearchExpression(searchExpression, sortedBy, limit, skip).ToArray();
     }
 
@@ -312,11 +319,11 @@ namespace System.Data.Fuse.Convenience.Internal {
       return _InternalRepo.GetEntityRefsByKey(keysToLoad.Cast<TKey>().ToArray()).ToArray();
     }
 
-    public override object[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public override object[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return _InternalRepo.GetEntities(filter, sortedBy, limit, skip).ToArray();
     }
 
-    public override object[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public override object[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return _InternalRepo.GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip).ToArray();
     }
 
@@ -324,11 +331,11 @@ namespace System.Data.Fuse.Convenience.Internal {
       return _InternalRepo.GetEntitiesByKey(keysToLoad.Cast<TKey>().ToArray()).ToArray();
     }
 
-    public override Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public override Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return _InternalRepo.GetEntityFields(filter, includedFieldNames, sortedBy, limit, skip).ToArray();
     }
 
-    public override Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public override Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return _InternalRepo.GetEntityFieldsBySearchExpression(searchExpression, includedFieldNames, sortedBy, limit, skip).ToArray();
     }
 

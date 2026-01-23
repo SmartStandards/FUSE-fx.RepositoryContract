@@ -25,11 +25,13 @@ namespace System.Data.Fuse.Convenience {
       return tree.CompileToWhereStatement(entitySchema, "dynamic linq", "");
     }
 
+    [Obsolete("Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'")]
     public static string CompileToSqlWhere(this ExpressionTree tree, EntitySchema entitySchema, string prefix = "") {
       if (tree == null) return null;
       return tree.CompileToWhereStatement(entitySchema, "sql", prefix);
     }
 
+    [Obsolete("Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'")]
     internal static string CompileToWhereStatement(
       this ExpressionTree expression,
       EntitySchema entitySchema,

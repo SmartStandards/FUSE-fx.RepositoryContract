@@ -9,7 +9,7 @@ namespace System.Data.Fuse.Convenience {
   public static class DataStoreExtensions {
 
     public static TEntity[] GetEntities<TEntity, TKey>(
-      this IDataStore dataStore, ExpressionTree filter, string[] sortedBy = null, int limit = 100, int skip = 0
+      this IDataStore dataStore, ExpressionTree filter, string[] sortedBy = null, int limit = 500, int skip = 0
     )
       where TEntity : class {
       return dataStore.GetRepository<TEntity, TKey>().GetEntities(
@@ -18,7 +18,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public static EntityRef<TKey>[] GetEntityRefs<TEntity, TKey>(
-      this IDataStore dataStore, ExpressionTree filter, string[] sortedBy = null, int limit = 100, int skip = 0
+      this IDataStore dataStore, ExpressionTree filter, string[] sortedBy = null, int limit = 500, int skip = 0
     )
       where TEntity : class {
       return dataStore.GetRepository<TEntity, TKey>().GetEntityRefs(
@@ -27,7 +27,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public static EntityRef<TKey>[] GetEntityRefsBySearchExpression<TEntity, TKey>(
-      this IDataStore dataStore, string filter, string[] sortedBy = null, int limit = 100, int skip = 0
+      this IDataStore dataStore, string filter, string[] sortedBy = null, int limit = 500, int skip = 0
     )
       where TEntity : class {
       return dataStore.GetRepository<TEntity, TKey>().GetEntityRefsBySearchExpression(
@@ -54,7 +54,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public static TEntity[] GetEntitiesBySearchExpression<TEntity, TKey>(
-      this IDataStore dataStore, string searchExpression, string[] sortedBy = null, int limit = 100, int skip = 0
+      this IDataStore dataStore, string searchExpression, string[] sortedBy = null, int limit = 500, int skip = 0
     )
       where TEntity : class {
       return dataStore.GetRepository<TEntity, TKey>().GetEntitiesBySearchExpression(

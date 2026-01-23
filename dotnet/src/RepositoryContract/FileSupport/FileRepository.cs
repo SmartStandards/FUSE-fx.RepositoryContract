@@ -1,20 +1,21 @@
 #if NETCOREAPP
 
+using CsvHelper;
 using System;
 using System.Collections.Generic;
+using System.Data.Fuse.Convenience;
+using System.Data.Fuse.LinqSupport;
+using System.Data.ModelDescription;
+using System.Data.ModelDescription.Convenience;
+using System.Formats.Asn1;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Text.Json;
 using System.Linq.Expressions;
-using System.Data.ModelDescription;
-using System.Data.Fuse.Convenience;
 using System.Reflection;
-using System.Data.ModelDescription.Convenience;
+using System.Text.Json;
 using static System.Net.WebRequestMethods;
-using System.Globalization;
-using System.Formats.Asn1;
-using CsvHelper;
 
 namespace System.Data.Fuse.FileSupport {
   public class FileRepository<TEntity, TKey> : IRepository<TEntity, TKey> where TEntity : class, new() {
@@ -87,7 +88,8 @@ namespace System.Data.Fuse.FileSupport {
         filePath = CreateNewEntityFile(); // Create new file if threshold reached
         entities = new List<TEntity>(); // Start with a new list for the new file
       }
-      entities.Add(entity); // Add
+      entities.Add(entity);
+
       SaveEntitiesToFile(entities, filePath);
       UpdateIndexAndMetadata(key, filePath, entities); // Update index and metadata   
     }
@@ -95,7 +97,7 @@ namespace System.Data.Fuse.FileSupport {
     public IEnumerable<TEntity> SearchEntities(
       string dynamicLinqExpression, string[] sortedBy, int limit, int skip
     ) {
-      var results = new List<TEntity>();
+      List<TEntity> results = new List<TEntity>();
 
       foreach (IndexEntry entry in GetDistinctIndexEntries()) {
         if (IsFilePotentiallyRelevant(entry.Metadata, dynamicLinqExpression)) {
@@ -103,15 +105,14 @@ namespace System.Data.Fuse.FileSupport {
           if (dynamicLinqExpression == null) {
             results.AddRange(entities);
           } else {
+
+            //HACK: internal usage of System.Linq.Dynamic.Core
             results.AddRange(entities.AsQueryable().Where(dynamicLinqExpression));
           }
         }
       }
 
-      IQueryable<TEntity> queryableResults = results.AsQueryable();
-      ApplySorting(sortedBy, queryableResults);
-      ApplyPaging(limit, skip, queryableResults);
-      return queryableResults;
+      return results.ApplySorting(sortedBy).ApplyPaging(limit, skip);
     }
 
     private List<IndexEntry> GetDistinctIndexEntries() { 
@@ -124,30 +125,31 @@ namespace System.Data.Fuse.FileSupport {
       return distinctIndexEntries;
     }
 
-    private static IQueryable<TEntity> ApplySorting(string[] sortedBy, IQueryable<TEntity> entities) {
-      foreach (var sortField in sortedBy) {
-        if (sortField.StartsWith("^")) {
-          string descSortField = sortField.Substring(1); // remove the "^" prefix
-          entities = entities.OrderBy(descSortField + " descending");
-        } else {
-          entities = entities.OrderBy(sortField);
-        }
-      }
+    //private static IQueryable<TEntity> ApplySorting(string[] sortedBy, IQueryable<TEntity> entities) {
+    //  foreach (var sortField in sortedBy) {
+    //    if (sortField.StartsWith("^")) {
+    //      string descSortField = sortField.Substring(1); // remove the "^" prefix
+    //      //HACK: internal usage of System.Linq.Dynamic.Core
+    //      entities = entities.OrderBy(descSortField + " descending");
+    //    } else {
+    //      entities = entities.OrderBy(sortField);
+    //    }
+    //  }
 
-      return entities;
-    }
+    //  return entities;
+    //}
 
-    private static IQueryable<TEntity> ApplyPaging(int limit, int skip, IQueryable<TEntity> entities) {
-      if (skip == 0 && limit == 0) {
-        return entities;
-      } else if (limit == 0) {
-        return entities.Skip(skip);
-      } else if (skip == 0) {
-        return entities.Take(limit);
-      } else {
-        return entities.Skip(skip).Take(limit);
-      }
-    }
+    //private static IQueryable<TEntity> ApplyPaging(int limit, int skip, IQueryable<TEntity> entities) {
+    //  if (skip == 0 && limit == 0) {
+    //    return entities;
+    //  } else if (limit == 0) {
+    //    return entities.Skip(skip);
+    //  } else if (skip == 0) {
+    //    return entities.Take(limit);
+    //  } else {
+    //    return entities.Skip(skip).Take(limit);
+    //  }
+    //}
 
     private Dictionary<TKey, IndexEntry> LoadOrCreateIndex() {
       if (IO.File.Exists(_indexFilePath)) {
@@ -273,7 +275,7 @@ namespace System.Data.Fuse.FileSupport {
     }
 
     public EntityRef<TKey>[] GetEntityRefs(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return this.GetEntityRefsBySearchExpression(
         //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
@@ -283,7 +285,7 @@ namespace System.Data.Fuse.FileSupport {
     }
 
     public EntityRef<TKey>[] GetEntityRefsBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return this.SearchEntities(
        searchExpression,
@@ -299,14 +301,14 @@ namespace System.Data.Fuse.FileSupport {
      ).ToArray();
     }
 
-    public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return this.SearchEntities(
         //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
         filter.CompileToDynamicLinq(_SchemaRoot.GetSchema(typeof(TEntity).Name)), sortedBy, limit, skip
       ).ToArray();
     }
 
-    public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return this.SearchEntities(searchExpression, sortedBy, limit, skip).ToArray();
     }
 
@@ -321,7 +323,7 @@ namespace System.Data.Fuse.FileSupport {
       }).Where(e => e != null).ToArray();
     }
 
-    public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return GetEntityFieldsBySearchExpression(
         //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
         filter.CompileToDynamicLinq(_SchemaRoot.GetSchema(typeof(TEntity).Name)),
@@ -333,7 +335,7 @@ namespace System.Data.Fuse.FileSupport {
       string searchExpression,
       string[] includedFieldNames,
       string[] sortedBy,
-      int limit = 100, int skip = 0
+      int limit = 500, int skip = 0
     ) {
       return GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip).Select(
          e => {

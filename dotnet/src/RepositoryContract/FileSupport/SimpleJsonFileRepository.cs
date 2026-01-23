@@ -41,7 +41,7 @@ namespace System.Data.Fuse.FileSupport {
       return Directory.GetFiles(_BasePath).Length;
     }
 
-    public TEntity[] GetEntities(Expression<Func<TEntity, bool>> filter, string[] sortedBy = null, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntities(Expression<Func<TEntity, bool>> filter, string[] sortedBy = null, int limit = 500, int skip = 0) {
       var query = GetAllEntities().AsQueryable();
       if (filter != null) {
         query = query.Where(filter);
@@ -99,11 +99,11 @@ namespace System.Data.Fuse.FileSupport {
       throw new NotImplementedException();
     }
 
-    public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       throw new NotImplementedException();
     }
 
-    public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       throw new NotImplementedException();
     }
 
@@ -111,11 +111,11 @@ namespace System.Data.Fuse.FileSupport {
       throw new NotImplementedException();
     }
 
-    public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       throw new NotImplementedException();
     }
 
-    public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       throw new NotImplementedException();
     }
 
@@ -123,11 +123,11 @@ namespace System.Data.Fuse.FileSupport {
       throw new NotImplementedException();
     }
 
-    public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       throw new NotImplementedException();
     }
 
-    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       throw new NotImplementedException();
     }
 

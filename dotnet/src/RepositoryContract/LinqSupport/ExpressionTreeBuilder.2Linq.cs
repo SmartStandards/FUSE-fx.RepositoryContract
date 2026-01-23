@@ -12,14 +12,14 @@ namespace System.Data.Fuse.LinqSupport {
     /// <summary>
     /// Rebuilds a LINQ Expression&lt;Func&lt;TEntity,bool&gt;&gt; from a FUSE ExpressionTree.
     /// </summary>
-    public static Expression<Func<TEntity, bool>> BuildLinqExpressionFromTree<TEntity>(ExpressionTree tree) {
+    public static Expression<Func<TEntity, bool>> BuildLinqExpressionFromTree<TEntity>(ExpressionTree tree, bool matchStringsCaseInsensitive) {
       if (tree == null) {
         throw new ArgumentNullException("tree");
       }
 
       ParameterExpression param = Expression.Parameter(typeof(TEntity), "p");
 
-      Expression body = BuildExpressionFromNode(tree, param);
+      Expression body = BuildExpressionFromNode(tree, param, matchStringsCaseInsensitive);
 
       if (body == null) {
         body = Expression.Constant(true);
@@ -31,7 +31,7 @@ namespace System.Data.Fuse.LinqSupport {
     //=====================================================================
     //  Rebuild tree recursively
     //=====================================================================
-    private static Expression BuildExpressionFromNode(ExpressionTree node, ParameterExpression param) {
+    private static Expression BuildExpressionFromNode(ExpressionTree node, ParameterExpression param, bool matchStringsCaseInsensitive) {
       Expression baseExpression = null;
 
       List<Expression> elements = new List<Expression>();
@@ -40,7 +40,7 @@ namespace System.Data.Fuse.LinqSupport {
       if (node.Predicates != null) {
         for (int i = 0; i < node.Predicates.Count; i++) {
           FieldPredicate pred = node.Predicates[i];
-          Expression expr = BuildPredicateExpression(pred, param);
+          Expression expr = BuildPredicateExpression(pred, param, matchStringsCaseInsensitive);
           elements.Add(expr);
         }
       }
@@ -48,7 +48,7 @@ namespace System.Data.Fuse.LinqSupport {
       // Sub-trees → recursive group expressions
       if (node.SubTree != null) {
         for (int i = 0; i < node.SubTree.Count; i++) {
-          Expression sub = BuildExpressionFromNode(node.SubTree[i], param);
+          Expression sub = BuildExpressionFromNode(node.SubTree[i], param, matchStringsCaseInsensitive);
           elements.Add(sub);
         }
       }
@@ -78,16 +78,27 @@ namespace System.Data.Fuse.LinqSupport {
       return baseExpression;
     }
 
+    private static MethodInfo _StringToLowerMethod = typeof(string).GetMethod(nameof(string.ToLower), new Type[] { typeof(string) });
+
     //=====================================================================
     // Build one predicate: FieldOperators.* + IN + string ops
     //=====================================================================
-    private static Expression BuildPredicateExpression(FieldPredicate predicate, ParameterExpression param) {
+    private static Expression BuildPredicateExpression(FieldPredicate predicate, ParameterExpression param, bool matchStringsCaseInsensitive) {
       string fieldName = predicate.FieldName;
 
       Expression member = BuildMemberAccess(param, fieldName);
 
       object constantValue = predicate.Value;
       Expression constExpr = Expression.Constant(constantValue);
+
+      if (matchStringsCaseInsensitive) {
+        if (member.Type == typeof(string)) {
+          member = Expression.Call(member, _StringToLowerMethod);
+        }
+        if (constExpr.Type == typeof(string)) {
+          constExpr = Expression.Call(constExpr, _StringToLowerMethod);
+        }
+      }
 
       switch (predicate.Operator) {
         case FieldOperators.Equal:

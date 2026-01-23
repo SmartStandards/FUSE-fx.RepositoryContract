@@ -2,13 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security.Principal;
 
 namespace System.Data.Fuse.LinqSupport {
 
-  public static class RepositoryExpressionExtensions {
+  public static partial class RepositoryExpressionExtensions {
 
     /// <summary>
     /// Executes a query against the repository using a LINQ-style predicate that is translated
@@ -36,7 +37,40 @@ namespace System.Data.Fuse.LinqSupport {
     public static EntityRef<TKey>[] GetEntityRefsWhere<TEntity, TKey>(
         this IRepository<TEntity, TKey> repository,
         Expression<Func<TEntity, bool>> predicate,
-        string[] sortedBy = null, int limit = 100, int skip = 0
+        string sortedBy, int limit = 500, int skip = 0
+    ) where TEntity : class {
+
+      //THIS IS ONLY AN OVERLOAD TO GIVE JUST A SINGLE SORT FIELD NAME INSTEAD OF ARRAY...
+      return GetEntityRefsWhere<TEntity, TKey>(repository, predicate, new string[] { sortedBy }, limit, skip);
+    }
+
+    /// <summary>
+    /// Executes a query against the repository using a LINQ-style predicate that is translated
+    /// into a FUSE ExpressionTree and passed to IRepository.GetEntityRefs(...).
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type of the repository.</typeparam>
+    /// <typeparam name="TKey">The key type of the repository.</typeparam>
+    /// <param name="repository">The repository instance to query.</param>
+    /// <param name="predicate">
+    /// A predicate describing the filter condition. It is not executed directly but translated
+    /// into a FUSE ExpressionTree structure.
+    /// </param>
+    /// <param name="sortedBy">
+    /// An array of field names to be used for sorting the results (before 'limit' and 'skip' is processed).
+    /// Use the character "^" as prefix for DESC sorting. Sample: ['^Age','Lastname']
+    /// </param>
+    /// <param name="limit"></param>
+    /// <param name="skip"></param>
+    /// <returns>An array of entities that match the given predicate.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if repository or predicate is null.</exception>
+    /// <exception cref="NotSupportedException">
+    /// Thrown if the repository does not support string based search expressions or if
+    /// the predicate contains unsupported expression constructs.
+    /// </exception>
+    public static EntityRef<TKey>[] GetEntityRefsWhere<TEntity, TKey>(
+        this IRepository<TEntity, TKey> repository,
+        Expression<Func<TEntity, bool>> predicate,
+        string[] sortedBy = null, int limit = 500, int skip = 0
     ) where TEntity : class {
 
       if (repository == null) {
@@ -56,6 +90,39 @@ namespace System.Data.Fuse.LinqSupport {
 
       return result;
     }
+    /// <summary>
+    /// Executes a query against the repository using a LINQ-style predicate that is translated
+    /// into a FUSE ExpressionTree and passed to IRepository.GetEntities(...).
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type of the repository.</typeparam>
+    /// <typeparam name="TKey">The key type of the repository.</typeparam>
+    /// <param name="repository">The repository instance to query.</param>
+    /// <param name="predicate">
+    /// A predicate describing the filter condition. It is not executed directly but translated
+    /// into a FUSE ExpressionTree structure.
+    /// </param>
+    /// <param name="sortedBy">
+    /// An array of field names to be used for sorting the results (before 'limit' and 'skip' is processed).
+    /// Use the character "^" as prefix for DESC sorting. Sample: ['^Age','Lastname']
+    /// </param>
+    /// <param name="limit"></param>
+    /// <param name="skip"></param>
+    /// <returns>An array of entities that match the given predicate.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if repository or predicate is null.</exception>
+    /// <exception cref="NotSupportedException">
+    /// Thrown if the repository does not support string based search expressions or if
+    /// the predicate contains unsupported expression constructs.
+    /// </exception>
+    public static TEntity[] GetEntitiesWhere<TEntity, TKey>(
+        this IRepository<TEntity, TKey> repository,
+        Expression<Func<TEntity, bool>> predicate,
+        string sortedBy, int limit = 500, int skip = 0
+    ) where TEntity : class {
+
+      //THIS IS ONLY AN OVERLOAD TO GIVE JUST A SINGLE SORT FIELD NAME INSTEAD OF ARRAY...
+      return GetEntitiesWhere(repository, predicate, new string[] { sortedBy }, limit, skip);
+    }
+
 
     /// <summary>
     /// Executes a query against the repository using a LINQ-style predicate that is translated
@@ -83,7 +150,7 @@ namespace System.Data.Fuse.LinqSupport {
     public static TEntity[] GetEntitiesWhere<TEntity, TKey>(
         this IRepository<TEntity, TKey> repository,
         Expression<Func<TEntity, bool>> predicate, 
-        string[] sortedBy = null, int limit = 100, int skip = 0
+        string[] sortedBy = null, int limit = 500, int skip = 0
     ) where TEntity : class {
 
       if (repository == null) {
@@ -129,7 +196,39 @@ namespace System.Data.Fuse.LinqSupport {
       this IRepository<TEntity, TKey> repository,
       Expression<Func<TEntity, bool>> where,
       Expression<Func<TEntity, TSelectedFields>> fieldsSelector,
-      string[] sortedBy = null, int limit = 100, int skip = 0
+      string sortedBy, int limit = 500, int skip = 0
+    ) where TEntity : class {
+
+      //THIS IS ONLY AN OVERLOAD TO GIVE JUST A SINGLE SORT FIELD NAME INSTEAD OF ARRAY...
+      return GetEntityFieldsWhere(repository, where, fieldsSelector, new string[] { sortedBy }, limit, skip);
+    }
+
+    /// <summary>
+    /// Executes a projection query using a FUSE ExpressionTree filter and a LINQ-style selector expression.
+    /// The repository only returns field dictionaries. This method maps them back into the desired selected type.
+    /// Supports anonymous type projections.
+    /// </summary>
+    /// <typeparam name="TEntity">Entity type.</typeparam>
+    /// <typeparam name="TKey">Primary key type.</typeparam>
+    /// <typeparam name="TSelectedFields">Projection type, including anonymous types.</typeparam>
+    /// <param name="repository">The repository instance.</param>
+    /// <param name="fieldsSelector">
+    /// A projection expression defining the return object structure. Can be an anonymous type.
+    /// </param>
+    /// <param name="where">
+    /// A boolean expression describing filter logic, translated into a FUSE ExpressionTree.
+    /// </param>
+    /// <param name="sortedBy">Sorting field names.</param>
+    /// <param name="limit">Limit of items (default 100).</param>
+    /// <param name="skip">Skip count.</param>
+    /// <returns>An array of projected objects of type TSelectedFields.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if repository or selector is null.</exception>
+    /// <exception cref="NotSupportedException">Thrown for unsupported expressions or capabilities.</exception>
+    public static TSelectedFields[] GetEntityFieldsWhere<TEntity, TKey, TSelectedFields>(
+      this IRepository<TEntity, TKey> repository,
+      Expression<Func<TEntity, bool>> where,
+      Expression<Func<TEntity, TSelectedFields>> fieldsSelector,
+      string[] sortedBy = null, int limit = 500, int skip = 0
     ) where TEntity : class {
 
       if (repository == null) {

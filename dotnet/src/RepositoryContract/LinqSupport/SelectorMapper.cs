@@ -136,7 +136,8 @@ namespace System.Data.Fuse.LinqSupport {
     /// Creates a dictionary-to-object projector from the selector expression.
     /// </summary>
     private static Func<Dictionary<string, object>, TSelectedFields> BuildProjector<TEntity, TSelectedFields>(
-        Expression<Func<TEntity, TSelectedFields>> selector) {
+      Expression<Func<TEntity, TSelectedFields>> selector
+    ) {
       Expression body = selector.Body;
 
       NewExpression newExpr = body as NewExpression;
@@ -156,7 +157,9 @@ namespace System.Data.Fuse.LinqSupport {
     /// Builds a projector for anonymous type new { X = p.Age, ... }.
     /// </summary>
     private static Func<Dictionary<string, object>, TSelectedFields> BuildAnonymousProjector<TEntity, TSelectedFields>(
-        NewExpression newExpr) {
+      NewExpression newExpr
+    ) {
+      
       return (Dictionary<string, object> dict) => {
         object[] args = new object[newExpr.Arguments.Count];
 

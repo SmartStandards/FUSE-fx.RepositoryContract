@@ -133,6 +133,7 @@
 //        }
 //      }
 //      sorting.Length -= 1;
+//      //HACK: internal usage of System.Linq.Dynamic.Core
 //      result = result.OrderBy(sorting.ToString());
 //      return result;
 //    }

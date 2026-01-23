@@ -55,7 +55,7 @@ namespace System.Data.Fuse {
     [WebInvoke(Method = "POST")]
 #endif
     EntityRef[] GetEntityRefs(
-      string entityName, ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      string entityName, ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -74,7 +74,7 @@ namespace System.Data.Fuse {
     [WebInvoke(Method = "POST")]
 #endif
     EntityRef[] GetEntityRefsBySearchExpression(
-      string entityName, string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string entityName, string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
 #if NET46
@@ -98,7 +98,7 @@ namespace System.Data.Fuse {
     [WebInvoke(Method = "POST")]
 #endif
     object[] GetEntities(
-      string entityName, ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      string entityName, ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -117,7 +117,7 @@ namespace System.Data.Fuse {
     [WebInvoke(Method = "POST")]
 #endif
     object[] GetEntitiesBySearchExpression(
-      string entityName, string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string entityName, string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary> </summary>
@@ -148,7 +148,7 @@ namespace System.Data.Fuse {
     [WebInvoke(Method = "POST")]
 #endif
     Dictionary<string, object>[] GetEntityFields(
-      string entityName, ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string entityName, ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -170,7 +170,7 @@ namespace System.Data.Fuse {
     [WebInvoke(Method = "POST")]
 #endif
     Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
-      string entityName, string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string entityName, string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
 #if NET46

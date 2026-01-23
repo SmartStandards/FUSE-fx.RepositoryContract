@@ -13,6 +13,28 @@ namespace System.Data.Fuse.Convenience {
     private Dictionary<string, RepositoryUntypingFacade> _InnerRepos = new Dictionary<string, RepositoryUntypingFacade>();
     private IEntityResolver _EntityResolver;
 
+    public bool TryGetInnerRepo(string entityName, out RepositoryUntypingFacade repoUntypingFacade) {
+      lock (_InnerRepos) {
+        if (_InnerRepos.ContainsKey(entityName)) {
+          repoUntypingFacade = _InnerRepos[entityName];
+          return true;
+        }
+        repoUntypingFacade = null;
+        return false;
+      }
+    }
+
+    public bool TryGetInnerRepo<TEntity, TKey>(out IRepository<TEntity, TKey> repo) where TEntity : class {
+      if(this.TryGetInnerRepo(typeof(TEntity).Name, out RepositoryUntypingFacade repoUntypingFacade)) {
+        if(repoUntypingFacade != null && repoUntypingFacade is DynamicRepositoryFacade<TEntity, TKey>) {
+          repo = ((DynamicRepositoryFacade<TEntity, TKey>)repoUntypingFacade).InnerRepository;
+          return true;
+        }
+      }
+      repo = null;
+      return false;
+    }
+
     protected IEntityResolver EntityResolver {
       get { 
         return _EntityResolver; 
@@ -46,11 +68,11 @@ namespace System.Data.Fuse.Convenience {
       return _InnerRepos.Keys.ToArray();
     }
 
-    public EntityRef[] GetEntityRefs(string entityName, ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef[] GetEntityRefs(string entityName, ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return GetInnerRepo(entityName).GetEntityRefs(filter, sortedBy, limit, skip);
     }
 
-    public EntityRef[] GetEntityRefsBySearchExpression(string entityName, string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef[] GetEntityRefsBySearchExpression(string entityName, string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return GetInnerRepo(entityName).GetEntityRefsBySearchExpression(searchExpression, sortedBy, limit, skip);
     }
 
@@ -58,11 +80,11 @@ namespace System.Data.Fuse.Convenience {
       return GetInnerRepo(entityName).GetEntityRefsByKey(keysToLoad);
     }
 
-    public object[] GetEntities(string entityName, ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public object[] GetEntities(string entityName, ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return GetInnerRepo(entityName).GetEntities(filter, sortedBy, limit, skip);
     }
 
-    public object[] GetEntitiesBySearchExpression(string entityName, string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public object[] GetEntitiesBySearchExpression(string entityName, string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return GetInnerRepo(entityName).GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip);
     }
 
@@ -70,11 +92,11 @@ namespace System.Data.Fuse.Convenience {
       return GetInnerRepo(entityName).GetEntitiesByKey(keysToLoad);
     }
 
-    public Dictionary<string, object>[] GetEntityFields(string entityName, ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFields(string entityName, ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return GetInnerRepo(entityName).GetEntityFields(filter, includedFieldNames, sortedBy, limit, skip);
     }
 
-    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string entityName, string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string entityName, string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return GetInnerRepo(entityName).GetEntityFieldsBySearchExpression(searchExpression, includedFieldNames, sortedBy, limit, skip);
     }
 

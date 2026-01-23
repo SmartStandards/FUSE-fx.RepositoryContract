@@ -970,7 +970,7 @@ namespace System.Data.Fuse.Sql {
       return RepositoryCapabilities.All;
     }
 
-    public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
         List<TEntity> result = new List<TEntity>();
 
@@ -1017,7 +1017,7 @@ namespace System.Data.Fuse.Sql {
       });
     }
 
-    public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
         List<TEntity> result = new List<TEntity>();
 
@@ -1041,7 +1041,7 @@ namespace System.Data.Fuse.Sql {
       });
     }
 
-    public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
         List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
 
@@ -1065,7 +1065,7 @@ namespace System.Data.Fuse.Sql {
       });
     }
 
-    public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
         TEntity[] entities = GetEntities(filter, sortedBy, limit, skip);
 
@@ -1087,7 +1087,7 @@ namespace System.Data.Fuse.Sql {
       });
     }
 
-    public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
         TEntity[] entities = GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip);
 
@@ -1478,7 +1478,7 @@ namespace System.Data.Fuse.Sql {
       });
     }
 
-    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
         List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
 

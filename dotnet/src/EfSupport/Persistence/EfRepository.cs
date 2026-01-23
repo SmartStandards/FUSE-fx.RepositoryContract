@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Data.Fuse.Ef.InstanceManagement;
+using System.Data.Fuse.LinqSupport;
 #if !NETCOREAPP
 using System.Data.Fuse.WcfSupport;
 #endif
@@ -287,7 +288,7 @@ namespace System.Data.Fuse.Ef {
     }
 
     public TEntity[] GetEntities(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
@@ -295,12 +296,12 @@ namespace System.Data.Fuse.Ef {
         if (filter == null) {
           entities = dbContext.Set<TEntity>();
         } else {
-          //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
+          //HACK: internal usage of System.Data.Fuse.LinqSupport
           entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
         }
 
-        entities = ApplySorting(sortedBy, entities);
-        entities = ApplyPaging(limit, skip, entities);
+        entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+        entities = entities.ApplyPaging(limit, skip);
 
         return entities.ToArray();
       });
@@ -315,13 +316,14 @@ namespace System.Data.Fuse.Ef {
 
 
     public TEntity[] GetEntitiesBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
         var entities = dbContext.Set<TEntity>().Where(searchExpression);
 
-        entities = ApplySorting(sortedBy, entities);
-        entities = ApplyPaging(limit, skip, entities);
+        //HACK: internal usage of System.Data.Fuse.LinqSupport
+        entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+        entities = entities.ApplyPaging(limit, skip);
 
         return entities.ToArray();
       });
@@ -330,14 +332,15 @@ namespace System.Data.Fuse.Ef {
     //AI
     public Dictionary<string, object>[] GetEntityFields(
       ExpressionTree filter,
-      string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
-        //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
+        //HACK: internal usage of System.Data.Fuse.LinqSupport
         IQueryable<TEntity> entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
 
-        entities = ApplySorting(sortedBy, entities);
-        entities = ApplyPaging(limit, skip, entities);
+        //HACK: internal usage of System.Data.Fuse.LinqSupport
+        entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+        entities = entities.ApplyPaging(limit, skip);
 
         // Build the select expression
         string selectExpression = "new(" + string.Join(", ", includedFieldNames) + ")";
@@ -358,33 +361,34 @@ namespace System.Data.Fuse.Ef {
       });
     }
 
-    private static IQueryable<TEntity> ApplySorting(string[] sortedBy, IQueryable<TEntity> entities) {
-      if (sortedBy == null) {
-        return entities;
-      }
-      foreach (var sortField in sortedBy) {
-        if (sortField.StartsWith("^")) {
-          string descSortField = sortField.Substring(1); // remove the "^" prefix
-          entities = entities.OrderBy(descSortField + " descending");
-        } else {
-          entities = entities.OrderBy(sortField);
-        }
-      }
+    //private static IQueryable<TEntity> ApplySorting(string[] sortedBy, IQueryable<TEntity> entities) {
+    //  if (sortedBy == null) {
+    //    return entities;
+    //  }
+    //  foreach (var sortField in sortedBy) {
+    //    if (sortField.StartsWith("^")) {
+    //      string descSortField = sortField.Substring(1); // remove the "^" prefix
+    //      //HACK: internal usage of System.Linq.Dynamic.Core
+    //      entities = entities.OrderBy(descSortField + " descending");
+    //    } else {
+    //      entities = entities.OrderBy(sortField);
+    //    }
+    //  }
 
-      return entities;
-    }
+    //  return entities;
+    //}
 
-    private static IQueryable<TEntity> ApplyPaging(int limit, int skip, IQueryable<TEntity> entities) {
-      if (skip == 0 && limit == 0) {
-        return entities;
-      } else if (limit == 0) {
-        return entities.Skip(skip);
-      } else if (skip == 0) {
-        return entities.Take(limit);
-      } else {
-        return entities.Skip(skip).Take(limit);
-      }
-    }
+    //private static IQueryable<TEntity> ApplyPaging(int limit, int skip, IQueryable<TEntity> entities) {
+    //  if (skip == 0 && limit == 0) {
+    //    return entities;
+    //  } else if (limit == 0) {
+    //    return entities.Skip(skip);
+    //  } else if (skip == 0) {
+    //    return entities.Take(limit);
+    //  } else {
+    //    return entities.Skip(skip).Take(limit);
+    //  }
+    //}
 
     public Dictionary<string, object>[] GetEntityFieldsByKey(
       TKey[] keysToLoad, string[] includedFieldNames
@@ -412,7 +416,7 @@ namespace System.Data.Fuse.Ef {
 
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
       string searchExpression,
-      string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip).Select(
         e => {
@@ -426,7 +430,7 @@ namespace System.Data.Fuse.Ef {
     }
 
     public EntityRef<TKey>[] GetEntityRefs(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return GetEntities(filter, sortedBy, limit, skip).Select(
         e => new EntityRef<TKey>(
@@ -445,7 +449,7 @@ namespace System.Data.Fuse.Ef {
     }
 
     public EntityRef<TKey>[] GetEntityRefsBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip).Select(
         e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(),
@@ -514,7 +518,7 @@ namespace System.Data.Fuse.Ef {
           throw new ArgumentException("Update fields must not contain key fields.");
         }
 
-        // Get the entities that match the search expression
+        //HACK: internal usage of System.Data.Fuse.LinqSupport
         var entitiesToUpdate = dbContext.Set<TEntity>().Where(searchExpression);
 
         // Update the fields of the entities

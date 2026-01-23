@@ -91,7 +91,7 @@ namespace System.Data.Fuse.Convenience {
       return _Repository.GetCapabilities();
     }
 
-    public TModel[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TModel[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return _Repository.GetEntities(filter, sortedBy, limit, skip)
         .Select((e) => e.ToBusinessModel(_HandlePropertyEntityToModel, _OnAfterEntityToModel))
         .ToArray();
@@ -103,7 +103,7 @@ namespace System.Data.Fuse.Convenience {
         .ToArray();
     }
 
-    public TModel[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TModel[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
         ? _Repository.GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip)
           .Select((e) => e.ToBusinessModel(_HandlePropertyEntityToModel, _OnAfterEntityToModel))
@@ -115,7 +115,7 @@ namespace System.Data.Fuse.Convenience {
       ExpressionTree filter,
       string[] includedFieldNames,
       string[] sortedBy,
-      int limit = 100, int skip = 0
+      int limit = 500, int skip = 0
     ) {
       return _Repository.GetEntityFields(filter, includedFieldNames, sortedBy, limit, skip);
     }
@@ -126,13 +126,13 @@ namespace System.Data.Fuse.Convenience {
       return _Repository.GetEntityFieldsByKey(keysToLoad, includedFieldNames);
     }
 
-    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
         ? _Repository.GetEntityFieldsBySearchExpression(searchExpression, includedFieldNames, sortedBy, limit, skip)
         : throw new NotSupportedException("SearchExpressions are not supported by the repository");
     }
 
-    public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return _Repository.GetEntityRefs(filter, sortedBy, limit, skip);
     }
 
@@ -140,7 +140,7 @@ namespace System.Data.Fuse.Convenience {
       return _Repository.GetEntityRefsByKey(keysToLoad);
     }
 
-    public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
         ? _Repository.GetEntityRefsBySearchExpression(searchExpression, sortedBy, limit, skip)
         : throw new NotSupportedException("SearchExpressions are not supported by the repository");

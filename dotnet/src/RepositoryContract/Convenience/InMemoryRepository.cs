@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Data.Fuse.Convenience;
+using System.Data.Fuse.LinqSupport;
 using System.Data.ModelDescription;
 using System.Data.ModelDescription.Convenience;
 using System.Linq;
 using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace System.Data.Fuse.Convenience {
@@ -11,8 +13,36 @@ namespace System.Data.Fuse.Convenience {
   public class InMemoryRepository<TEntity, TKey> : IRepository<TEntity, TKey>
     where TEntity : class {
 
-    private static SchemaRoot _SchemaRoot;
-    private static List<TEntity> _Entities = new List<TEntity>();
+    private SchemaRoot _SchemaRoot;
+    private bool _MatchStringsCaseInsensitive = true; //more equal to SQL behavior
+    private bool _NewModeWithoutLinqDynamic = false;
+
+    private string _VirtualDbAddress;
+    #region " Virtual DB Management "
+
+    private static Dictionary<string, List<TEntity>> _VirtualDbs = new Dictionary<string, List<TEntity>>();
+
+    public static void TerminateVirtualDb(string virtualDbAddress) {
+      lock (_VirtualDbs) {
+        if (_VirtualDbs.ContainsKey(virtualDbAddress)) {
+          _VirtualDbs.Remove(virtualDbAddress);
+        }
+      }
+    }
+
+    public static string[] VirtualDbAddresses {
+      get {
+        lock (_VirtualDbs) {
+          return _VirtualDbs.Keys.ToArray();
+        }
+      }
+    }
+
+    public const string SharedVirtualDbAddress = "shared";
+
+    #endregion
+
+    private List<TEntity> _Entities = null;
 
     protected SchemaRoot SchemaRoot {
       get {
@@ -20,8 +50,58 @@ namespace System.Data.Fuse.Convenience {
       }
     }
 
-    public InMemoryRepository(SchemaRoot schemaRoot) {
+    public RepositoryCapabilities GetCapabilities() {
+      return RepositoryCapabilities.All;
+    }
+
+    /// <summary>
+    ///  creates an InMemoryRepository that is coupled to the virtualDbAddress 'shared'.
+    /// </summary>
+    /// <param name="schemaRoot"></param>
+    [Obsolete("Use constructor with explicit 'matchStringsCaseInsensitive' parameter")]
+    public InMemoryRepository(SchemaRoot schemaRoot) { //ACHTUNG: via dynamisch via activator vom InMemoryUniversalRepository!
       _SchemaRoot = schemaRoot;
+      _VirtualDbAddress = SharedVirtualDbAddress;
+      this.InitializeEntitiesListHandle();
+    }
+
+    public InMemoryRepository(SchemaRoot schemaRoot, bool matchStringsCaseInsensitive) { //ACHTUNG: via dynamisch via activator vom InMemoryUniversalRepository!
+      _SchemaRoot = schemaRoot;
+      _MatchStringsCaseInsensitive = matchStringsCaseInsensitive;
+      _NewModeWithoutLinqDynamic = true; //gibts gratis mit diesem constructor (schleichende migration)
+      _VirtualDbAddress = null;
+      this.InitializeEntitiesListHandle();
+    }
+
+    /// <summary>
+    ///  creates an InMemoryRepository that is isolated by the given virtualDbAddress.
+    /// </summary>
+    /// <param name="schemaRoot"></param>
+    /// <param name="matchStringsCaseInsensitive"></param>
+    /// <param name="virtualDbAddress">
+    ///  Use a unique string to identify the virtual database or 'shared'.
+    ///  NULL will disable shared access.
+    ///  WARNING: shared virtual DBs will be kept in memory for ever unless you call the 'TerminateVirtualDb' method!
+    /// </param>
+    public InMemoryRepository(SchemaRoot schemaRoot, bool matchStringsCaseInsensitive, string virtualDbAddress) { //ACHTUNG: via dynamisch via activator vom InMemoryUniversalRepository!
+      _SchemaRoot = schemaRoot;
+      _MatchStringsCaseInsensitive = matchStringsCaseInsensitive;
+      _NewModeWithoutLinqDynamic = true; //gibts gratis mit diesem constructor (schleichende migration)
+      _VirtualDbAddress = virtualDbAddress;
+      this.InitializeEntitiesListHandle();
+    }
+
+    private void InitializeEntitiesListHandle() {
+      if (string.IsNullOrWhiteSpace(_VirtualDbAddress)) {
+        _Entities = new List<TEntity>();
+        return;
+      }
+      lock (_VirtualDbs) {
+        if (!_VirtualDbs.TryGetValue(_VirtualDbAddress, out _Entities)) {
+          _Entities = new List<TEntity>();
+          _VirtualDbs[_VirtualDbAddress] = _Entities;
+        }
+      }
     }
 
     private static List<List<PropertyInfo>> _UniqueKeySets;
@@ -54,31 +134,34 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public TEntity AddOrUpdateEntity(TEntity entity) {
+      lock (_Entities) {
 
-      object[] keySetValues = entity.GetValues(PrimaryKeySet);
-      TEntity existingEntity = _Entities.FirstOrDefault(
-        entity.GetSearchExpression(PrimaryKeySet.ToArray()).Compile()
-      );
+        object[] keySetValues = entity.GetValues(PrimaryKeySet);
+        TEntity existingEntity = _Entities.FirstOrDefault(
+          entity.GetSearchExpression(PrimaryKeySet.ToArray()).Compile()
+        );
 
-      //AI
-      // If no primary key is found, try to find the entity by unique key
-      if (existingEntity == null) {
-        foreach (var keyset in Keysets) {
-          existingEntity = _Entities.FirstOrDefault(
-            entity.GetSearchExpression(keyset.ToArray()).Compile()
-          );
-          if (existingEntity != null) {
-            break;
+        //AI
+        // If no primary key is found, try to find the entity by unique key
+        if (existingEntity == null) {
+          foreach (var keyset in Keysets) {
+            existingEntity = _Entities.FirstOrDefault(
+              entity.GetSearchExpression(keyset.ToArray()).Compile()
+            );
+            if (existingEntity != null) {
+              break;
+            }
           }
         }
-      }
 
-      if (existingEntity == null) {
-        _Entities.Add(entity);
-        return entity;
-      } else {
-        CopyFields(entity, existingEntity);
-        return existingEntity;
+        if (existingEntity == null) {
+          _Entities.Add(entity);
+          return entity;
+        } else {
+          CopyFields(entity, existingEntity);
+          return existingEntity;
+        }
+
       }
     }
 
@@ -93,49 +176,51 @@ namespace System.Data.Fuse.Convenience {
     public Dictionary<string, object> AddOrUpdateEntityFields(
       Dictionary<string, object> fields
     ) {
+      lock (_Entities) {
 
-      // Check for existing entity by primary key
-      object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
-      TEntity existingEntity = (primaryKeyValues == null)
-        ? null : _Entities.FindMatchByValues(primaryKeyValues, PrimaryKeySet.ToArray());
+        // Check for existing entity by primary key
+        object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
+        TEntity existingEntity = (primaryKeyValues == null)
+          ? null : _Entities.FindMatchByValues(primaryKeyValues, PrimaryKeySet.ToArray());
 
-      // If not found by primary key, check for existing entity by unique keysets
-      if (existingEntity == null) {
-        foreach (var keyset in Keysets) {
-          object[] keysetValues = fields.GetValuesFromDictionary(keyset);
-          existingEntity = (keysetValues == null)
-            ? null : _Entities.FindMatchByValues(keysetValues, keyset.ToArray());
-          if (existingEntity != null) {
-            break;
+        // If not found by primary key, check for existing entity by unique keysets
+        if (existingEntity == null) {
+          foreach (var keyset in Keysets) {
+            object[] keysetValues = fields.GetValuesFromDictionary(keyset);
+            existingEntity = (keysetValues == null)
+              ? null : _Entities.FindMatchByValues(keysetValues, keyset.ToArray());
+            if (existingEntity != null) {
+              break;
+            }
           }
         }
-      }
 
-      if (existingEntity != null) {
-        // If existing entity found, update it
-        CopyFields2(fields, existingEntity);
-      } else {
-        // Create a new instance of TEntity
-        TEntity entity = Activator.CreateInstance<TEntity>();
-        CopyFields2(fields, entity);
-        existingEntity = entity;
-        // If no existing entity found, add new entity
-        _Entities.Add(entity);
-      }
-
-      // Convert the updated entity back to a dictionary and return it
-      Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
-      foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
-        var updatedValue = propertyInfo.GetValue(existingEntity);
-        if (
-          !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
-          !Equals(updatedValue, originalValue)
-        ) {
-          conflictingFields[propertyInfo.Name] = updatedValue;
+        if (existingEntity != null) {
+          // If existing entity found, update it
+          CopyFields2(fields, existingEntity);
+        } else {
+          // Create a new instance of TEntity
+          TEntity entity = Activator.CreateInstance<TEntity>();
+          CopyFields2(fields, entity);
+          existingEntity = entity;
+          // If no existing entity found, add new entity
+          _Entities.Add(entity);
         }
-      }
 
-      return conflictingFields;
+        // Convert the updated entity back to a dictionary and return it
+        Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
+        foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
+          var updatedValue = propertyInfo.GetValue(existingEntity);
+          if (
+            !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
+            !Equals(updatedValue, originalValue)
+          ) {
+            conflictingFields[propertyInfo.Name] = updatedValue;
+          }
+        }
+
+        return conflictingFields;   
+      }
     }
 
     private static void CopyFields2(Dictionary<string, object> fields, TEntity entity) {
@@ -148,135 +233,181 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public bool ContainsKey(TKey key) {
-      return _Entities.FindMatchByValues(key.GetKeyFieldValues(), PrimaryKeySet.ToArray()) != null;
+      lock (_Entities) {
+        return _Entities.FindMatchByValues(key.GetKeyFieldValues(), PrimaryKeySet.ToArray()) != null;
+      }
     }
 
     public int Count(ExpressionTree filter) {
-      //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
-      return _Entities.AsQueryable().Count(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+      if (_NewModeWithoutLinqDynamic) {
+        Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+          filter, _MatchStringsCaseInsensitive
+        );
+        lock  (_Entities) {
+          return _Entities.Count(predicateExpression.Compile());
+        }
+      } 
+      else {
+        lock (_Entities) {
+          return _Entities.AsQueryable().Count(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+        }
+      }
     }
 
     public int CountAll() {
-      return _Entities.Count();
+      lock (_Entities) {
+        return _Entities.Count();
+      }
     }
 
     public int CountBySearchExpression(string searchExpression) {
-      return _Entities.AsQueryable().Count(searchExpression);
+      lock (_Entities) {
+         return _Entities.AsQueryable().Count(searchExpression);
+      }
     }
 
-    public RepositoryCapabilities GetCapabilities() {
-      return RepositoryCapabilities.All;
-    }
 
     public TEntity[] GetEntities(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
+      lock (_Entities) {
+        if (_NewModeWithoutLinqDynamic) {
 
-      //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
-      string stringbasedDynamicLinqExpression = filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name));
-      IQueryable<TEntity> entities = _Entities.AsQueryable().Where(stringbasedDynamicLinqExpression);
+          Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+            filter, _MatchStringsCaseInsensitive
+          );
+          IEnumerable<TEntity> entities = _Entities.Where(predicateExpression.Compile());
 
-      entities = ApplySorting(sortedBy, entities);
-      entities = ApplyPaging(limit, skip, entities);
+          entities = entities.ApplySorting(sortedBy);
+          entities = entities.ApplyPaging(limit, skip);
 
-      return entities.ToArray();
+          return entities.ToArray();
+        }
+        else {
+
+          //HACK: internal usage of System.Data.Fuse.LinqSupport
+          string stringbasedDynamicLinqExpression = filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name));
+          IQueryable<TEntity> entities = _Entities.AsQueryable().Where(stringbasedDynamicLinqExpression);
+         
+          entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+          entities = entities.ApplyPaging(limit, skip);
+
+          return entities.ToArray();
+        }
+      }
     }
 
     public TEntity[] GetEntitiesByKey(TKey[] keysToLoad) {
-      return _Entities.Where(
-        keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
-      ).ToArray();
+      lock (_Entities) {
+        return _Entities.Where(
+          keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
+        ).ToArray();
+      }
     }
 
     public TEntity[] GetEntitiesBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
-      var entities = _Entities.AsQueryable().Where(searchExpression);
-      entities = ApplySorting(sortedBy, entities);
-      entities = ApplyPaging(limit, skip, entities);
+      lock (_Entities) {
 
-      return entities.ToArray();
+        //HACK: internal usage of System.Data.Fuse.LinqSupport
+        var entities = _Entities.AsQueryable().Where(searchExpression);
 
+        //HACK: internal usage of System.Data.Fuse.LinqSupport
+        entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+        entities = entities.ApplyPaging(limit, skip);
+
+        return entities.ToArray();
+      }
     }
 
     //AI
     public Dictionary<string, object>[] GetEntityFields(
       ExpressionTree filter,
-      string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
-      //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
-      var entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+      lock (_Entities) {
+        if (_NewModeWithoutLinqDynamic) {
 
-      entities = ApplySorting(sortedBy, entities);
-      entities = ApplyPaging(limit, skip, entities);
+          Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+            filter, _MatchStringsCaseInsensitive
+          );
+          IEnumerable<TEntity> entities = _Entities.Where(predicateExpression.Compile());
 
-      // Build the select expression
-      string selectExpression = "new(" + string.Join(", ", includedFieldNames) + ")";
+          entities = entities.ApplySorting(sortedBy);
+          entities = entities.ApplyPaging(limit, skip);
 
-      // Use the select expression to select the fields
-      var selectedFields = entities.Select(selectExpression).ToDynamicArray();
+          Dictionary<string, object>[] result = entities.Select(
+            (sf) => {
+              Dictionary<string, object> dict = new Dictionary<string, object>();
+              foreach (string fieldName in includedFieldNames) {
+                //TODO: performance optimieren via cached propertyinfo -> extra helper bauen!!!
+                dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
+              }
+              return dict;
+            }
+          ).ToArray();
 
-      // Convert the selected fields to dictionaries
-      Dictionary<string, object>[] result = selectedFields.Select(sf => {
-        var dict = new Dictionary<string, object>();
-        foreach (var fieldName in includedFieldNames) {
-          dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
+          return result;
         }
-        return dict;
-      }).ToArray();
+        else {
 
-      return result;
-    }
+          //HACK: internal usage of System.Data.Fuse.LinqSupport
+          IQueryable<TEntity> entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
 
-    private static IQueryable<TEntity> ApplySorting(string[] sortedBy, IQueryable<TEntity> entities) {
-      foreach (var sortField in sortedBy) {
-        if (sortField.StartsWith("^")) {
-          string descSortField = sortField.Substring(1); // remove the "^" prefix
-          entities = entities.OrderBy(descSortField + " descending");
-        } else {
-          entities = entities.OrderBy(sortField);
+          //HACK: internal usage of System.Data.Fuse.LinqSupport
+          entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+          entities = entities.ApplyPaging(limit, skip);
+
+          // Build the select expression
+          string selectExpression = "new(" + string.Join(", ", includedFieldNames) + ")";
+
+          // Use the select expression to select the fields
+          var selectedFields = entities.Select(selectExpression).ToDynamicArray();
+
+          // Convert the selected fields to dictionaries
+          Dictionary<string, object>[] result = selectedFields.Select(sf => {
+            var dict = new Dictionary<string, object>();
+            foreach (var fieldName in includedFieldNames) {
+              //TODO: performance optimieren via cached propertyinfo -> extra helper bauen!!!
+              dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
+            }
+            return dict;
+          }).ToArray();
+
+          return result;
         }
-      }
-
-      return entities;
+      } 
     }
 
-    private static IQueryable<TEntity> ApplyPaging(int limit, int skip, IQueryable<TEntity> entities) {
-      if (skip == 0 && limit == 0) {
-        return entities;
-      } else if (limit == 0) {
-        return entities.Skip(skip);
-      } else if (skip == 0) {
-        return entities.Take(limit);
-      } else {
-        return entities.Skip(skip).Take(limit);
-      }
-    }
 
     public Dictionary<string, object>[] GetEntityFieldsByKey(
       TKey[] keysToLoad, string[] includedFieldNames
     ) {
-      return _Entities.Where(
-        keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
-      ).Select(
-        e => new {
-          e, //TODO is e correct? remove e?
-          includedFieldNames
-        }
-      ).ToDynamicArray().Select(
-        e => {
-          var dict = new Dictionary<string, object>();
-          foreach (var fieldName in includedFieldNames) {
-            dict[fieldName] = e.e.GetType().GetProperty(fieldName).GetValue(e.e);
+      lock (_Entities) {
+        return _Entities.Where(
+          keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
+        ).Select(
+          e => new {
+            e, //TODO is e correct? remove e?
+            includedFieldNames
           }
-          return dict;
-        }
-      ).ToArray();
+        ).ToDynamicArray().Select(
+          e => {
+            var dict = new Dictionary<string, object>();
+            foreach (var fieldName in includedFieldNames) {
+              dict[fieldName] = e.e.GetType().GetProperty(fieldName).GetValue(e.e);
+            }
+            return dict;
+          }
+        ).ToArray();
+
+      }
     }
 
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
       string searchExpression,
-      string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip).Select(
         e => {
@@ -290,7 +421,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public EntityRef<TKey>[] GetEntityRefs(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return GetEntities(filter, sortedBy, limit, skip).Select(
         e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(), e.ToString())
@@ -304,7 +435,7 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public EntityRef<TKey>[] GetEntityRefsBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip).Select(
         e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(), e.ToString())
@@ -326,10 +457,39 @@ namespace System.Data.Fuse.Convenience {
     /// </param>
     /// <returns></returns>
     public TKey[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
-      //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
-      return MassupdateBySearchExpression(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)), fields);
-    }
+      if (_NewModeWithoutLinqDynamic) {
 
+        // Ensure that the fields to be updated do not include any key fields
+        var keyFieldNames = this.PrimaryKeySet.Select(p => p.Name);
+        if (fields.Keys.Intersect(keyFieldNames).Any()) {
+          throw new ArgumentException("Update fields must not contain key fields.");
+        }
+
+        lock (_Entities) {
+
+          Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+            filter, _MatchStringsCaseInsensitive
+          );
+          IEnumerable<TEntity> entitiesToUpdate = _Entities.Where(predicateExpression.Compile());
+
+          // Update the fields of the entities
+          foreach (TEntity entity in entitiesToUpdate) {
+            foreach (KeyValuePair<string,object> field in fields) {
+              PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
+              if (propertyInfo != null) {
+                propertyInfo.SetValue(entity, field.Value);
+              }
+            }
+          }
+
+          // Return the keys of the updated entities
+          return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+        }
+      }
+      else {
+        return MassupdateBySearchExpression(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)), fields);
+      }
+    }
 
     public TKey[] MassupdateByKeys(TKey[] keysToUpdate, Dictionary<string, object> fields) {
       // Ensure that the fields to be updated do not include any key fields
@@ -338,47 +498,54 @@ namespace System.Data.Fuse.Convenience {
         throw new ArgumentException("Update fields must not contain key fields.");
       }
 
-      // Get the entities that match the provided keys
-      var entitiesToUpdate = _Entities.Where(
-        keysToUpdate.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
-      );
+      lock (_Entities) {
+        // Get the entities that match the provided keys
+        var entitiesToUpdate = _Entities.Where(
+          keysToUpdate.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray()).Compile()
+        );
 
-      // Update the fields of the entities
-      foreach (var entity in entitiesToUpdate) {
-        foreach (var field in fields) {
-          var propertyInfo = typeof(TEntity).GetProperty(field.Key);
-          if (propertyInfo != null) {
-            propertyInfo.SetValue(entity, field.Value);
+        // Update the fields of the entities
+        foreach (var entity in entitiesToUpdate) {
+          foreach (var field in fields) {
+            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
+            if (propertyInfo != null) {
+              propertyInfo.SetValue(entity, field.Value);
+            }
           }
         }
-      }
 
-      // Return the keys of the updated entities
-      return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+        // Return the keys of the updated entities
+        return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+
+      }
     }
 
     public TKey[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields) {
-      // Ensure that the fields to be updated do not include any key fields
-      var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
-      if (fields.Keys.Intersect(keyFieldNames).Any()) {
-        throw new ArgumentException("Update fields must not contain key fields.");
-      }
+      lock (_Entities) {
 
-      // Get the entities that match the search expression
-      var entitiesToUpdate = _Entities.AsQueryable().Where(searchExpression);
+        // Ensure that the fields to be updated do not include any key fields
+        var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
+        if (fields.Keys.Intersect(keyFieldNames).Any()) {
+          throw new ArgumentException("Update fields must not contain key fields.");
+        }
 
-      // Update the fields of the entities
-      foreach (var entity in entitiesToUpdate) {
-        foreach (var field in fields) {
-          var propertyInfo = typeof(TEntity).GetProperty(field.Key);
-          if (propertyInfo != null) {
-            propertyInfo.SetValue(entity, field.Value);
+        //HACK: internal usage of System.Data.Fuse.LinqSupport
+        var entitiesToUpdate = _Entities.AsQueryable().Where(searchExpression);
+
+        // Update the fields of the entities
+        foreach (var entity in entitiesToUpdate) {
+          foreach (var field in fields) {
+            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
+            if (propertyInfo != null) {
+              propertyInfo.SetValue(entity, field.Value);
+            }
           }
         }
-      }
 
-      // Return the keys of the updated entities
-      return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+        // Return the keys of the updated entities
+        return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+
+      }
     }
 
     /// <summary>
@@ -391,14 +558,18 @@ namespace System.Data.Fuse.Convenience {
     /// <returns>The entity key on success, otherwise null</returns>
     public TKey TryAddEntity(TEntity entity) {
       try {
-        // Check if the entity already exists
-        object[] keySetValues = entity.GetValues(PrimaryKeySet);
-        TEntity existingEntity = _Entities.FindMatch(entity, PrimaryKeySet.ToArray());
+        lock (_Entities) {
 
-        // If the entity does not exist, add it
-        if (existingEntity == null) {
-          _Entities.Add(entity);
-          return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
+          // Check if the entity already exists
+          object[] keySetValues = entity.GetValues(PrimaryKeySet);
+          TEntity existingEntity = _Entities.FindMatch(entity, PrimaryKeySet.ToArray());
+
+          // If the entity does not exist, add it
+          if (existingEntity == null) {
+            _Entities.Add(entity);
+            return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
+          }
+
         }
       } catch (Exception) {
         // Ignore exceptions and return default(TKey)
@@ -407,7 +578,6 @@ namespace System.Data.Fuse.Convenience {
       // If the entity already exists or if an error occurs, return default(TKey)
       return default(TKey);
     }
-
 
     /// <summary>
     /// Tries to delete entities by the given keys und returns an array containing the keys of only that entities
@@ -421,14 +591,18 @@ namespace System.Data.Fuse.Convenience {
 
       foreach (var key in keysToDelete) {
         try {
-          // Find the entity by its key
-          object[] keySetValues = key.GetKeyFieldValues();
-          TEntity entityToDelete = _Entities.FindMatchByValues(keySetValues, PrimaryKeySet.ToArray());
+          lock (_Entities) {
 
-          // If the entity exists, delete it
-          if (entityToDelete != null) {
-            _Entities.Remove(entityToDelete);
-            deletedKeys.Add(key);
+            // Find the entity by its key
+            object[] keySetValues = key.GetKeyFieldValues();
+            TEntity entityToDelete = _Entities.FindMatchByValues(keySetValues, PrimaryKeySet.ToArray());
+
+            // If the entity exists, delete it
+            if (entityToDelete != null) {
+              _Entities.Remove(entityToDelete);
+              deletedKeys.Add(key);
+            }
+
           }
         } catch (Exception) {
           // Ignore exceptions and continue with the next key
@@ -455,14 +629,18 @@ namespace System.Data.Fuse.Convenience {
     /// </returns>
     public TEntity TryUpdateEntity(TEntity entity) {
       try {
-        // Check if the entity exists
-        object[] keySetValues = entity.GetValues(PrimaryKeySet);
-        TEntity existingEntity = _Entities.FindMatchByValues(keySetValues, PrimaryKeySet.ToArray());
+        lock (_Entities) {
 
-        // If the entity exists, update it
-        if (existingEntity != null) {
-          CopyFields(entity, existingEntity);
-          return existingEntity;
+          // Check if the entity exists
+          object[] keySetValues = entity.GetValues(PrimaryKeySet);
+          TEntity existingEntity = _Entities.FindMatchByValues(keySetValues, PrimaryKeySet.ToArray());
+
+          // If the entity exists, update it
+          if (existingEntity != null) {
+            CopyFields(entity, existingEntity);
+            return existingEntity;
+          }
+
         }
       } catch (Exception) {
         // Ignore exceptions and return null
@@ -486,43 +664,47 @@ namespace System.Data.Fuse.Convenience {
     /// (2) was updated using normlized (=modified) value that differs from the given one,
     /// (3) was updated implicitely (timestamp's,rowversion's,...) 
     public Dictionary<string, object> TryUpdateEntityFields(Dictionary<string, object> fields) {
-      // Check for existing entity by primary key
-      object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
-      TEntity existingEntity = (primaryKeyValues == null)
-        ? null : _Entities.FindMatchByValues(primaryKeyValues, PrimaryKeySet.ToArray());
+      lock (_Entities) {
 
-      // If not found by primary key, check for existing entity by unique keysets
-      if (existingEntity == null) {
-        foreach (var keyset in Keysets) {
-          object[] keysetValues = fields.GetValuesFromDictionary(keyset);
-          existingEntity = (keysetValues == null)
-            ? null : _Entities.FindMatchByValues(keysetValues, keyset.ToArray());
-          if (existingEntity != null) {
-            break;
+        // Check for existing entity by primary key
+        object[] primaryKeyValues = fields.TryGetValuesByFields(PrimaryKeySet);
+        TEntity existingEntity = (primaryKeyValues == null)
+          ? null : _Entities.FindMatchByValues(primaryKeyValues, PrimaryKeySet.ToArray());
+
+        // If not found by primary key, check for existing entity by unique keysets
+        if (existingEntity == null) {
+          foreach (var keyset in Keysets) {
+            object[] keysetValues = fields.GetValuesFromDictionary(keyset);
+            existingEntity = (keysetValues == null)
+              ? null : _Entities.FindMatchByValues(keysetValues, keyset.ToArray());
+            if (existingEntity != null) {
+              break;
+            }
           }
         }
-      }
 
-      if (existingEntity != null) {
-        // If existing entity found, update it
-        CopyFields2(fields, existingEntity);
-      } else {
-        return null;
-      }
-
-      // Convert the updated entity back to a dictionary and return it
-      Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
-      foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
-        var updatedValue = propertyInfo.GetValue(existingEntity);
-        if (
-          !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
-          !Equals(updatedValue, originalValue)
-        ) {
-          conflictingFields[propertyInfo.Name] = updatedValue;
+        if (existingEntity != null) {
+          // If existing entity found, update it
+          CopyFields2(fields, existingEntity);
+        } else {
+          return null;
         }
-      }
 
-      return conflictingFields;
+        // Convert the updated entity back to a dictionary and return it
+        Dictionary<string, object> conflictingFields = new Dictionary<string, object>();
+        foreach (var propertyInfo in typeof(TEntity).GetProperties()) {
+          var updatedValue = propertyInfo.GetValue(existingEntity);
+          if (
+            !fields.TryGetValue(propertyInfo.Name, out var originalValue) ||
+            !Equals(updatedValue, originalValue)
+          ) {
+            conflictingFields[propertyInfo.Name] = updatedValue;
+          }
+        }
+
+        return conflictingFields;
+
+      }
     }
 
     /// <summary>
@@ -534,26 +716,30 @@ namespace System.Data.Fuse.Convenience {
     /// <returns></returns>
     public bool TryUpdateKey(TKey currentKey, TKey newKey) {
       try {
-        // Check if the entity with the current key exists
-        object[] currentKeyValues = currentKey.GetKeyFieldValues();
-        TEntity existingEntity = _Entities.FindMatchByValues(currentKeyValues, PrimaryKeySet.ToArray());
+        lock (_Entities) {
 
-        // If the entity exists, update its key
-        if (existingEntity != null) {
-          // Check if the entity with the new key already exists
-          object[] newKeyValues = newKey.GetKeyFieldValues();
-          TEntity newEntity = _Entities.FindMatchByValues(newKeyValues, PrimaryKeySet.ToArray());
+          // Check if the entity with the current key exists
+          object[] currentKeyValues = currentKey.GetKeyFieldValues();
+          TEntity existingEntity = _Entities.FindMatchByValues(currentKeyValues, PrimaryKeySet.ToArray());
 
-          // If the entity with the new key does not exist, update the key
-          if (newEntity == null) {
-            int i = 0;
-            foreach (PropertyInfo propertyInfo in PrimaryKeySet) {
-              object newKeyValue = newKeyValues[i++];
-              propertyInfo.SetValue(existingEntity, newKeyValue);
-            }            
+          // If the entity exists, update its key
+          if (existingEntity != null) {
+            // Check if the entity with the new key already exists
+            object[] newKeyValues = newKey.GetKeyFieldValues();
+            TEntity newEntity = _Entities.FindMatchByValues(newKeyValues, PrimaryKeySet.ToArray());
+
+            // If the entity with the new key does not exist, update the key
+            if (newEntity == null) {
+              int i = 0;
+              foreach (PropertyInfo propertyInfo in PrimaryKeySet) {
+                object newKeyValue = newKeyValues[i++];
+                propertyInfo.SetValue(existingEntity, newKeyValue);
+              }            
             
-            return true;
+              return true;
+            }
           }
+
         }
       } catch (Exception) {
         // Ignore exceptions and return false

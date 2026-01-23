@@ -65,7 +65,7 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="skip"></param>
     /// <returns></returns>
     public EntityRef<object>[] GetEntityRefs(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _Repository.GetEntityRefs(filter, sortedBy, limit, skip)
         .Select((e) => new EntityRef<object>() { Key = e.Key, Label = e.Label }).ToArray();
@@ -83,7 +83,7 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="skip"></param>
     /// <returns></returns>
     public EntityRef<object>[] GetEntityRefsBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
         ? _Repository.GetEntityRefsBySearchExpression(searchExpression, sortedBy, limit, skip)
@@ -109,7 +109,7 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="skip"></param>
     /// <returns></returns>
     public Dictionary<string, object>[] GetEntities(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _Repository.GetEntities(filter, sortedBy, limit, skip)
         .Select((e) => e.ConvertToBusinessModelDynamic(_HandlePropertyEntityToModel)).ToArray();
@@ -127,7 +127,7 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="skip"></param>
     /// <returns></returns>
     public Dictionary<string, object>[] GetEntitiesBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
         ? _Repository.GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip)
@@ -158,7 +158,7 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="skip"></param>
     /// <returns></returns>
     public Dictionary<string, object>[] GetEntityFields(
-      ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _Repository.GetEntityFields(filter, includedFieldNames, sortedBy, limit, skip);
     }
@@ -178,7 +178,7 @@ namespace System.Data.Fuse.Convenience {
     /// <param name="skip"></param>
     /// <returns></returns>
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
-      string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _Repository.GetCapabilities().SupportsStringBasedSearchExpressions
         ? _Repository.GetEntityFieldsBySearchExpression(

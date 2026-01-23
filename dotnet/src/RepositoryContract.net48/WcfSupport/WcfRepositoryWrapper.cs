@@ -37,7 +37,7 @@ namespace System.Data.Fuse.WcfSupport {
       return innerRepository.GetCapabilities();
     }
 
-    public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntities(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return innerRepository.GetEntities(filter, sortedBy, limit, skip);
     }
 
@@ -45,11 +45,11 @@ namespace System.Data.Fuse.WcfSupport {
       return innerRepository.GetEntitiesByKey(keysToLoad);
     }
 
-    public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public TEntity[] GetEntitiesBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return innerRepository.GetEntitiesBySearchExpression(searchExpression, sortedBy, limit, skip);
     }
 
-    public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFields(ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return innerRepository.GetEntityFields(filter, includedFieldNames, sortedBy, limit, skip);
     }
 
@@ -57,11 +57,11 @@ namespace System.Data.Fuse.WcfSupport {
       return innerRepository.GetEntityFieldsByKey(keysToLoad, includedFieldNames);
     }
 
-    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0) {
+    public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0) {
       return innerRepository.GetEntityFieldsBySearchExpression(searchExpression, includedFieldNames, sortedBy, limit, skip);
     }
 
-    public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef<TKey>[] GetEntityRefs(ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0) {
       return innerRepository.GetEntityRefs(filter, sortedBy, limit, skip);
     }
 
@@ -69,7 +69,7 @@ namespace System.Data.Fuse.WcfSupport {
       return innerRepository.GetEntityRefsByKey(keysToLoad);
     }
 
-    public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 100, int skip = 0) {
+    public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
       return innerRepository.GetEntityRefsBySearchExpression(searchExpression, sortedBy, limit, skip);
     }
 

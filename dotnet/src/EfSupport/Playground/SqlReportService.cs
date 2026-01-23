@@ -26,7 +26,7 @@ namespace System.Data.Fuse.Ef {
       string[]? stackBy = null,
       string[]? reportValues = null,
       string[]? sortedBy = null,
-      int limit = 100,
+      int limit = 500,
       int skip = 0
     ) {
 

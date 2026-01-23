@@ -35,7 +35,7 @@ namespace System.Data.Fuse.WcfSupport {
     /// <returns></returns>
     [WebInvoke(Method = "POST")]
     EntityRef<TKey>[] GetEntityRefs(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -51,7 +51,7 @@ namespace System.Data.Fuse.WcfSupport {
     /// <returns></returns>
     [WebInvoke(Method = "POST")]
     EntityRef<TKey>[] GetEntityRefsBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     [WebInvoke(Method = "POST")]
@@ -70,7 +70,7 @@ namespace System.Data.Fuse.WcfSupport {
     /// <returns></returns>
     [WebInvoke(Method = "POST")]
     TEntity[] GetEntities(
-      ExpressionTree filter, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -86,7 +86,7 @@ namespace System.Data.Fuse.WcfSupport {
     /// <returns></returns>
     [WebInvoke(Method = "POST")]
     TEntity[] GetEntitiesBySearchExpression(
-      string searchExpression, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary> </summary>
@@ -111,7 +111,7 @@ namespace System.Data.Fuse.WcfSupport {
     /// <returns></returns>
     [WebInvoke(Method = "POST")]
     Dictionary<string, object>[] GetEntityFields(
-      ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      ExpressionTree filter, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     /// <summary>
@@ -130,7 +130,7 @@ namespace System.Data.Fuse.WcfSupport {
     /// <returns></returns>
     [WebInvoke(Method = "POST")]
     Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
-      string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 100, int skip = 0
+      string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
     [WebInvoke(Method = "POST")]
