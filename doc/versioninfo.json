@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.7.3",
-  "currentVersionWithSuffix": "0.7.3",
+  "currentVersion": "0.8.0",
+  "currentVersionWithSuffix": "0.8.0",
   "releaseType": "",
-  "previousVersion": "0.7.2",
-  "changeGrade": "fix",
+  "previousVersion": "0.7.3",
+  "changeGrade": "minor",
   "currentMajor": 0,
-  "currentMinor": 7,
-  "currentPatch": 3,
-  "versionDateInfo": "2026-01-22",
-  "versionTimeInfo": "11:39:27",
-  "versionNotes": "- new revision without significant changes\n"
+  "currentMinor": 8,
+  "currentPatch": 0,
+  "versionDateInfo": "2026-01-23",
+  "versionTimeInfo": "10:29:32",
+  "versionNotes": "- new Feature: added more control for InMemoryRepository regarding the usage of Shared Virtual Dbs\n- centralized redundant Sorting and Paging methods\n- fixed dynamic-link problems\n- refactored parts of several classes to use clean Linq-Expressions instead of strings+Linq.Dynamic\n"
 }

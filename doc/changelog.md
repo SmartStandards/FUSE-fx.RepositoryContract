@@ -11,13 +11,18 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* fixed dynamic-link problems
-* **new Feature**: added more control for InMemoryRepository regarding the usage of Shared Virtual Dbs
-* refactored parts of several classes to use clean Linq-Expressions instead of strings+Linq.Dynamic
+*(none)*
 
-* centralized redundant Sorting and Paging methods
 
-  
+
+## v 0.8.0
+released **2026-01-23**, including:
+ - **new Feature**: added more control for InMemoryRepository regarding the usage of Shared Virtual Dbs
+ - centralized redundant Sorting and Paging methods
+ - fixed dynamic-link problems
+ - refactored parts of several classes to use clean Linq-Expressions instead of strings+Linq.Dynamic
+
+
 
 ## v 0.7.3
 released **2026-01-22**, including:

@@ -13,10 +13,10 @@
     <Product>FUSE-fx.RepositoryContract</Product>
     <Company>(public domain)</Company>
     <Copyright>SmartStandards</Copyright>
-    <Version>0.7.3</Version>
-    <AssemblyVersion>0.7.3</AssemblyVersion>
+    <Version>0.8.0</Version>
+    <AssemblyVersion>0.8.0</AssemblyVersion>
     <Authors>SmartStandards</Authors>
-    <FileVersion>0.7.3</FileVersion>
+    <FileVersion>0.8.0</FileVersion>
     <PackageTags>UID64 Salted Timestamp UUID BigInt Long</PackageTags>
     <Nullable>disable</Nullable>
   </PropertyGroup>
