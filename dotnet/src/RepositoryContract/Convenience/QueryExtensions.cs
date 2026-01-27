@@ -349,8 +349,11 @@ namespace System.Data.Fuse.Convenience {
       }
     }
 
-    public static object[] GetValues(this object entity, List<PropertyInfo> properties) {
+    public static object[] GetValues(this object entity, IEnumerable<PropertyInfo> properties) {
       List<object> values = new List<object>();
+      if (entity == null) {
+        return null;
+      }
       foreach (PropertyInfo propertyInfo in properties) {
         values.Add(propertyInfo.GetValue(entity, null));
       }
@@ -488,6 +491,9 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public static TKey ToKey<TKey>(this object[] fieldValues) {
+      if(fieldValues == null) {
+        return default(TKey);
+      }
       if (typeof(ICompositeKey).IsAssignableFrom(typeof(TKey))) {
         return (TKey)Activator.CreateInstance(typeof(TKey),  fieldValues );
       } else {

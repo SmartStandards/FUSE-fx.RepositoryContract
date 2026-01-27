@@ -109,9 +109,13 @@ namespace System.Data.Fuse.Sql {
     #endregion
 
     private readonly IDbConnectionProvider _ConnectionProvider;
+
     private readonly bool _OwnsConnection;
     private readonly string _TableName = null;
     private readonly string _SchemaName = null;
+
+    private readonly Func<TEntity, TKey> _KeyExtractor;
+
     private string SchemaAndTableName => string.IsNullOrEmpty(_SchemaName) ? _TableName : $"{_SchemaName}.{_TableName}";
 
     public IDbConnectionProvider ConnectionProvider {
@@ -132,12 +136,16 @@ namespace System.Data.Fuse.Sql {
       string tableName = null,
       string schemaName = null
     ) {
+
+      EntitySchema schema = schemaRoot.GetSchema(typeof(TEntity).Name);
+
       _ConnectionProvider = connectionProvider;
       _SchemaRoot = schemaRoot;
       _OwnsConnection = false;
-      EntitySchema schema = _SchemaRoot.GetSchema(typeof(TEntity).Name);
-      this._TableName = string.IsNullOrEmpty(tableName) ? schema.NamePlural : tableName;
-      this._SchemaName = schemaName;
+      _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
+      _TableName = string.IsNullOrEmpty(tableName) ? schema.NamePlural : tableName;
+      _SchemaName = schemaName;
+
     }
 
     //[Obsolete("This overload is unsafe because it doesn't care about lifetime management of the connection!")]
@@ -479,7 +487,7 @@ namespace System.Data.Fuse.Sql {
               if (keyFields.Count() == 1) {
                 entityRef.Key = value;
               } else {
-                //TODO
+                //TODO: Composite key handling
               }
             }
           } else {
@@ -983,7 +991,7 @@ namespace System.Data.Fuse.Sql {
             skip
           );
 
-          using (var reader = command.ExecuteReader()) {
+          using (IDataReader reader = command.ExecuteReader()) {
             while (reader.Read()) {
               result.Add(DataRowToEntity(reader));
             }
@@ -994,22 +1002,47 @@ namespace System.Data.Fuse.Sql {
       });
     }
 
+    /// <summary>
+    /// Loads entities by their keys, in exact order as the given key-array.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
+    /// <param name="keysToLoad"></param>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     public TEntity[] GetEntitiesByKey(TKey[] keysToLoad) {
+
+      if (keysToLoad.Length == 0) {
+        return new TEntity[0];
+      }
+
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
-        if (keysToLoad.Length == 0) {
-          return new TEntity[0];
-        }
 
         List<TEntity> result = new List<TEntity>();
+        //TEntity[] result = new TEntity[keysToLoad.Length];
+        using (IDbCommand command = connection.CreateCommand()) {
 
-        using (var command = connection.CreateCommand()) {
-          command.CommandText = BuildSelectSql(true, BuildWhereClauseForKeys(keysToLoad));
-          AddKeysParameters(command, keysToLoad);
+          command.CommandText = this.BuildSelectSql(true, this.BuildWhereClauseForKeys(keysToLoad));
+          this.AddKeysParameters(command, keysToLoad);
 
-          using (var reader = command.ExecuteReader()) {
+          using (IDataReader reader = command.ExecuteReader()) {
+
             while (reader.Read()) {
-              result.Add(DataRowToEntity(reader));
+              TEntity entity = this.DataRowToEntity(reader);
+              result.Add(entity);
             }
+            //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
+            //            -> keine NULL-felder im array, pot. verdrehte Sortierung!  
+            // Lösung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
+
+            //materialization-loop
+            //while (reader.Read()) {
+            //  TEntity loadedEntity = this.DataRowToEntity(reader);
+            //  TKey key = _KeyExtractor(loadedEntity);
+            //  ConversionHelper.SortIntoResultArray(result, loadedEntity, key, keysToLoad);
+            //}
+
           }
         }
 
@@ -1076,15 +1109,29 @@ namespace System.Data.Fuse.Sql {
       });
     }
 
+    /// <summary>
+    /// Loads entity references by their keys, in exact order as the given key-array.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
+    /// <param name="keysToLoad"></param>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     public EntityRef<TKey>[] GetEntityRefsByKey(TKey[] keysToLoad) {
-      return _ConnectionProvider.VisitCurrentConnection((connection) => {
-        TEntity[] entities = GetEntitiesByKey(keysToLoad);
 
-        return entities.Select(e => new EntityRef<TKey>(
-          e.GetValues(PrimaryKeySet).ToKey<TKey>(),
-          ConversionHelper.GetLabel(e, this.GetSchemaRoot())
-        )).ToArray();
-      });
+      //HACK: Materialisiert KOMPLETTE Entität und führt diese Methode ad-absodum!
+      //      Beim Umbau dran denken: NULL-Einträge für nicht-existierende Keys im Ergebnis-Array!!!
+      //      + _ContextInstanceProvider.VisitCurrentDbContext nutzen!!
+
+      return this.GetEntitiesByKey(keysToLoad).Select(
+        (e) => (
+          e == null ? null : new EntityRef<TKey>(
+            e.GetValues(PrimaryKeySet).ToKey<TKey>(),
+            ConversionHelper.GetLabel(e, this.GetSchemaRoot())
+          )
+        )
+      ).ToArray();
     }
 
     public EntityRef<TKey>[] GetEntityRefsBySearchExpression(string searchExpression, string[] sortedBy, int limit = 500, int skip = 0) {
@@ -1452,22 +1499,38 @@ namespace System.Data.Fuse.Sql {
       });
     }
 
+    /// <summary>
+    /// Loads entity fields by their keys, in exact order as the given key-array.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
+    /// <param name="keysToLoad"></param>
+    /// <param name="includedFieldNames"></param>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     public Dictionary<string, object>[] GetEntityFieldsByKey(TKey[] keysToLoad, string[] includedFieldNames) {
+
+      if (keysToLoad.Length == 0) {
+        return new Dictionary<string, object>[0];
+      }
+
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
-        if (keysToLoad.Length == 0) {
-          return new Dictionary<string, object>[0];
-        }
+
+        //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
+        //            -> keine NULL-felder im array, pot. verdrehte Sortierung! 
 
         List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
 
-        using (var command = connection.CreateCommand()) {
+        using (IDbCommand command = connection.CreateCommand()) {
+
           command.CommandText = BuildSelectFieldsSql(
             includedFieldNames,
             BuildWhereClauseForKeys(keysToLoad)
           );
           AddKeysParameters(command, keysToLoad);
 
-          using (var reader = command.ExecuteReader()) {
+          using (IDataReader reader = command.ExecuteReader()) {
             while (reader.Read()) {
               result.Add(DataRowToDictionary(reader, includedFieldNames));
             }

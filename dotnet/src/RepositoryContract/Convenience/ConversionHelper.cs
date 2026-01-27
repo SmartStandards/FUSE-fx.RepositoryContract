@@ -950,10 +950,20 @@ namespace System.Data.Fuse.Convenience {
       );
     }
 
-    public static object GetKey(object o, SchemaRoot schemaRoot) {
+    public static object GetKey(object o, SchemaRoot schemaRoot, bool useKeyPropertyDeclaringType = false) {
       List<PropertyInfo> keyProperties = schemaRoot.GetPrimaryKeyProperties(o.GetNonDynamicType());
       object[] keyValues = o.GetValues(keyProperties);
-      return GetKey(keyProperties, keyValues);
+      return GetKey(keyProperties, keyValues, useKeyPropertyDeclaringType);
+    }
+
+    // returns a function that extracts the key (boxed atomic or composite-obj) from an entity
+    public static Func<TEntity,TKey> GetKeyExtractor<TEntity, TKey>(SchemaRoot schemaRoot, bool useKeyPropertyDeclaringType = false) {
+      PropertyInfo[] keyProperties = schemaRoot.GetPrimaryKeyProperties(typeof(TEntity)).ToArray();
+      return (entity) => {
+        if(entity == null) return default(TKey);
+        object[] keyValues = keyProperties.Select((pi) => pi.GetValue(entity, null)).ToArray();
+        return (TKey)GetKey(keyProperties, keyValues, useKeyPropertyDeclaringType);
+      };
     }
 
     /// <summary>
@@ -1015,17 +1025,60 @@ namespace System.Data.Fuse.Convenience {
       return result;
     }
 
-    private static object GetKey(List<PropertyInfo> keyProperties, object[] keyValues) {
-      if (keyProperties.Count == 0) {
+    internal static void SortIntoResultArray<TEntity, TKey>(
+      TEntity[] resultArray, TEntity loadedEntity, TKey key, TKey[] requestedKeyOrder
+    ) {
+      //TODO: evtl. spezielle methode, die fallback auf property-iteration hat, wenn IEquatable nicht implementiert ist...
+      int index = Array.FindIndex(requestedKeyOrder, k => k.Equals(key));
+      resultArray[index] = loadedEntity;
+    }
+
+    /// <summary></summary>
+    /// <param name="keyProperties"></param>
+    /// <param name="keyValues"></param>
+    /// <param name="useKeyPropertyDeclaringType">
+    /// If the key properties are derivated into a base-class which already represents the composite key,
+    /// we can use this more concrete one instead of the generic CompositeKey-Touples below...
+    /// </param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static object GetKey(IEnumerable<PropertyInfo> keyProperties, object[] keyValues, bool useKeyPropertyDeclaringType = false) {
+      int numberOfKeyProperties = keyProperties.Count();
+
+      if (numberOfKeyProperties == 0) {
         throw new InvalidOperationException("No key properties found");
       }
+      if (numberOfKeyProperties != keyValues.Length) {
+        throw new ArgumentException("Number of key properties does not match number of key values");
+      }
 
-      if (keyProperties.Count == 1) {
+      if (useKeyPropertyDeclaringType){ 
+
+        object keyInstance = null;
+        int pIndex = 0;
+
+        foreach (PropertyInfo p in keyProperties) {
+
+          Type keyInstanceType = p.DeclaringType;
+          if (keyInstance == null) { //first
+            keyInstance = Activator.CreateInstance(keyInstanceType);
+          }
+          else if (keyInstance.GetType() != keyInstanceType) {
+            throw new InvalidOperationException("Key properties do not share the same declaring type!");
+          }
+          p.SetValue(keyInstance, keyValues[pIndex]);
+
+          pIndex++; 
+        }
+
+        return keyInstance;
+      }
+      else if (numberOfKeyProperties == 1) {
         return keyValues[0];
       }
 
       Type keyType = null;
-      switch (keyProperties.Count) {
+      switch (numberOfKeyProperties) {
         case 2:
           keyType = typeof(CompositeKey2<,>).MakeGenericType(keyProperties.Select(p => p.PropertyType).ToArray());
           break;

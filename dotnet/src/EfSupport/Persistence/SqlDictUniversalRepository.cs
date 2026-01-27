@@ -41,7 +41,7 @@ namespace System.Data.Fuse.Sql {
     ) :
     base(entityResolver) {
       _ConnectionProvider = connectionProvider;
-      this._TableNameGetter = tableNameGetter;
+      _TableNameGetter = tableNameGetter;
     }
 
     public SqlDictUniversalRepository(
@@ -125,7 +125,7 @@ namespace System.Data.Fuse.Sql {
 
     private string _GeneratedOriginIdentity = null;
     public override string GetOriginIdentity() {
-      return "???"; //TODO
+      return "???"; //TODO: saubere identität des stores ermitteln -> ggf aus connectionstring
     }
 
     public override RepositoryCapabilities GetCapabilities() {

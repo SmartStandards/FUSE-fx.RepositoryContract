@@ -51,6 +51,15 @@ namespace System.Data.Fuse {
       string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
+    /// <summary>
+    /// Loads entity references by their keys, in exact order as the given key-array.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
+    /// <param name="keysToLoad"></param>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     EntityRef<TKey>[] GetEntityRefsByKey(
       TKey[] keysToLoad
     );
@@ -83,9 +92,15 @@ namespace System.Data.Fuse {
       string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     );
 
-    /// <summary> </summary>
+    /// <summary>
+    /// Loads entities by their keys, in exact order as the given key-array.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
     /// <param name="keysToLoad"></param>
-    /// <returns></returns>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     TEntity[] GetEntitiesByKey(
       TKey[] keysToLoad
     );
@@ -124,6 +139,16 @@ namespace System.Data.Fuse {
       string searchExpression, string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     );
 
+    /// <summary>
+    /// Loads entity fields by their keys, in exact order as the given key-array.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
+    /// <param name="keysToLoad"></param>
+    /// <param name="includedFieldNames"></param>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     Dictionary<string, object>[] GetEntityFieldsByKey(
         TKey[] keysToLoad, string[] includedFieldNames
     );

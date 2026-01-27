@@ -5,7 +5,7 @@ namespace System.Data.Fuse {
   /// <summary>
   /// (from 'FUSE-fx.RepositoryContract')
   /// </summary>
-  public interface ICompositeKey {
+  public interface ICompositeKey : IEquatable<ICompositeKey> {
     object[] GetFields();
   }
 
@@ -16,7 +16,7 @@ namespace System.Data.Fuse {
   /// represented by 2 fields.
   /// </summary>
   [DebuggerDisplay("{Field1}|{Field2}")]
-  public class CompositeKey2<TKey1,TKey2> : ICompositeKey {
+  public class CompositeKey2<TKey1,TKey2> : ICompositeKey, IEquatable<CompositeKey2<TKey1, TKey2>> {
 
     public CompositeKey2() {
     }
@@ -43,6 +43,14 @@ namespace System.Data.Fuse {
     public object[] GetFields() {
       return new object[] { Field1, Field2 };
     }
+    public bool Equals(ICompositeKey other) {
+      return this.GetHashCode().Equals(other?.GetHashCode());
+    }
+
+    public bool Equals(CompositeKey2<TKey1, TKey2> other) {
+      return this.GetHashCode().Equals(other.GetHashCode());
+    }
+
   }
 
   /// <summary>
@@ -51,7 +59,7 @@ namespace System.Data.Fuse {
   /// represented by 3 fields.
   /// </summary>
   [DebuggerDisplay("{Field1}|{Field2}|{Field3}")]
-  public class CompositeKey3<TKey1, TKey2, TKey3> : ICompositeKey {
+  public class CompositeKey3<TKey1, TKey2, TKey3> : ICompositeKey, IEquatable<CompositeKey3<TKey1, TKey2, TKey3>> {
 
     public CompositeKey3() {
     }
@@ -80,6 +88,13 @@ namespace System.Data.Fuse {
     public object[] GetFields() {
       return new object[] { Field1, Field2, Field3 };
     }
+    public bool Equals(ICompositeKey other) {
+      return this.GetHashCode().Equals(other?.GetHashCode());
+    }
+
+    public bool Equals(CompositeKey3<TKey1, TKey2, TKey3> other) {
+      return this.GetHashCode().Equals(other.GetHashCode());
+    }
 
   }
 
@@ -89,7 +104,7 @@ namespace System.Data.Fuse {
   /// represented by 4 fields.
   /// </summary>
   [DebuggerDisplay("{Field1}|{Field2}|{Field3}|{Field4}")]
-  public class CompositeKey4<TKey1, TKey2, TKey3, TKey4> : ICompositeKey {
+  public class CompositeKey4<TKey1, TKey2, TKey3, TKey4> : ICompositeKey, IEquatable<CompositeKey4<TKey1, TKey2, TKey3, TKey4>> {
 
     public CompositeKey4() {
     }
@@ -120,6 +135,13 @@ namespace System.Data.Fuse {
     public object[] GetFields() {
       return new object[] { Field1, Field2, Field3, Field4 };
     }
+    public bool Equals(ICompositeKey other) {
+      return this.GetHashCode().Equals(other?.GetHashCode());
+    }
+
+    public bool Equals(CompositeKey4<TKey1, TKey2, TKey3, TKey4> other) {
+      return this.GetHashCode().Equals(other.GetHashCode());
+    }
 
   }
 
@@ -129,7 +151,7 @@ namespace System.Data.Fuse {
   /// represented by 5 fields.
   /// </summary>
   [DebuggerDisplay("{Field1}|{Field2}|{Field3}|{Field4}|{Field5}")]
-  public class CompositeKey5<TKey1, TKey2, TKey3, TKey4, TKey5> : ICompositeKey {
+  public class CompositeKey5<TKey1, TKey2, TKey3, TKey4, TKey5> : ICompositeKey, IEquatable<CompositeKey5<TKey1, TKey2, TKey3, TKey4, TKey5>> {
 
     public CompositeKey5() {
     }
@@ -161,6 +183,14 @@ namespace System.Data.Fuse {
 
     public object[] GetFields() {
       return new object[] { Field1, Field2, Field3, Field4, Field5 };
+    }
+
+    public bool Equals(ICompositeKey other) {
+      return this.GetHashCode().Equals(other?.GetHashCode());
+    }
+
+    public bool Equals(CompositeKey5<TKey1, TKey2, TKey3, TKey4, TKey5> other) {
+      return this.GetHashCode().Equals(other.GetHashCode());
     }
 
   }

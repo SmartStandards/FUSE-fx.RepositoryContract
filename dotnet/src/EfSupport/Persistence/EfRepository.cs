@@ -48,6 +48,8 @@ namespace System.Data.Fuse.Ef {
 
     #endregion
 
+    private readonly Func<TEntity, TKey> _KeyExtractor;
+
     private IDbContextInstanceProvider _ContextInstanceProvider;
     public IDbContextInstanceProvider ContextInstanceProvider {
       get {
@@ -57,22 +59,26 @@ namespace System.Data.Fuse.Ef {
 
     public EfRepository(IDbContextInstanceProvider contextInstanceProvider) {
       _ContextInstanceProvider = contextInstanceProvider;
+      _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(this.GetSchemaRoot());
     }
 
     [Obsolete("This overload is unsave, because it doesnt care about lifetime management of the dbcontext!")]
     public EfRepository(DbContext dbContext) {
       _ContextInstanceProvider = new LongLivingDbContextInstanceProvider(dbContext);
+      _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(this.GetSchemaRoot());
     }
 
     public EfRepository(IDbContextInstanceProvider contextInstanceProvider, SchemaRoot schemaRoot) {
       _ContextInstanceProvider = contextInstanceProvider;
       _SchemaRoot = schemaRoot;
+      _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
     }
 
     [Obsolete("This overload is unsave, because it doesnt care about lifetime management of the dbcontext!")]
     public EfRepository(DbContext dbContext, SchemaRoot schemaRoot) {
       _ContextInstanceProvider = new LongLivingDbContextInstanceProvider(dbContext);
       _SchemaRoot = schemaRoot;
+      _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
     }
 
     private static List<List<PropertyInfo>> _UniqueKeySets;
@@ -307,13 +313,40 @@ namespace System.Data.Fuse.Ef {
       });
     }
 
+    /// <summary>
+    /// Loads entities by their keys.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
+    /// <param name="keysToLoad"></param>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     public TEntity[] GetEntitiesByKey(TKey[] keysToLoad) {
+
+      if (keysToLoad.Length == 0) {
+        return new TEntity[0];
+      }
+
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+
         var lambda = keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray());
-        return dbContext.Set<TEntity>().Where(lambda).ToArray();
+
+        TEntity[] result = dbContext.Set<TEntity>().Where(lambda).ToArray();
+        //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
+        //            -> keine NULL-felder im array, pot. verdrehte Sortierung!  
+        // Lösung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
+
+        //TEntity[] result = new TEntity[keysToLoad.Length];
+        ////materialization-loop
+        //foreach (TEntity loadedEntity in dbContext.Set<TEntity>().Where(lambda)) {
+        //  TKey key = _KeyExtractor(loadedEntity);
+        //  ConversionHelper.SortIntoResultArray(result, loadedEntity, key, keysToLoad);
+        //}
+
+        return result;
       });
     }
-
 
     public TEntity[] GetEntitiesBySearchExpression(
       string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
@@ -390,14 +423,32 @@ namespace System.Data.Fuse.Ef {
     //  }
     //}
 
+    /// <summary>
+    /// Loads entity fields by their keys, in exact order as the given key-array.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
+    /// <param name="keysToLoad"></param>
+    /// <param name="includedFieldNames"></param>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     public Dictionary<string, object>[] GetEntityFieldsByKey(
       TKey[] keysToLoad, string[] includedFieldNames
     ) {
+
+      if (keysToLoad.Length == 0) {
+        return new Dictionary<string, object>[0];
+      }
+
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+
+        //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
+        //            -> keine NULL-felder im array, pot. verdrehte Sortierung! 
+
         return dbContext.Set<TEntity>().Where(
-        keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
-      )
-        .Select(
+          keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
+        ).Select(
           e => new {
             e, //TODO is e correct? remove e?
             includedFieldNames
@@ -406,11 +457,13 @@ namespace System.Data.Fuse.Ef {
           e => {
             var dict = new Dictionary<string, object>();
             foreach (var fieldName in includedFieldNames) {
+              //HACK: EXTREM TEUER!!
               dict[fieldName] = e.e.GetType().GetProperty(fieldName).GetValue(e.e);
             }
             return dict;
           }
         ).ToArray();
+
       });
     }
 
@@ -440,11 +493,28 @@ namespace System.Data.Fuse.Ef {
       ).ToArray();
     }
 
+    /// <summary>
+    /// Loads entity references by their keys, in exact order as the given key-array.
+    /// WARNING: the returned array will contain NULL entries for non-existing entities!
+    /// </summary>
+    /// <param name="keysToLoad"></param>
+    /// <returns>
+    /// Returns an array with exact the same size as the given 'keysToLoad' array.
+    /// Non existing keys will be represented by a NULL entry at the corresponding position.
+    /// </returns>
     public EntityRef<TKey>[] GetEntityRefsByKey(TKey[] keysToLoad) {
-      return GetEntitiesByKey(keysToLoad).Select(
-        e => new EntityRef<TKey>(e.GetValues(PrimaryKeySet).ToKey<TKey>(),
-        ConversionHelper.GetLabel(e, this.GetSchemaRoot())
-      )
+
+      //HACK: Materialisiert KOMPLETTE Entität und führt diese Methode ad-absodum!
+      //      Beim Umbau dran denken: NULL-Einträge für nicht-existierende Keys im Ergebnis-Array!!!
+      //      + _ContextInstanceProvider.VisitCurrentDbContext nutzen!!
+
+      return this.GetEntitiesByKey(keysToLoad).Select(
+        (e) => (
+          e == null ? null : new EntityRef<TKey>(
+            e.GetValues(PrimaryKeySet).ToKey<TKey>(),
+            ConversionHelper.GetLabel(e, this.GetSchemaRoot())
+          )
+        )
       ).ToArray();
     }
 
