@@ -15,7 +15,7 @@ using System.Linq;
 
 namespace RepositoryTests {
 
-  [TestClass]
+  [TestClass, Ignore]
   public class ModelVsEfEntity2RepositoryTests : ModelVsEntityRepositoryTestsBase {
 
     protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {   

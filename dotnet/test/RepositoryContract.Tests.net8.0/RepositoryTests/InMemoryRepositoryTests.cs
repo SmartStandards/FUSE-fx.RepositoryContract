@@ -10,7 +10,7 @@ using System.Linq;
 namespace RepositoryTests {
 
   //TODO_RWE: Remove Ignore attribute when tests are ready to run
-  [TestClass, Ignore]
+  [TestClass]
   public class InMemoryRepositoryTests : RepositoryTestsBase {
 
     protected override IRepository<LeafEntity1, int> CreateLeaf1EntityRepository() {
