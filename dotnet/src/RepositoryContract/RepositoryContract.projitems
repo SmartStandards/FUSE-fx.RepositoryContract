@@ -13,9 +13,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)convenience\DataStoreExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ModelVsEntityDataStore.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\RepositoryTypingFacade.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\[internal]\EntityToDisctionaryMapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\[internal]\ArrayOrderedResult.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\ExpressionTreeBuilder.2Linq.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\RepositoryExpressionExtensions.Aggregation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\RepositoryExpressionExtensions.Sorting.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\SelectorMapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)convenience\[internal]\SelectorMapper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\ExpressionTreeBuilder.2Tree.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\RepositoryExpressionExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[Assembly].cs" />
@@ -58,6 +61,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)[Store]\InMemoryModelVsEntityDataStore.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)convenience\[internal]\" />
     <Folder Include="$(MSBuildThisFileDirectory)[Move2EntityAnnotations]\" />
   </ItemGroup>
 </Project>

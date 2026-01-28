@@ -1019,8 +1019,8 @@ namespace System.Data.Fuse.Sql {
 
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
 
-        List<TEntity> result = new List<TEntity>();
-        //TEntity[] result = new TEntity[keysToLoad.Length];
+        //List<TEntity> result = new List<TEntity>();
+        TEntity[] result = new TEntity[keysToLoad.Length];
         using (IDbCommand command = connection.CreateCommand()) {
 
           command.CommandText = this.BuildSelectSql(true, this.BuildWhereClauseForKeys(keysToLoad));
@@ -1028,20 +1028,20 @@ namespace System.Data.Fuse.Sql {
 
           using (IDataReader reader = command.ExecuteReader()) {
 
-            while (reader.Read()) {
-              TEntity entity = this.DataRowToEntity(reader);
-              result.Add(entity);
-            }
+            //while (reader.Read()) {
+            //  TEntity entity = this.DataRowToEntity(reader);
+            //  result.Add(entity);
+            //}
             //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
             //            -> keine NULL-felder im array, pot. verdrehte Sortierung!  
             // Lösung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
 
             //materialization-loop
-            //while (reader.Read()) {
-            //  TEntity loadedEntity = this.DataRowToEntity(reader);
-            //  TKey key = _KeyExtractor(loadedEntity);
-            //  ConversionHelper.SortIntoResultArray(result, loadedEntity, key, keysToLoad);
-            //}
+            while (reader.Read()) {
+              TEntity loadedEntity = this.DataRowToEntity(reader);
+              TKey key = _KeyExtractor(loadedEntity);
+              ConversionHelper.SortIntoResultArray(result, loadedEntity, key, keysToLoad);
+            }
 
           }
         }
@@ -1518,7 +1518,8 @@ namespace System.Data.Fuse.Sql {
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
 
         //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
-        //            -> keine NULL-felder im array, pot. verdrehte Sortierung! 
+        //            -> keine NULL-felder im array, pot. verdrehte Sortierung!
+        // SIEHE EF VARIANTE - DIE IST SCHON SAUBER UMGESETZT!!!!!
 
         List<Dictionary<string, object>> result = new List<Dictionary<string, object>>();
 

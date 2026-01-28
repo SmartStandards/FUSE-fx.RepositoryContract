@@ -5,9 +5,31 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace System.Data.Fuse.LinqSupport {
+namespace System.Data.Fuse.Convenience {
 
   internal static class SelectorMapper {
+
+    //produces a system.Linq.Expression that represents selecting the given fields from TEntity
+    public static Expression<Func<TEntity, TEntity>> CreateDynamicSelectorExpression<TEntity>(string[] selectedFieldNames) {
+      if (selectedFieldNames == null || selectedFieldNames.Length == 0) {
+        throw new ArgumentException("No fields specified for selection.", nameof(selectedFieldNames));
+      }
+
+      // Create a parameter expression for the TEntity type
+      ParameterExpression parameter = Expression.Parameter(typeof(TEntity), "e");
+
+      // Create bindings for each selected field
+      IEnumerable<MemberAssignment> bindings = selectedFieldNames.Select(fieldName => {
+        MemberExpression property = Expression.Property(parameter, fieldName);
+        return Expression.Bind(typeof(TEntity).GetProperty(fieldName), property);
+      });
+
+      // Create a new expression for the selected fields
+      NewExpression newExpression = Expression.New(typeof(TEntity));
+      MemberInitExpression memberInit = Expression.MemberInit(newExpression, bindings);
+
+      return Expression.Lambda<Func<TEntity, TEntity>>(memberInit, parameter);
+    }
 
     /// <summary>
     /// Extracts a list of field names referenced by the selector.

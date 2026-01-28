@@ -330,19 +330,19 @@ namespace System.Data.Fuse.Ef {
 
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
-        var lambda = keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray());
+        Expression<Func<TEntity, bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
 
-        TEntity[] result = dbContext.Set<TEntity>().Where(lambda).ToArray();
+        //TEntity[] result = dbContext.Set<TEntity>().Where(queryByKeys).ToArray();
         //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
         //            -> keine NULL-felder im array, pot. verdrehte Sortierung!  
         // Lösung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
 
-        //TEntity[] result = new TEntity[keysToLoad.Length];
-        ////materialization-loop
-        //foreach (TEntity loadedEntity in dbContext.Set<TEntity>().Where(lambda)) {
-        //  TKey key = _KeyExtractor(loadedEntity);
-        //  ConversionHelper.SortIntoResultArray(result, loadedEntity, key, keysToLoad);
-        //}
+        TEntity[] result = new TEntity[keysToLoad.Length];
+        //materialization-loop
+        foreach (TEntity loadedEntity in dbContext.Set<TEntity>().Where(queryByKeys)) {
+          TKey key = _KeyExtractor(loadedEntity);
+          ConversionHelper.SortIntoResultArray(result, loadedEntity, key, keysToLoad);
+        }
 
         return result;
       });
@@ -446,26 +446,53 @@ namespace System.Data.Fuse.Ef {
         //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
         //            -> keine NULL-felder im array, pot. verdrehte Sortierung! 
 
-        return dbContext.Set<TEntity>().Where(
-          keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
-        ).Select(
-          e => new {
-            e, //TODO is e correct? remove e?
-            includedFieldNames
-          }
-        ).ToDynamicArray().Select(
-          e => {
-            var dict = new Dictionary<string, object>();
-            foreach (var fieldName in includedFieldNames) {
-              //HACK: EXTREM TEUER!!
-              dict[fieldName] = e.e.GetType().GetProperty(fieldName).GetValue(e.e);
-            }
-            return dict;
-          }
-        ).ToArray();
+        //return dbContext.Set<TEntity>().Where(
+        //  keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
+        //).Select(
+        //  e => new {
+        //    e, //TODO is e correct? remove e?
+        //    includedFieldNames
+        //  }
+        //).ToDynamicArray().Select(
+        //  e => {
+        //    var dict = new Dictionary<string, object>();
+        //    foreach (var fieldName in includedFieldNames) {
+        //      //HACK: EXTREM TEUER!!
+        //      dict[fieldName] = e.e.GetType().GetProperty(fieldName).GetValue(e.e);
+        //    }
+        //    return dict;
+        //  }
+        //).ToArray();
 
+        var orderedResult = new ArrayOrderedResult<TKey,Dictionary<string,object>>(keysToLoad);
+
+        Expression<Func<TEntity,bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
+
+        string[] keyPropertyNames = PrimaryKeySet.Select(p => p.Name).ToArray();
+        string[] fieldNamesToLoad =  includedFieldNames.Union(keyPropertyNames).Distinct().ToArray();
+
+        Expression<Func<TEntity,TEntity>> selector = SelectorMapper.CreateDynamicSelectorExpression<TEntity>(includedFieldNames);
+
+        //full entity-class, but only with selected fields loaded
+        TEntity[] partiallyLoadedEntitiesInUnknownOrder = dbContext.Set<TEntity>()
+          .Where(queryByKeys)
+          .Select(selector)
+          .ToArray();//MATERIALIZE!
+
+        EntityToDictionaryMapper<TEntity> mapper = new EntityToDictionaryMapper<TEntity>();
+
+        foreach (TEntity partiallyLoadedEntity in partiallyLoadedEntitiesInUnknownOrder) {
+          TKey key = _KeyExtractor(partiallyLoadedEntity);
+          Dictionary<string, object> resultDict = mapper.MapEntityToDictionary(partiallyLoadedEntity, includedFieldNames);
+          orderedResult.SetResultItem(key, resultDict);
+        }
+
+        Dictionary<string, object>[] result = orderedResult.GetResultItems(keepEmptyEntriesForMissingResults: true).ToArray();
+        return result;
+        
       });
     }
+
 
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
       string searchExpression,
@@ -558,7 +585,7 @@ namespace System.Data.Fuse.Ef {
 
         // Get the entities that match the provided keys
         var entitiesToUpdate = dbContext.Set<TEntity>().Where(
-          keysToUpdate.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
+          keysToUpdate.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray())
         );
 
         // Update the fields of the entities

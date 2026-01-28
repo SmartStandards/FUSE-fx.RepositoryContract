@@ -501,7 +501,7 @@ namespace System.Data.Fuse.Convenience {
       }
     }
 
-    public static Expression<Func<TEntity, bool>> BuildFilterForKeyValuesExpression<TEntity, TKey>(
+    public static Expression<Func<TEntity, bool>> BuildInArrayPredicate<TEntity, TKey>(
       this TKey[] valuesToLoad, PropertyInfo[] propertyInfos
     ) {
       var parameter = Expression.Parameter(typeof(TEntity), "entity");
@@ -534,6 +534,37 @@ namespace System.Data.Fuse.Convenience {
 
       var lambda = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
       return lambda;
+    }
+
+    //by TK
+    public static Expression<Func<TEntity, bool>> BuildInArrayPredicate<TEntity, TPropertyType>(
+      Expression<Func<TEntity, TPropertyType>> propertySelector,
+      IEnumerable<TPropertyType> allowedValuesArray
+    ) {
+
+      // Create parameter "e" for the resulting lambda.
+      ParameterExpression entityParameterExpression = Expression.Parameter(typeof(TEntity), "e");
+
+      // Rebind the selector to the new parameter by invoking it with the new parameter.
+      // This avoids a custom ExpressionVisitor.
+      InvocationExpression keyInvocationExpression = Expression.Invoke(propertySelector, entityParameterExpression);
+
+      // Build: Enumerable.Contains<TForeignKey>(foreignKeysToLoad, keyInvocationExpression)
+      MethodInfo containsMethodInfo = typeof(Enumerable)
+        .GetMethods()
+        .Single((MethodInfo methodInfo) => methodInfo.Name == nameof(Enumerable.Contains)
+          && methodInfo.GetParameters().Length == 2)
+        .MakeGenericMethod(typeof(TPropertyType));
+
+      Expression keysConstantExpression = Expression.Constant(allowedValuesArray, typeof(IEnumerable<TPropertyType>));
+
+      MethodCallExpression containsCallExpression = Expression.Call(
+          containsMethodInfo,
+          keysConstantExpression,
+          keyInvocationExpression
+      );
+
+      return Expression.Lambda<Func<TEntity, bool>>(containsCallExpression, entityParameterExpression);
     }
 
   }
