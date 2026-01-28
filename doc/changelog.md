@@ -11,7 +11,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* Concretized error-behaviour for 'Get...ByKeys'-Methods: here we want empty fields to keep array-indices constant!
+*(none)*
+
+
+
+## v 0.8.2
+released **2026-01-28**, including:
+ - Concretized error-behaviour for 'Get...ByKeys'-Methods: here we want empty fields to keep array-indices constant!
 
 
 

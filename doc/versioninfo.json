@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.8.1",
-  "currentVersionWithSuffix": "0.8.1",
+  "currentVersion": "0.8.2",
+  "currentVersionWithSuffix": "0.8.2",
   "releaseType": "",
-  "previousVersion": "0.8.0",
+  "previousVersion": "0.8.1",
   "changeGrade": "fix",
   "currentMajor": 0,
   "currentMinor": 8,
-  "currentPatch": 1,
-  "versionDateInfo": "2026-01-27",
-  "versionTimeInfo": "19:26:58",
-  "versionNotes": "- new revision without significant changes\n"
+  "currentPatch": 2,
+  "versionDateInfo": "2026-01-28",
+  "versionTimeInfo": "16:19:29",
+  "versionNotes": "- Concretized error-behaviour for 'Get...ByKeys'-Methods: here we want empty fields to keep array-indices constant!\n"
 }
