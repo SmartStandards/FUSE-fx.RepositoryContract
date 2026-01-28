@@ -15,6 +15,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 0.8.1
+released **2026-01-27**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.8.0
 released **2026-01-23**, including:
  - **new Feature**: added more control for InMemoryRepository regarding the usage of Shared Virtual Dbs
