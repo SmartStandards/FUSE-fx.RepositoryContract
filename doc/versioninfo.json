@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.8.2",
-  "currentVersionWithSuffix": "0.8.2",
+  "currentVersion": "0.9.0",
+  "currentVersionWithSuffix": "0.9.0",
   "releaseType": "",
-  "previousVersion": "0.8.1",
-  "changeGrade": "fix",
+  "previousVersion": "0.8.2",
+  "changeGrade": "minor",
   "currentMajor": 0,
-  "currentMinor": 8,
-  "currentPatch": 2,
-  "versionDateInfo": "2026-01-28",
-  "versionTimeInfo": "16:19:29",
-  "versionNotes": "- Concretized error-behaviour for 'Get...ByKeys'-Methods: here we want empty fields to keep array-indices constant!\n"
+  "currentMinor": 9,
+  "currentPatch": 0,
+  "versionDateInfo": "2026-01-29",
+  "versionTimeInfo": "06:28:45",
+  "versionNotes": "- Fix: new Feature 'matchStringsCaseInsensitive' had bug when resolving ToLower-MethodInfo\n"
 }

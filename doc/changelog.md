@@ -7,7 +7,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* Fix: new Feature 'matchStringsCaseInsensitive' had bug when resolving ToLower-MethodInfo
+*(none)*
+
+
+
+## v 0.9.0
+released **2026-01-29**, including:
+ - Fix: **new Feature** 'matchStringsCaseInsensitive' had bug when resolving ToLower-MethodInfo
 
 
 

@@ -13,10 +13,10 @@
     <Product>FUSE-fx.EfSupport</Product>
     <Company>(public domain)</Company>
     <Copyright>SmartStandards</Copyright>
-    <Version>0.8.2</Version>
-    <AssemblyVersion>0.8.2</AssemblyVersion>
+    <Version>0.9.0</Version>
+    <AssemblyVersion>0.9.0</AssemblyVersion>
     <Authors>SmartStandards</Authors>
-    <FileVersion>0.8.2</FileVersion>
+    <FileVersion>0.9.0</FileVersion>
     <PackageTags></PackageTags>
     <Nullable>disable</Nullable>
   </PropertyGroup>
