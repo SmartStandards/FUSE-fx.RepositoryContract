@@ -7,7 +7,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* Fix: SelectorMapper (special case) and added more UnitTests
+*(none)*
+
+
+
+## v 0.9.2
+released **2026-01-29**, including:
+ - Fix: SelectorMapper (special case) and added more UnitTests
 
 
 
