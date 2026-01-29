@@ -182,6 +182,12 @@ namespace System.Data.Fuse.Convenience {
     ) {
       Expression body = selector.Body;
 
+      MemberExpression memb = (body as MemberExpression);
+      if (memb != null) {
+        // e => e.Field
+        return BuildSingleMemberProjector<TEntity, TSelectedFields>(memb);
+      }
+
       NewExpression newExpr = body as NewExpression;
       if (newExpr != null) {
         return BuildAnonymousProjector<TEntity, TSelectedFields>(newExpr);
@@ -192,7 +198,81 @@ namespace System.Data.Fuse.Convenience {
         return BuildObjectInitProjector<TEntity, TSelectedFields>(initExpr);
       }
 
+      ParameterExpression selfExpr = (body as ParameterExpression);
+      if (selfExpr != null) {
+        // e => e (identity projection)
+        return BuildIdentityProjector<TEntity, TSelectedFields>();
+      }
+
       throw new NotSupportedException("Unsupported projection selector expression: " + body.NodeType.ToString());
+    }
+
+    /// <summary>
+    /// Builds a projector for single member projections: e => e.Field
+    /// </summary>
+    private static Func<Dictionary<string, object>, TSelectedFields> BuildSingleMemberProjector<TEntity, TSelectedFields>(
+      MemberExpression memberExpr
+    ) {
+      string fieldName = ExtractMemberName(memberExpr);
+      return (Dictionary<string, object> dict) => {
+        object value = dict != null && dict.ContainsKey(fieldName) ? dict[fieldName] : null;
+        // handle nulls and simple conversions
+        if (value == null) return default(TSelectedFields);
+        Type targetType = typeof(TSelectedFields);
+        if (targetType.IsAssignableFrom(value.GetType())) {
+          return (TSelectedFields)value;
+        }
+        // attempt change type for primitives/strings
+        try {
+          object coerced = Convert.ChangeType(value, Nullable.GetUnderlyingType(targetType) ?? targetType);
+          return (TSelectedFields)coerced;
+        } catch {
+          return (TSelectedFields)value;
+        }
+      };
+    }
+
+    /// <summary>
+    /// Builds an identity projector for e => e, constructing TSelectedFields from dictionary entries.
+    /// </summary>
+    private static Func<Dictionary<string, object>, TSelectedFields> BuildIdentityProjector<TEntity, TSelectedFields>() {
+      var type = typeof(TSelectedFields);
+      // Require a parameterless ctor to materialize
+      var ctor = type.GetConstructor(Type.EmptyTypes);
+      if (ctor == null) {
+        throw new NotSupportedException("Identity projection requires a parameterless constructor on " + type.Name);
+      }
+      var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                      .Where(p => p.CanWrite)
+                      .ToArray();
+
+      return (Dictionary<string, object> dict) => {
+        object instance = ctor.Invoke(Array.Empty<object>());
+        if (dict != null) {
+          foreach (var p in props) {
+            if (!dict.ContainsKey(p.Name)) continue;
+            object value = dict[p.Name];
+            if (value == null) {
+              p.SetValue(instance, null);
+              continue;
+            }
+            var target = p.PropertyType;
+            try {
+              var underlying = Nullable.GetUnderlyingType(target) ?? target;
+              object coerced = (underlying.IsAssignableFrom(value.GetType()))
+                ? value
+                : Convert.ChangeType(value, underlying);
+              p.SetValue(instance, coerced);
+            } catch {
+              // best-effort: assign as-is if compatible
+              if (p.PropertyType.IsAssignableFrom(value.GetType())) {
+                p.SetValue(instance, value);
+              }
+            }
+          }
+        }
+        return (TSelectedFields)instance;
+      };
     }
 
     /// <summary>
