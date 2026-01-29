@@ -78,7 +78,7 @@ namespace System.Data.Fuse.LinqSupport {
       return baseExpression;
     }
 
-    private static MethodInfo _StringToLowerMethod = typeof(string).GetMethod(nameof(string.ToLower), new Type[] { typeof(string) });
+    private static MethodInfo _StringToLowerMethod = typeof(string).GetMethod(nameof(string.ToLower), new Type[] {});
 
     //=====================================================================
     // Build one predicate: FieldOperators.* + IN + string ops

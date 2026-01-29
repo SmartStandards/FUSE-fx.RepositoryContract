@@ -5,13 +5,9 @@ This files contains a version history including all changes relevant for semanti
 
 
 
-* fixed GetEntities can handle 'IN' (Contains) Expressions with Empty Arrays
-
-
-
 ## Upcoming Changes
 
-*(none)*
+* Fix: new Feature 'matchStringsCaseInsensitive' had bug when resolving ToLower-MethodInfo
 
 
 
@@ -23,7 +19,7 @@ released **2026-01-28**, including:
 
 ## v 0.8.1
 released **2026-01-27**, including:
- - new revision without significant changes
+ - fixed some UnitTests
 
 
 
@@ -38,7 +34,7 @@ released **2026-01-23**, including:
 
 ## v 0.7.3
 released **2026-01-22**, including:
- - new revision without significant changes
+ - fixed GetEntities can handle 'IN' (Contains) Expressions with Empty Arrays
 
 
 
