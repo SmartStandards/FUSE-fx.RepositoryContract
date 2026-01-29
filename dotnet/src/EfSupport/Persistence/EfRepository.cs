@@ -300,10 +300,10 @@ namespace System.Data.Fuse.Ef {
 
         IQueryable<TEntity> entities;
         if (filter == null) {
-          entities = dbContext.Set<TEntity>();
+          entities = dbContext.Set<TEntity>().AsNoTracking();
         } else {
           //HACK: internal usage of System.Data.Fuse.LinqSupport
-          entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
+          entities = dbContext.Set<TEntity>().AsNoTracking().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
         }
 
         entities = entities.ApplySortingViaLinqDynamic(sortedBy);
@@ -332,14 +332,14 @@ namespace System.Data.Fuse.Ef {
 
         Expression<Func<TEntity, bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
 
-        //TEntity[] result = dbContext.Set<TEntity>().Where(queryByKeys).ToArray();
+        //TEntity[] result = dbContext.Set<TEntity>().AsNoTracking().Where(queryByKeys).ToArray();
         //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
         //            -> keine NULL-felder im array, pot. verdrehte Sortierung!  
         // Lösung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
 
         TEntity[] result = new TEntity[keysToLoad.Length];
         //materialization-loop
-        foreach (TEntity loadedEntity in dbContext.Set<TEntity>().Where(queryByKeys)) {
+        foreach (TEntity loadedEntity in dbContext.Set<TEntity>().AsNoTracking().AsNoTracking().Where(queryByKeys)) {
           TKey key = _KeyExtractor(loadedEntity);
           ConversionHelper.SortIntoResultArray(result, loadedEntity, key, keysToLoad);
         }
@@ -352,7 +352,7 @@ namespace System.Data.Fuse.Ef {
       string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
-        var entities = dbContext.Set<TEntity>().Where(searchExpression);
+        var entities = dbContext.Set<TEntity>().AsNoTracking().Where(searchExpression);
 
         //HACK: internal usage of System.Data.Fuse.LinqSupport
         entities = entities.ApplySortingViaLinqDynamic(sortedBy);
@@ -369,7 +369,7 @@ namespace System.Data.Fuse.Ef {
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
         //HACK: internal usage of System.Data.Fuse.LinqSupport
-        IQueryable<TEntity> entities = dbContext.Set<TEntity>().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
+        IQueryable<TEntity> entities = dbContext.Set<TEntity>().AsNoTracking().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
 
         //HACK: internal usage of System.Data.Fuse.LinqSupport
         entities = entities.ApplySortingViaLinqDynamic(sortedBy);
@@ -446,7 +446,7 @@ namespace System.Data.Fuse.Ef {
         //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
         //            -> keine NULL-felder im array, pot. verdrehte Sortierung! 
 
-        //return dbContext.Set<TEntity>().Where(
+        //return dbContext.Set<TEntity>().AsNoTracking().Where(
         //  keysToLoad.BuildFilterForKeyValuesExpression<TEntity, TKey>(PrimaryKeySet.ToArray())
         //).Select(
         //  e => new {
@@ -474,7 +474,7 @@ namespace System.Data.Fuse.Ef {
         Expression<Func<TEntity,TEntity>> selector = SelectorMapper.CreateDynamicSelectorExpression<TEntity>(includedFieldNames);
 
         //full entity-class, but only with selected fields loaded
-        TEntity[] partiallyLoadedEntitiesInUnknownOrder = dbContext.Set<TEntity>()
+        TEntity[] partiallyLoadedEntitiesInUnknownOrder = dbContext.Set<TEntity>().AsNoTracking()
           .Where(queryByKeys)
           .Select(selector)
           .ToArray();//MATERIALIZE!

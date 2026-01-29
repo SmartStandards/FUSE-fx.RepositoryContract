@@ -426,8 +426,8 @@ namespace RepositoryTests {
       var filter = ExpressionTree.And(FieldPredicate.Greater(nameof(LeafEntity1.Id), highestKey - 2));
       var fields = new System.Collections.Generic.Dictionary<string, object>
       {
-            { "StringValue", "MassUpdateByFilter" }
-        };
+        { "StringValue", "MassUpdateByFilter" }
+      };
       var updatedKeys = repository.Massupdate(filter, fields);
       Assert.AreEqual(2, updatedKeys.Length);
 

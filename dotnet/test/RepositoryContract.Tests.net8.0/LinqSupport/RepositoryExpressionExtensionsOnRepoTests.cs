@@ -6,6 +6,7 @@ using System.Data.Fuse.Convenience;
 using System.Data.ModelDescription;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.Cache;
 
 namespace System.Data.Fuse.LinqSupport {
 
@@ -306,6 +307,68 @@ namespace System.Data.Fuse.LinqSupport {
 
       Assert.AreEqual(expected.Length, results.Length);
       Assert.IsTrue(results.All(expected.Contains));
+    }
+
+    // --------------------------------------------------------------------
+    // FieldSelector
+    // --------------------------------------------------------------------
+
+    [TestMethod]
+    public void LinqSupp_FieldSelector_SingleProperty() {
+
+      string[] names = SelectorMapper.ExtractSelectorFieldNames(
+        (Person p) => p.Age
+      );
+
+      Assert.IsNotNull(names);
+      Assert.AreEqual(1, names.Length);
+      Assert.AreEqual(names[0], nameof(Person.Age));
+
+    }
+
+    [TestMethod]
+    public void LinqSupp_FieldSelector_MultiPropertyAnonymous() {
+
+      string[] names = SelectorMapper.ExtractSelectorFieldNames(
+        (Person p) => new{ p.Age, p.Country }
+      );
+
+      Assert.IsNotNull(names);
+      Assert.AreEqual(2, names.Length);
+      Assert.AreEqual(names[0], nameof(Person.Age));
+      Assert.AreEqual(names[1], nameof(Person.Country));
+
+    }
+
+    [TestMethod]
+    public void LinqSupp_FieldSelector_MultiPropertyClass() {
+
+      string[] names = SelectorMapper.ExtractSelectorFieldNames(
+        (Person p) => new Person { Age = p.Age, Country = p.Country }
+      );
+
+      Assert.IsNotNull(names);
+      Assert.AreEqual(2, names.Length);
+      Assert.AreEqual(names[0], nameof(Person.Age));
+      Assert.AreEqual(names[1], nameof(Person.Country));
+
+    }
+
+    [TestMethod]
+    public void LinqSupp_FieldSelector_Self() {
+
+      string[] names = SelectorMapper.ExtractSelectorFieldNames(
+        (Person p) => p
+      );
+
+      Assert.IsNotNull(names);
+      Assert.AreEqual(5, names.Length);
+      Assert.AreEqual(names[0], nameof(Person.Id));
+      Assert.AreEqual(names[1], nameof(Person.Name));
+      Assert.AreEqual(names[2], nameof(Person.Age));
+      Assert.AreEqual(names[3], nameof(Person.IsActive));
+      Assert.AreEqual(names[4], nameof(Person.Country));
+
     }
 
   }

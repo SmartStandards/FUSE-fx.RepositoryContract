@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RepositoryContract.Tests;
+using System;
 using System.Collections.Generic;
+using System.Data.Fuse.Convenience;
 using System.Linq;
 using System.Linq.Expressions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace System.Data.Fuse.LinqSupport {
 
@@ -247,6 +249,31 @@ namespace System.Data.Fuse.LinqSupport {
       Assert.AreEqual("IsActive", pred.FieldName);
       Assert.AreEqual(FieldOperators.Equal, pred.Operator);
       Assert.AreEqual(true, pred.Value);
+    }
+
+
+    // --------------------------------------------------------------------
+    // BOOL CONSTANT ( ()=>false / ()=>true )
+    // --------------------------------------------------------------------
+
+    [TestMethod]
+    public void LinqSupp_ConstantBoolFalse_IsTranslated() {
+
+      Expression<Func<Person, bool>> expr = (p) => false;
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
+
+      Assert.AreEqual(true, tree.MatchAll);
+      Assert.AreEqual(true, tree.Negate);
+    }
+
+    [TestMethod]
+    public void LinqSupp_ConstantBoolTrue_IsTranslated() {
+
+      Expression<Func<Person, bool>> expr = (p) => true;
+      ExpressionTree tree = ExpressionTreeMapper.BuildTreeFromLinqExpression(expr);
+
+      Assert.AreEqual(true, tree.MatchAll);
+      Assert.AreEqual(false, tree.Negate);
     }
 
     // --------------------------------------------------------------------

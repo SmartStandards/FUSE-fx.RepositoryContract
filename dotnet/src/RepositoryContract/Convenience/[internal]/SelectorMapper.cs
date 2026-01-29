@@ -34,19 +34,29 @@ namespace System.Data.Fuse.Convenience {
     /// <summary>
     /// Extracts a list of field names referenced by the selector.
     /// </summary>
-    public static string[] ExtractSelectorFieldNames<TEntity, TSelectedFields>(Expression<Func<TEntity, TSelectedFields>> selector) {
+    public static string[] ExtractSelectorFieldNames<TEntity, TSelectedFields>(
+      Expression<Func<TEntity, TSelectedFields>> selector
+    ) {
       
       Expression body = selector.Body;
-
       List<string> fields = new List<string>();
 
-      NewExpression newExpression = body as NewExpression;
+      MemberExpression memb = (body as MemberExpression);
+      if (memb != null) {
+        string fieldName = ExtractMemberName(memb);
+        fields.Add(fieldName);
+
+        return fields.ToArray();
+      }
+
+      NewExpression newExpression = (body as NewExpression);
       if (newExpression != null) {
         for (int i = 0; i < newExpression.Arguments.Count; i++) {
+
           MemberExpression member = newExpression.Arguments[i] as MemberExpression;
           if (member == null) {
             throw new NotSupportedException(
-                "Only direct member projections are supported in anonymous selectors."
+              "Only direct member projections are supported in anonymous selectors."
             );
           }
 
@@ -57,9 +67,10 @@ namespace System.Data.Fuse.Convenience {
         return fields.ToArray();
       }
 
-      MemberInitExpression init = body as MemberInitExpression;
+      MemberInitExpression init = (body as MemberInitExpression);
       if (init != null) {
         foreach (MemberBinding binding in init.Bindings) {
+
           MemberAssignment assignment = binding as MemberAssignment;
           if (assignment == null) {
             throw new NotSupportedException("Unsupported member binding in projection.");
@@ -77,6 +88,13 @@ namespace System.Data.Fuse.Convenience {
         return fields.ToArray();
       }
 
+      ParameterExpression self = (body as ParameterExpression);
+      if (self != null) {
+        return self.Type.GetProperties(
+          BindingFlags.Instance | BindingFlags.Public
+        ).Select(prop => prop.Name).ToArray();
+      }
+
       throw new NotSupportedException("Unsupported selector expression type: " + body.NodeType.ToString());
     }
 
@@ -91,14 +109,15 @@ namespace System.Data.Fuse.Convenience {
     /// Maps a dictionary row array into instances of TSelectedFields.
     /// </summary>
     public static TSelectedFields[] Map<TEntity, TSelectedFields>(
-        Dictionary<string, object>[] rows,
-        Expression<Func<TEntity, TSelectedFields>> selector) {
+      Dictionary<string, object>[] rows,
+      Expression<Func<TEntity, TSelectedFields>> selector
+    ) {
+
       if (rows == null) {
         return new TSelectedFields[0];
       }
 
-      Func<Dictionary<string, object>, TSelectedFields> projector =
-          BuildProjector<TEntity, TSelectedFields>(selector);
+      Func<Dictionary<string, object>, TSelectedFields> projector = BuildProjector<TEntity, TSelectedFields>(selector);
 
       TSelectedFields[] result = new TSelectedFields[rows.Length];
 
@@ -120,6 +139,7 @@ namespace System.Data.Fuse.Convenience {
     /// <exception cref="ArgumentNullException">Thrown if instance is null.</exception>
     /// <exception cref="NotSupportedException">Thrown if type contains unsupported members.</exception>
     public static Dictionary<string, object> MapToDict<TSelectedFields>(TSelectedFields instance) {
+
       if (instance == null) {
         throw new ArgumentNullException("instance");
       }
