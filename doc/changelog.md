@@ -7,7 +7,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
-* Fix: Selector-Predicate was not working for single property
+*(none)*
+
+
+
+## v 0.9.1
+released **2026-01-29**, including:
+ - Fix: Selector-Predicate was not working for single property
 
 
 

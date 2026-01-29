@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.9.0",
-  "currentVersionWithSuffix": "0.9.0",
+  "currentVersion": "0.9.1",
+  "currentVersionWithSuffix": "0.9.1",
   "releaseType": "",
-  "previousVersion": "0.8.2",
-  "changeGrade": "minor",
+  "previousVersion": "0.9.0",
+  "changeGrade": "fix",
   "currentMajor": 0,
   "currentMinor": 9,
-  "currentPatch": 0,
+  "currentPatch": 1,
   "versionDateInfo": "2026-01-29",
-  "versionTimeInfo": "06:28:45",
-  "versionNotes": "- Fix: new Feature 'matchStringsCaseInsensitive' had bug when resolving ToLower-MethodInfo\n"
+  "versionTimeInfo": "08:41:37",
+  "versionNotes": "- Fix: Selector-Predicate was not working for single property\n"
 }
