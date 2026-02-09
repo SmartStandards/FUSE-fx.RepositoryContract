@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.9.2",
-  "currentVersionWithSuffix": "0.9.2",
+  "currentVersion": "0.9.3",
+  "currentVersionWithSuffix": "0.9.3",
   "releaseType": "",
-  "previousVersion": "0.9.1",
+  "previousVersion": "0.9.2",
   "changeGrade": "fix",
   "currentMajor": 0,
   "currentMinor": 9,
-  "currentPatch": 2,
-  "versionDateInfo": "2026-01-29",
-  "versionTimeInfo": "13:55:14",
-  "versionNotes": "- Fix: SelectorMapper (special case) and added more UnitTests\n"
+  "currentPatch": 3,
+  "versionDateInfo": "2026-02-09",
+  "versionTimeInfo": "14:33:13",
+  "versionNotes": "- Fix: UnsetIdentityFields entfernt\n"
 }
