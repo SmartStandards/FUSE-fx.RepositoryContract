@@ -129,8 +129,6 @@ namespace System.Data.Fuse.Ef {
         }
 
         if (existingEntity == null) {
-          // when adding a new entity, we have to unset the key fields that are identity fields
-          this.UnsetIdentityFields(entity);
 
           dbContext.Set<TEntity>().Add(entity);
           dbContext.SaveChanges();
@@ -191,7 +189,6 @@ namespace System.Data.Fuse.Ef {
           CopyFields2(fields, entity);
           existingEntity = entity;
           // If no existing entity found, add new entity
-          this.UnsetIdentityFields(entity);
           dbContext.Set<TEntity>().Add(entity);
         }
 
@@ -653,7 +650,6 @@ namespace System.Data.Fuse.Ef {
 
           // If the entity does not exist, add it
           if (existingEntity == null) {
-            this.UnsetIdentityFields(entity);
             dbContext.Set<TEntity>().Add(entity);
             dbContext.SaveChanges();
             return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
@@ -830,7 +826,6 @@ namespace System.Data.Fuse.Ef {
               // Remove the old entity
               dbContext.Set<TEntity>().Remove(existingEntity);
               // Add the new entity
-              this.UnsetIdentityFields(updatedEntity);
               dbContext.Set<TEntity>().Add(updatedEntity);
 
               dbContext.SaveChanges();
