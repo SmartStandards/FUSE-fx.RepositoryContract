@@ -11,6 +11,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 0.9.4
+released **2026-02-10**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.9.3
 released **2026-02-09**, including:
  - Fix: UnsetIdentityFields entfernt
