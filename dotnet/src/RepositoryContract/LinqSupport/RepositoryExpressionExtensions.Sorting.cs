@@ -31,6 +31,7 @@ namespace System.Data.Fuse.LinqSupport {
     /// <returns></returns>
     [Obsolete("use 'ApplySorting' instead!")]
     public static IQueryable<TEntity> ApplySortingViaLinqDynamic<TEntity>(this IQueryable<TEntity> entities, params string[] sortedBy) {
+      if (sortedBy == null) return entities;
       foreach (var sortField in sortedBy) {
         if (sortField.StartsWith("^")) {
           string descSortField = sortField.Substring(1); // remove the "^" prefix
