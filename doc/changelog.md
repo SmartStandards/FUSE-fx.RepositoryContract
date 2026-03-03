@@ -7,7 +7,13 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
- - Breaking Change: Rückbau DynamicLinq Schritt1: Entfernung von CompileToDynamicLinq (Filtern)
+*(none)*
+
+
+
+## v 0.10.0
+released **2026-03-03**, including:
+ - Breaking Change: Rï¿½ckbau DynamicLinq Schritt1: Entfernung von CompileToDynamicLinq (Filtern)
 
 
 
