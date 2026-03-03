@@ -111,7 +111,7 @@ namespace System.Data.Fuse.LinqSupport {
           return Expression.GreaterThan(member, Expression.Convert(constExpr, member.Type));
 
         case FieldOperators.GreaterOrEqual: // + FieldOperators.Contains        
-          if(param.Type == typeof(string)) {
+          if(member.Type == typeof(string)) {
             return BuildStringCall(member, "Contains", constantValue);
           }
           return Expression.GreaterThanOrEqual(member, Expression.Convert(constExpr, member.Type));
@@ -119,7 +119,7 @@ namespace System.Data.Fuse.LinqSupport {
         case FieldOperators.Less:
           return Expression.LessThan(member, Expression.Convert(constExpr, member.Type));
 
-        case FieldOperators.LessOrEqual:
+        case FieldOperators.LessOrEqual: //TODO_Krn: SubstringOf ?
           return Expression.LessThanOrEqual(member, Expression.Convert(constExpr, member.Type));
 
         case FieldOperators.StartsWith:
@@ -183,17 +183,26 @@ namespace System.Data.Fuse.LinqSupport {
         throw new InvalidOperationException("IN operator expects an object[] array.");
       }
 
-      Expression arrayExpr = Expression.Constant(array);
-
       MethodInfo containsMethod =
           typeof(Enumerable).GetMethods()
           .Where(m => m.Name == "Contains" && m.GetParameters().Length == 2)
           .First()
           .MakeGenericMethod(member.Type);
 
+      // Create a properly typed array using reflection
+      Array typedArray = Array.CreateInstance(member.Type, array.Length);
+      for (int i = 0; i < array.Length; i++) {
+        typedArray.SetValue(Convert.ChangeType(array[i], member.Type), i);
+      }
+
+      //TODO_Krn: Review
+      // array.Select(x => Convert.ChangeType(x, member.Type)).ToArray() => das ChangeType reicht nicht,
+      // der innere Typ des resultierenden Arrays wäre object, muss aber auch member.Type sein,
+      // damit die Contains-Methode funktioniert.
+      // Deshalb wird hier ein Array mit dem richtigen Typ erstellt und befüllt, gehts besser?
       Expression convertedArray = Expression.Constant(
-          array.Select(x => Convert.ChangeType(x, member.Type)).ToArray(),
-          typeof(IEnumerable<>).MakeGenericType(member.Type)
+        typedArray,
+        typeof(IEnumerable<>).MakeGenericType(member.Type)
       );
 
       return Expression.Call(null, containsMethod, convertedArray, member);

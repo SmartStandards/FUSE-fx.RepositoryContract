@@ -255,7 +255,8 @@ namespace System.Data.Fuse.Convenience {
       } 
       else {
         lock (_Entities) {
-          return _Entities.AsQueryable().Count(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+          var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
+          return _Entities.AsQueryable().Count(filterExpression);
         }
       }
     }
@@ -291,9 +292,8 @@ namespace System.Data.Fuse.Convenience {
         }
         else {
 
-          //HACK: internal usage of System.Data.Fuse.LinqSupport
-          string stringbasedDynamicLinqExpression = filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name));
-          IQueryable<TEntity> entities = _Entities.AsQueryable().Where(stringbasedDynamicLinqExpression);
+          var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
+          IQueryable<TEntity> entities = _Entities.AsQueryable().Where(filterExpression);
          
           entities = entities.ApplySortingViaLinqDynamic(sortedBy);
           entities = entities.ApplyPaging(limit, skip);
@@ -385,8 +385,8 @@ namespace System.Data.Fuse.Convenience {
         }
         else {
 
-          //HACK: internal usage of System.Data.Fuse.LinqSupport
-          IQueryable<TEntity> entities = _Entities.AsQueryable().Where(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)));
+          var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
+          IQueryable<TEntity> entities = _Entities.AsQueryable().Where(filterExpression);
 
           //HACK: internal usage of System.Data.Fuse.LinqSupport
           entities = entities.ApplySortingViaLinqDynamic(sortedBy);
@@ -583,7 +583,8 @@ namespace System.Data.Fuse.Convenience {
         }
       }
       else {
-        return MassupdateBySearchExpression(filter.CompileToDynamicLinq(SchemaRoot.GetSchema(typeof(TEntity).Name)), fields);
+        var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
+        return MassupdateByLinqExpression(filterExpression, fields);
       }
     }
 
@@ -615,7 +616,7 @@ namespace System.Data.Fuse.Convenience {
 
       }
     }
-
+    
     public TKey[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields) {
       lock (_Entities) {
 
@@ -627,6 +628,34 @@ namespace System.Data.Fuse.Convenience {
 
         //HACK: internal usage of System.Data.Fuse.LinqSupport
         var entitiesToUpdate = _Entities.AsQueryable().Where(searchExpression);
+
+        // Update the fields of the entities
+        foreach (var entity in entitiesToUpdate) {
+          foreach (var field in fields) {
+            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
+            if (propertyInfo != null) {
+              propertyInfo.SetValue(entity, field.Value);
+            }
+          }
+        }
+
+        // Return the keys of the updated entities
+        return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+
+      }
+    }
+
+    public TKey[] MassupdateByLinqExpression(Expression<Func<TEntity,bool>> filterExpression, Dictionary<string, object> fields) {
+      lock (_Entities) {
+
+        // Ensure that the fields to be updated do not include any key fields
+        var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
+        if (fields.Keys.Intersect(keyFieldNames).Any()) {
+          throw new ArgumentException("Update fields must not contain key fields.");
+        }
+
+        //HACK: internal usage of System.Data.Fuse.LinqSupport
+        var entitiesToUpdate = _Entities.AsQueryable().Where(filterExpression);
 
         // Update the fields of the entities
         foreach (var entity in entitiesToUpdate) {

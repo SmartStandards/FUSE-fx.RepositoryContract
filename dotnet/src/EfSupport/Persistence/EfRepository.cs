@@ -269,8 +269,8 @@ namespace System.Data.Fuse.Ef {
 
     public int Count(ExpressionTree filter) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
-        //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
-        return dbContext.Set<TEntity>().Count(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
+        var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
+        return dbContext.Set<TEntity>().Count(filterExpression);        
       });
     }
 
@@ -299,8 +299,8 @@ namespace System.Data.Fuse.Ef {
         if (filter == null) {
           entities = dbContext.Set<TEntity>().AsNoTracking();
         } else {
-          //HACK: internal usage of System.Data.Fuse.LinqSupport
-          entities = dbContext.Set<TEntity>().AsNoTracking().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
+          var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
+          entities = dbContext.Set<TEntity>().AsNoTracking().Where(filterExpression);
         }
 
         entities = entities.ApplySortingViaLinqDynamic(sortedBy);
@@ -365,8 +365,8 @@ namespace System.Data.Fuse.Ef {
       string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
-        //HACK: internal usage of System.Data.Fuse.LinqSupport
-        IQueryable<TEntity> entities = dbContext.Set<TEntity>().AsNoTracking().Where(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)));
+        var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
+        IQueryable<TEntity> entities = dbContext.Set<TEntity>().AsNoTracking().Where(filterExpression);
 
         //HACK: internal usage of System.Data.Fuse.LinqSupport
         entities = entities.ApplySortingViaLinqDynamic(sortedBy);
@@ -567,8 +567,8 @@ namespace System.Data.Fuse.Ef {
     /// </param>
     /// <returns></returns>
     public TKey[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
-      //TODO: Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'
-      return MassupdateBySearchExpression(filter.CompileToDynamicLinq(GetSchemaRoot().GetSchema(typeof(TEntity).Name)), fields);
+      var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
+      return MassupdateByLinqFilter(filterExpression, fields);
     }
 
     public TKey[] MassupdateByKeys(TKey[] keysToUpdate, Dictionary<string, object> fields) {
@@ -614,6 +614,35 @@ namespace System.Data.Fuse.Ef {
 
         //HACK: internal usage of System.Data.Fuse.LinqSupport
         var entitiesToUpdate = dbContext.Set<TEntity>().Where(searchExpression);
+
+        // Update the fields of the entities
+        foreach (var entity in entitiesToUpdate) {
+          foreach (var field in fields) {
+            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
+            if (propertyInfo != null) {
+              propertyInfo.SetValue(entity, field.Value);
+            }
+          }
+        }
+
+        // Save the changes to the database
+        dbContext.SaveChanges();
+
+        // Return the keys of the updated entities
+        return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
+      });
+    }
+
+    public TKey[] MassupdateByLinqFilter(Expression<Func<TEntity,bool>> filterExpression, Dictionary<string, object> fields) {
+      return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+
+        // Ensure that the fields to be updated do not include any key fields
+        var keyFieldNames = PrimaryKeySet.Select(p => p.Name);
+        if (fields.Keys.Intersect(keyFieldNames).Any()) {
+          throw new ArgumentException("Update fields must not contain key fields.");
+        }
+
+        var entitiesToUpdate = dbContext.Set<TEntity>().Where(filterExpression);
 
         // Update the fields of the entities
         foreach (var entity in entitiesToUpdate) {
