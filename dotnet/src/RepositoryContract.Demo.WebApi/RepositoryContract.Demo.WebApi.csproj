@@ -30,10 +30,15 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.16" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.7" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="SmartStandards.AuthTokenHandling" Version="5.0.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
     <PackageReference Include="System.Linq.Dynamic.Core" Version="1.4.3" />
     <PackageReference Include="UID64" Version="1.0.1" />
-    <PackageReference Include="UJMW.DynamicController" Version="4.1.4" />
+    <PackageReference Include="UJMW.DynamicController" Version="5.3.4" />
+    <PackageReference Include="UShell.FrontendBundle" Version="3.2.23.1314" />
+    <PackageReference Include="UShell.FrontendBundle.Mvc" Version="3.2.23.1314" />
+    <PackageReference Include="UShell.PortfolioDescription" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>

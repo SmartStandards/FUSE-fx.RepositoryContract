@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using UShell;
 
 namespace RepositoryContract.Demo.WebApi.PortfolioHandling {
 
@@ -18,14 +19,27 @@ namespace RepositoryContract.Demo.WebApi.PortfolioHandling {
       return result;
     }
 
-    public static PortfolioDescriptionResponse GetPortfolio(string portfolioName) {
-      string resoucreName = $"RepositoryContract.Demo.WebApi.PortfolioHandling.{portfolioName}";
-      return new PortfolioDescriptionResponse() {
-        PortfolioDescriptionJson = ReadResource(resoucreName)
+    public static PortfolioDescription GetPortfolio() {
+      //string resoucreName = $"RepositoryContract.Demo.WebApi.PortfolioHandling.{portfolioName}";
+      return new PortfolioDescription() {
+        ApplicationTitle = "Demo Application",
+        ModuleDescriptionUrls = new string[] {
+          "Module/SchemaEditor.json"
+        }
       };
+    }
+
+    public static ModuleDescription GetSchemaEditorModuleDescription() {
+      ModuleDescription result = new ModuleDescription();
+      result.ModuleTitle = "Schema Editor";
+      result.AddUsecaseToWorkspaceWithCommand(
+        "Schema Editor", "Schema Editor", "Schema", (ud, wd, cd) => {
+          ud.WidgetClass = "SchemaEditor";
+        }
+      );
+      return result;
     }
   }
 }
-
 
 

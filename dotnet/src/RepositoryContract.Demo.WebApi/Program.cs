@@ -1,16 +1,24 @@
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using RepositoryContract.Demo.Model;
+using RepositoryContract.Demo.WebApi.DynamicSqlRepoDemo;
 using RepositoryContract.Demo.WebApi.Persistence;
 using System;
+using System.Data.Common;
 using System.Data.Fuse;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef;
 using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.Fuse.SchemaResolving;
+using System.Data.Fuse.Sql.InstanceManagement;
+using System.Data.ModelDescription;
+using System.Data.SqlClient;
 using System.Web.UJMW;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -76,15 +84,30 @@ builder.Services.AddScoped<RepositoryCollection>((s) => {
   return dataStore;
 });
 
+
+IDataStore sqlDataStore = new DemoSqlDataStore();
+builder.Services.AddSingleton<IDataStore>(sqlDataStore);
+RegisterRepo<BavPerson, int>(builder.Services);
+
+DynamicUjmwControllerOptions options1 = new DynamicUjmwControllerOptions();
+//options1.ApiGroupName = "Demo";
+options1.ControllerRoute = "DemoStore";
+DynamicUjmwControllerOptions options2 = new DynamicUjmwControllerOptions();
+//options2.ApiGroupName = "DemoSqlDataStore";
+options2.ControllerRoute = "DemoSqlDataStore";
+
+
 builder.Services.AddDynamicUjmwControllers(r => {
-  r.AddControllerFor<IUniversalRepository>("DemoStore");
+  r.AddControllerFor<IUniversalRepository>(options1);
+  //r.AddControllerFor<DemoSqlDataStore>(options2);
 });
+//builder.Services.AddUjmwStandardSwaggerGen("Fileaccess-Demo");
 
 var app = builder.Build();
 
-using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope()) {
-  var x = serviceScope.ServiceProvider.GetService<RepositoryCollection>()!;
-}
+//using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope()) {
+//  var x = serviceScope.ServiceProvider.GetService<RepositoryCollection>()!;
+//}
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
   app.UseSwagger();
@@ -98,4 +121,20 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+//app.UseUjmwStandardSwagger(app.Configuration, "Fuse-Demo");
+
+app.ConfigureUShellSpaHosting("Portfolio", "UShell", "/");
+
 app.Run();
+
+static void  RegisterRepo<TEntity, TKey>(IServiceCollection s) where TEntity : class {
+  s.AddSingleton<IRepository<TEntity, TKey>>((sp => {
+    var dataStore = sp.GetService<IDataStore>()!;
+    return dataStore.GetRepository<TEntity, TKey>();
+  }));
+  s.AddDynamicUjmwControllers((c) => {
+    c.AddControllerFor<IRepository<TEntity, TKey>>(new DynamicUjmwControllerOptions() {
+      ControllerRoute = typeof(TEntity).Name
+    });
+  });
+}

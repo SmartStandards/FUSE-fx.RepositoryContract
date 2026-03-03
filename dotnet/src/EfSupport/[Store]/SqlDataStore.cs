@@ -54,6 +54,18 @@ namespace System.Data.Fuse.Ef {
       this._SchemaName = schemaName;
     }
 
+    public SqlDataStore(
+      IDbConnectionProvider connectionProvider,
+      SchemaRoot schemaRoot,
+      Func<EntitySchema, string> tableNameGetter = null,
+      string schemaName = null
+    ) {
+      _ConnectionProvider = connectionProvider;      
+      _SchemaRoot = schemaRoot;
+      this._TableNameGetter = tableNameGetter != null ? tableNameGetter : (EntitySchema es) => es.NamePlural;
+      this._SchemaName = schemaName;
+    }
+
     public IRepository<TEntity, TKey> GetRepository<TEntity, TKey>() where TEntity : class {
 
       //HACK: sollte doch nicht immer eine neue instanz sein oder?
