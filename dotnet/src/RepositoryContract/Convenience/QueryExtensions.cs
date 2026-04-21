@@ -17,7 +17,7 @@ namespace System.Data.Fuse.Convenience {
   /// <summary>
   /// (from 'FUSE-fx.RepositoryContract')
   /// </summary>
-  public static class QueryExtensions {   
+  public static class QueryExtensions {
 
     //TODO_Krn ??? => hier kommt sql raus
     [Obsolete("Verwender bitte umbauen auf 'System.Data.Fuse.LinqSupport.ExpressionTreeMapper.BuildLinqExpressionFromTree'")]
@@ -211,8 +211,7 @@ namespace System.Data.Fuse.Convenience {
             relationElementValue, relationElement.FieldName, mode, prefix,
             ref fieldName, ref @operator
           );
-        }
-        else if (fieldType == "Guid") {
+        } else if (fieldType == "Guid") {
 #if NETCOREAPP
           if (relationElementValue.Contains("\"")) {
             relationElementValue = JsonSerializer.Deserialize<Guid>(relationElementValue).ToString();
@@ -308,8 +307,7 @@ namespace System.Data.Fuse.Convenience {
         if (mode == "sql") {
           @operator = " like ";
           serializedValue = $"'%{valueSerialized}'";
-        }
-        else {
+        } else {
           @operator = ".EndsWith";
           serializedValue = $"(\"{valueSerialized}\")";
         }
@@ -361,7 +359,17 @@ namespace System.Data.Fuse.Convenience {
     ) {
       List<object> values = new List<object>();
       foreach (PropertyInfo propertyInfo in properties) {
-        values.Add(entity[propertyInfo.Name]);
+        if (!entity.ContainsKey(propertyInfo.Name)) {
+          object defaultPropertyValue;
+          if (propertyInfo.PropertyType == typeof(DateTime)) {
+            defaultPropertyValue = new DateTime(1900, 1, 1);
+          } else {
+            defaultPropertyValue = Activator.CreateInstance(propertyInfo.PropertyType);
+          }
+          values.Add(defaultPropertyValue);
+        } else {
+          values.Add(entity[propertyInfo.Name]);
+        }
       }
       return values.ToArray();
     }
@@ -486,11 +494,11 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public static TKey ToKey<TKey>(this object[] fieldValues) {
-      if(fieldValues == null) {
+      if (fieldValues == null) {
         return default(TKey);
       }
       if (typeof(ICompositeKey).IsAssignableFrom(typeof(TKey))) {
-        return (TKey)Activator.CreateInstance(typeof(TKey),  fieldValues );
+        return (TKey)Activator.CreateInstance(typeof(TKey), fieldValues);
       } else {
         return (TKey)fieldValues[0];
       }

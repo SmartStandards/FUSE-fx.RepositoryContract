@@ -717,6 +717,7 @@ namespace System.Data.Fuse.Sql {
             }
           }
         }
+        bool foundByPrimaryKey = entityExists;
 
         // If not found by primary key, try unique keys
         if (!entityExists) {
@@ -759,6 +760,9 @@ namespace System.Data.Fuse.Sql {
 
         // Perform insert or update
         if (entityExists) {
+          if (!foundByPrimaryKey && !keyValues.All(v => v == null || v.Equals(Activator.CreateInstance(v.GetType())))) {
+            return null;
+          }
           // Update existing entity
           Dictionary<string, object> fields = ExtractNonKeyFieldsFromEntity(entity);
 
@@ -829,6 +833,7 @@ namespace System.Data.Fuse.Sql {
             }
           }
         }
+        bool foundByPrimaryKey = entityExists;
 
         // If not found by primary key, check unique keys
         if (!entityExists) {
@@ -873,6 +878,9 @@ namespace System.Data.Fuse.Sql {
 
         // Perform insert or update
         if (entityExists) {
+          if (!foundByPrimaryKey && primaryKeyValues != null && !primaryKeyValues.All(v => v == null || v.Equals(Activator.CreateInstance(v.GetType())))) {
+            return null;
+          }
           // Create a dictionary of non-key fields for update
           Dictionary<string, object> updateFields = new Dictionary<string, object>(fields);
           foreach (PropertyInfo keyProp in PrimaryKeySet) {
@@ -1464,20 +1472,21 @@ namespace System.Data.Fuse.Sql {
               // Begin a transaction for the key update
               using (var transaction = connection.BeginTransaction()) {
                 try {
-                  // Insert a new entity with the new key and all fields
-                  using (var command = connection.CreateCommand()) {
-                    command.Transaction = transaction;
-                    command.CommandText = BuildInsertSql(fields);
-                    AddFieldParameters(command, fields);
-
-                    command.ExecuteNonQuery();
-                  }
 
                   // Delete the entity with the old key
                   using (var command = connection.CreateCommand()) {
                     command.Transaction = transaction;
                     command.CommandText = BuildDeleteSql(BuildWhereClauseForKey(currentKey, false));
                     AddKeyParameters(command, currentKey);
+
+                    command.ExecuteNonQuery();
+                  }
+
+                  // Insert a new entity with the new key and all fields
+                  using (var command = connection.CreateCommand()) {
+                    command.Transaction = transaction;
+                    command.CommandText = BuildInsertSql(fields);
+                    AddFieldParameters(command, fields);
 
                     command.ExecuteNonQuery();
                   }

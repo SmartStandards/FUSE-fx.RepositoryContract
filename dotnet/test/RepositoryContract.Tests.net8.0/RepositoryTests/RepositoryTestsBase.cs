@@ -321,6 +321,31 @@ namespace RepositoryTests {
     }
 
     [TestMethod]
+    public void Repository_AddOrUpdateEntity_AlternateKey_Works() {
+      var repository = this.CreateLeaf1EntityRepository();
+      var keyToDelete = repository.GetEntityRefs(
+       ExpressionTree.Empty(), new string[] { }
+     ).Select(r => r.Key).ToArray();
+      repository.TryDeleteEntities(keyToDelete);
+
+
+      // Add new
+      var newEntity = new LeafEntity1 { Id = 1, StringValue = "Id1", LongValue = 1 };
+      var added = repository.AddOrUpdateEntity(newEntity);
+      Assert.AreEqual("Id1", added.StringValue);
+
+      // Update existing
+      var entity = new LeafEntity1 { Id = 0, StringValue = "Id1", LongValue = 100 };
+      var updated = repository.AddOrUpdateEntity(entity);
+      Assert.AreEqual(100, updated.LongValue);
+
+      // Update existing with wrong primary key
+      var entity2 = new LeafEntity1 { Id = 3, StringValue = "Id1", LongValue = 100 };
+      var updated2 = repository.AddOrUpdateEntity(entity2);
+      Assert.IsNull(updated2);
+    }
+
+    [TestMethod]
     public void Repository_AddOrUpdateEntityFields_Works() {
       var repository = this.CreateLeaf1EntityRepository();
       int highestKey = SeedLeafEntity1Repository(repository, 10);

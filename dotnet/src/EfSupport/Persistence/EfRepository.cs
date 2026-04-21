@@ -34,7 +34,7 @@ namespace System.Data.Fuse.Ef {
 
     private static SchemaRoot _SchemaRoot = null;
     public SchemaRoot GetSchemaRoot() {
-      //TODO: wollen wir so eine funktionalität überhaupt hier,
+      //TODO: wollen wir so eine funktionalitÃ¤t Ã¼berhaupt hier,
       //oder verzichten wir lifer auf den konstruktor ohne schema
       if (_SchemaRoot == null) {
         Type dbContextType = null;
@@ -115,13 +115,20 @@ namespace System.Data.Fuse.Ef {
 
         object[] keySetValues = entity.GetValues(PrimaryKeySet);
         TEntity existingEntity = dbContext.Set<TEntity>().Find(keySetValues.ToArray());
+        bool foundByPrimaryKey = existingEntity != null;
 
-        //AI
-        // If no primary key is found, try to find the entity by unique key
         if (existingEntity == null) {
           foreach (var keyset in Keysets) {
             object[] keysetValues = entity.GetValues(keyset);
-            existingEntity = dbContext.Set<TEntity>().Find(keysetValues);
+            var parameter = Expression.Parameter(typeof(TEntity), "e");
+            Expression body = Expression.Constant(true);
+            for (int i = 0; i < keyset.Count; i++) {
+              var prop = Expression.Property(parameter, keyset[i]);
+              var val = Expression.Constant(keysetValues[i], keyset[i].PropertyType);
+              body = Expression.AndAlso(body, Expression.Equal(prop, val));
+            }
+            var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+            existingEntity = dbContext.Set<TEntity>().FirstOrDefault(predicate);
             if (existingEntity != null) {
               break;
             }
@@ -129,12 +136,14 @@ namespace System.Data.Fuse.Ef {
         }
 
         if (existingEntity == null) {
-
           dbContext.Set<TEntity>().Add(entity);
           dbContext.SaveChanges();
           return entity;
         } else {
-          CopyFields(entity, existingEntity);
+          if (!foundByPrimaryKey && !keySetValues.All(v => v == null || v.Equals(Activator.CreateInstance(v.GetType())))) {
+            return null;
+          }
+          CopyFields(entity, existingEntity, false);
           dbContext.SaveChanges();
           return existingEntity;
         }
@@ -172,8 +181,16 @@ namespace System.Data.Fuse.Ef {
         if (existingEntity == null) {
           foreach (var keyset in Keysets) {
             object[] keysetValues = fields.GetValuesFromDictionary(keyset);
-            existingEntity = (keysetValues == null)
-              ? null : dbContext.Set<TEntity>().Find(keysetValues);
+            if (keysetValues == null) continue;
+            var parameter = Expression.Parameter(typeof(TEntity), "e");
+            Expression body = Expression.Constant(true);
+            for (int i = 0; i < keyset.Count; i++) {
+              var prop = Expression.Property(parameter, keyset[i]);
+              var val = Expression.Constant(keysetValues[i], keyset[i].PropertyType);
+              body = Expression.AndAlso(body, Expression.Equal(prop, val));
+            }
+            var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+            existingEntity = dbContext.Set<TEntity>().FirstOrDefault(predicate);
             if (existingEntity != null) {
               break;
             }
@@ -209,11 +226,12 @@ namespace System.Data.Fuse.Ef {
         return conflictingFields;
       });
     }
-    private void CopyFields(TEntity from, TEntity to) {
+    private void CopyFields(TEntity from, TEntity to, bool copyPrimaryKey = true) {
       EntitySchema schema = GetSchemaRoot().GetSchema(typeof(TEntity).Name);
       //HACK: viel zu teuer, immerwieder die properties zu laden
       foreach (PropertyInfo propertyInfo in typeof(TEntity).GetProperties()) {
         if (!schema.Fields.Any((f) => f.Name == propertyInfo.Name)) continue;
+        if (!copyPrimaryKey && PrimaryKeySet.Any(pk => pk.Name == propertyInfo.Name)) continue;
         propertyInfo.SetValue(to, propertyInfo.GetValue(from, null), null);
       }
     }
@@ -330,9 +348,9 @@ namespace System.Data.Fuse.Ef {
         Expression<Func<TEntity, bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
 
         //TEntity[] result = dbContext.Set<TEntity>().AsNoTracking().Where(queryByKeys).ToArray();
-        //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
+        //TODO: BUG!! aktuell werden nur die entities zurÃ¼ckgegeben, die existieren,
         //            -> keine NULL-felder im array, pot. verdrehte Sortierung!  
-        // Lösung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
+        // LÃ¶sung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
 
         TEntity[] result = new TEntity[keysToLoad.Length];
         //materialization-loop
@@ -440,7 +458,7 @@ namespace System.Data.Fuse.Ef {
 
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
-        //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
+        //TODO: BUG!! aktuell werden nur die entities zurÃ¼ckgegeben, die existieren,
         //            -> keine NULL-felder im array, pot. verdrehte Sortierung! 
 
         //return dbContext.Set<TEntity>().AsNoTracking().Where(
@@ -528,8 +546,8 @@ namespace System.Data.Fuse.Ef {
     /// </returns>
     public EntityRef<TKey>[] GetEntityRefsByKey(TKey[] keysToLoad) {
 
-      //HACK: Materialisiert KOMPLETTE Entität und führt diese Methode ad-absodum!
-      //      Beim Umbau dran denken: NULL-Einträge für nicht-existierende Keys im Ergebnis-Array!!!
+      //HACK: Materialisiert KOMPLETTE EntitÃ¤t und fÃ¼hrt diese Methode ad-absodum!
+      //      Beim Umbau dran denken: NULL-EintrÃ¤ge fÃ¼r nicht-existierende Keys im Ergebnis-Array!!!
       //      + _ContextInstanceProvider.VisitCurrentDbContext nutzen!!
 
       return this.GetEntitiesByKey(keysToLoad).Select(
@@ -750,7 +768,7 @@ namespace System.Data.Fuse.Ef {
 
           // If the entity exists, update it
           if (existingEntity != null) {
-            CopyFields(entity, existingEntity);
+            CopyFields(entity, existingEntity, false);
             dbContext.SaveChanges();
             return existingEntity;
           }
@@ -789,8 +807,16 @@ namespace System.Data.Fuse.Ef {
         if (existingEntity == null) {
           foreach (var keyset in Keysets) {
             object[] keysetValues = fields.GetValuesFromDictionary(keyset);
-            existingEntity = (keysetValues == null)
-              ? null : dbContext.Set<TEntity>().Find(keysetValues);
+            if (keysetValues == null) continue;
+            var parameter = Expression.Parameter(typeof(TEntity), "e");
+            Expression body = Expression.Constant(true);
+            for (int i = 0; i < keyset.Count; i++) {
+              var prop = Expression.Property(parameter, keyset[i]);
+              var val = Expression.Constant(keysetValues[i], keyset[i].PropertyType);
+              body = Expression.AndAlso(body, Expression.Equal(prop, val));
+            }
+            var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+            existingEntity = dbContext.Set<TEntity>().FirstOrDefault(predicate);
             if (existingEntity != null) {
               break;
             }

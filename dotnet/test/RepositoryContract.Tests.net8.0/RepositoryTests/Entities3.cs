@@ -5,6 +5,7 @@ namespace RepositoryTests {
 
   [UniquePropertyGroup("PrimaryKey", nameof(Id))]
   [PrimaryIdentity("PrimaryKey")]
+  [UniquePropertyGroup("FE", nameof(StringValue), nameof(DateValue) )]
   public class LeafEntity1 {
     public int Id { get; set; }
     public long LongValue { get; set; }

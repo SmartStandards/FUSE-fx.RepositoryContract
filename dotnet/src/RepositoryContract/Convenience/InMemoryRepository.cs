@@ -146,9 +146,8 @@ namespace System.Data.Fuse.Convenience {
         TEntity existingEntity = _Entities.FirstOrDefault(
           entity.GetSearchExpression(PrimaryKeySet.ToArray()).Compile()
         );
+        bool foundByPrimaryKey = existingEntity != null;
 
-        //AI
-        // If no primary key is found, try to find the entity by unique key
         if (existingEntity == null) {
           foreach (var keyset in Keysets) {
             existingEntity = _Entities.FirstOrDefault(
@@ -164,17 +163,21 @@ namespace System.Data.Fuse.Convenience {
           _Entities.Add(entity);
           return entity;
         } else {
-          CopyFields(entity, existingEntity);
+          if (!foundByPrimaryKey && !keySetValues.All(v => v == null || v.Equals(Activator.CreateInstance(v.GetType())))) {
+            return null;
+          }
+          CopyFields(entity, existingEntity, false);
           return existingEntity;
         }
 
       }
     }
 
-    private void CopyFields(TEntity from, TEntity to) {
+    private void CopyFields(TEntity from, TEntity to, bool copyPrimaryKey = true) {
       EntitySchema schema = SchemaRoot.GetSchema(typeof(TEntity).Name);
       foreach (PropertyInfo propertyInfo in typeof(TEntity).GetProperties()) {
         if (!schema.Fields.Any((f) => f.Name == propertyInfo.Name)) continue;
+        if (!copyPrimaryKey && PrimaryKeySet.Any(pk => pk.Name == propertyInfo.Name)) continue;
         propertyInfo.SetValue(to, propertyInfo.GetValue(from, null), null);
       }
     }
@@ -323,9 +326,9 @@ namespace System.Data.Fuse.Convenience {
        Expression<Func<TEntity, bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
 
         //TEntity[] result = _Entities.Where(lambda.Compile()).ToArray();
-        ////TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
+        ////TODO: BUG!! aktuell werden nur die entities zurÃ¼ckgegeben, die existieren,
         ////            -> keine NULL-felder im array, pot. verdrehte Sortierung!  
-        //// Lösung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
+        //// LÃ¶sung ist schon hier vvvvvvv - muss aber erst noch getestet werden...
 
         TEntity[] result = new TEntity[keysToLoad.Length];
         //materialization-loop
@@ -433,7 +436,7 @@ namespace System.Data.Fuse.Convenience {
 
       lock (_Entities) {
 
-        //TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
+        //TODO: BUG!! aktuell werden nur die entities zurÃ¼ckgegeben, die existieren,
         //            -> keine NULL-felder im array, pot. verdrehte Sortierung! 
 
         //return _Entities.Where(
@@ -517,8 +520,8 @@ namespace System.Data.Fuse.Convenience {
     /// </returns>
     public EntityRef<TKey>[] GetEntityRefsByKey(TKey[] keysToLoad) {
 
-      //HACK: Materialisiert KOMPLETTE Entität und führt diese Methode ad-absodum!
-      //      Beim Umbau dran denken: NULL-Einträge für nicht-existierende Keys im Ergebnis-Array!!!
+      //HACK: Materialisiert KOMPLETTE EntitÃ¤t und fÃ¼hrt diese Methode ad-absodum!
+      //      Beim Umbau dran denken: NULL-EintrÃ¤ge fÃ¼r nicht-existierende Keys im Ergebnis-Array!!!
 
       return this.GetEntitiesByKey(keysToLoad).Select(
         (e) => (

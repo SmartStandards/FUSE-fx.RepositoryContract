@@ -35,7 +35,6 @@ namespace RepositoryTests {
     }
   }
 
-  //TODO_RWE: Remove Ignore attribute when tests are ready to run
   [TestClass]
   public class EfRepositoryTests : RepositoryTestsBase {
 
