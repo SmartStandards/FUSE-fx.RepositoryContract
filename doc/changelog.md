@@ -11,6 +11,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 0.10.1
+released **2026-04-21**, including:
+ - new revision without significant changes
+
+
+
 ## v 0.10.0
 released **2026-03-03**, including:
  - Breaking Change: R�ckbau DynamicLinq Schritt1: Entfernung von CompileToDynamicLinq (Filtern)

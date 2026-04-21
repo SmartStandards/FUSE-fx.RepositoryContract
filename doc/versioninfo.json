@@ -1,13 +1,13 @@
 {
-  "currentVersion": "0.10.0",
-  "currentVersionWithSuffix": "0.10.0",
+  "currentVersion": "0.10.1",
+  "currentVersionWithSuffix": "0.10.1",
   "releaseType": "",
-  "previousVersion": "0.9.5",
-  "changeGrade": "major",
+  "previousVersion": "0.10.0",
+  "changeGrade": "fix",
   "currentMajor": 0,
   "currentMinor": 10,
-  "currentPatch": 0,
-  "versionDateInfo": "2026-03-03",
-  "versionTimeInfo": "20:44:42",
-  "versionNotes": "- Breaking Change: R�ckbau DynamicLinq Schritt1: Entfernung von CompileToDynamicLinq (Filtern)\n"
+  "currentPatch": 1,
+  "versionDateInfo": "2026-04-21",
+  "versionTimeInfo": "20:15:09",
+  "versionNotes": "- new revision without significant changes\n"
 }
