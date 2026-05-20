@@ -20,11 +20,6 @@
         <dependency id="FUSE-fx.ModelDescription" version="2.0.22" />
         <dependency id="FUSE-fx.ModelReader" version="0.2.17" />
       </group>
-			<group targetFramework="net6.0">
-        <dependency id="FUSE-fx.EntityAnnotations" version="4.2.0" />
-        <dependency id="FUSE-fx.ModelDescription" version="2.0.22" />
-        <dependency id="FUSE-fx.ModelReader" version="0.2.17" />
-			</group>
       <group targetFramework="net8.0">
         <dependency id="FUSE-fx.EntityAnnotations" version="4.2.0" />
         <dependency id="FUSE-fx.ModelDescription" version="2.0.22" />
@@ -44,10 +39,6 @@
     <file src="dist\bin-net48\FUSE-fx.RepositoryContract.dll" target="lib/net48" />
     <file src="dist\bin-net48\FUSE-fx.RepositoryContract.xml" target="lib/net48" />
     <file src="dist\bin-net48\FUSE-fx.RepositoryContract.pdb" target="lib/net48" />
-		<!-- .NET 6.0 -->
-		<file src="dist\bin-net6.0\FUSE-fx.RepositoryContract.dll" target="lib/net6.0" />
-		<file src="dist\bin-net6.0\FUSE-fx.RepositoryContract.xml" target="lib/net6.0" />
-		<file src="dist\bin-net6.0\FUSE-fx.RepositoryContract.pdb" target="lib/net6.0" />
     <!-- .NET 8.0 -->
     <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.dll" target="lib/net8.0" />
     <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.xml" target="lib/net8.0" />

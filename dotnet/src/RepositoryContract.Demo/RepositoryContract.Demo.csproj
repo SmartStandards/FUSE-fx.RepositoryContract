@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -31,11 +31,6 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\EfSupport.net6.0\EfSupport.net6.0.csproj" />
-    <ProjectReference Include="..\RepositoryContract.net6.0\RepositoryContract.net6.0.csproj" />
   </ItemGroup>
 
 </Project>

@@ -20,8 +20,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{431B90E9-4591-
 		..\js\Contract\package.json = ..\js\Contract\package.json
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.net6.0", "src\RepositoryContract.net6.0\RepositoryContract.net6.0.csproj", "{7B5BAEA8-7E79-4A30-B6C1-4DA4831AF970}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{CD3C708D-7B37-40E1-8808-68DA9E2AD789}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RepositoryContract.Tests.net8.0", "test\RepositoryContract.Tests.net8.0\RepositoryContract.Tests.net8.0.csproj", "{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}"
@@ -29,8 +27,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{B9C01000-4A72-4ADD-8569-9AA76495C23C}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "EfSupport", "src\EfSupport\EfSupport.shproj", "{CF0A161A-99BA-4F01-AF5E-16C6FCBC85AF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfSupport.net6.0", "src\EfSupport.net6.0\EfSupport.net6.0.csproj", "{F80F0165-972E-49E4-A6EC-0F3C06C108E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepositoryContract.Tests.net48", "test\RepositoryContract.Tests.net48\RepositoryContract.Tests.net48.csproj", "{F2F17019-9184-46DC-A950-E2210692BC39}"
 EndProject
@@ -60,18 +56,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7B5BAEA8-7E79-4A30-B6C1-4DA4831AF970}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B5BAEA8-7E79-4A30-B6C1-4DA4831AF970}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7B5BAEA8-7E79-4A30-B6C1-4DA4831AF970}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7B5BAEA8-7E79-4A30-B6C1-4DA4831AF970}.Release|Any CPU.Build.0 = Release|Any CPU
 		{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F80F0165-972E-49E4-A6EC-0F3C06C108E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F80F0165-972E-49E4-A6EC-0F3C06C108E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F80F0165-972E-49E4-A6EC-0F3C06C108E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F80F0165-972E-49E4-A6EC-0F3C06C108E8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F2F17019-9184-46DC-A950-E2210692BC39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F2F17019-9184-46DC-A950-E2210692BC39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2F17019-9184-46DC-A950-E2210692BC39}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -119,11 +107,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{CF0A161A-99BA-4F01-AF5E-16C6FCBC85AE} = {EFB5135D-039A-4D92-8FDD-9EA5D070F991}
 		{431B90E9-4591-4FBD-A87F-52866A67B36D} = {4130D21C-FE8F-4925-93E7-217B4AF1B7D9}
-		{7B5BAEA8-7E79-4A30-B6C1-4DA4831AF970} = {B9C01000-4A72-4ADD-8569-9AA76495C23C}
 		{233CFBE0-0EF5-4C1E-9FA8-88AFE1DB4DA7} = {CD3C708D-7B37-40E1-8808-68DA9E2AD789}
 		{B9C01000-4A72-4ADD-8569-9AA76495C23C} = {EFB5135D-039A-4D92-8FDD-9EA5D070F991}
 		{CF0A161A-99BA-4F01-AF5E-16C6FCBC85AF} = {EFB5135D-039A-4D92-8FDD-9EA5D070F991}
-		{F80F0165-972E-49E4-A6EC-0F3C06C108E8} = {B9C01000-4A72-4ADD-8569-9AA76495C23C}
 		{F2F17019-9184-46DC-A950-E2210692BC39} = {CD3C708D-7B37-40E1-8808-68DA9E2AD789}
 		{EDA78844-E126-4484-A61A-9AAC3CA0E8E5} = {25D3BAED-F39D-452C-BE5B-2436706E4E4E}
 		{CCF6A373-46CF-4A49-BA1C-9B0E94CA2F69} = {25D3BAED-F39D-452C-BE5B-2436706E4E4E}
@@ -142,12 +128,10 @@ Global
 		src\RepositoryContract\RepositoryContract.projitems*{27bfce67-2f65-ef90-4baf-558d153052e3}*SharedItemsImports = 5
 		src\EfSupport\EfSupport.projitems*{7457e4ed-35d8-489e-877f-047d22e5a19c}*SharedItemsImports = 5
 		src\EfSupport\EfSupport.projitems*{76a15d21-891f-442d-9211-bef1b3c1b422}*SharedItemsImports = 4
-		src\RepositoryContract\RepositoryContract.projitems*{7b5baea8-7e79-4a30-b6c1-4da4831af970}*SharedItemsImports = 5
 		src\RepositoryContract\RepositoryContract.projitems*{aa63f109-770d-4c95-945d-a0f57225dc84}*SharedItemsImports = 4
 		src\EfSupport\EfSupport.projitems*{c59b7340-6c81-9cce-deb3-5dafbccdc374}*SharedItemsImports = 5
 		src\RepositoryContract\RepositoryContract.projitems*{cf0a161a-99ba-4f01-af5e-16c6fcbc85ae}*SharedItemsImports = 13
 		src\EfSupport\EfSupport.projitems*{cf0a161a-99ba-4f01-af5e-16c6fcbc85af}*SharedItemsImports = 13
-		src\EfSupport\EfSupport.projitems*{f80f0165-972e-49e4-a6ec-0f3c06c108e8}*SharedItemsImports = 5
 		src\RepositoryContract\RepositoryContract.projitems*{f9b75e57-b9e7-4b26-8f0d-ee4290639cf6}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
