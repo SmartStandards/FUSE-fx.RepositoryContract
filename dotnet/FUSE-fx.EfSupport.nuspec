@@ -22,10 +22,12 @@
       <group targetFramework="net6.0">
         <dependency id="FUSE-fx.RepositoryContract" version="[0.10.2]" />
         <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
-			</group>
+        <dependency id="Microsoft.EntityFrameworkCore.Relational" version="7.0.15" />
+      </group>
       <group targetFramework="net8.0">
         <dependency id="FUSE-fx.RepositoryContract" version="[0.10.2]" />
         <dependency id="Microsoft.EntityFrameworkCore" version="7.0.16" />
+        <dependency id="Microsoft.EntityFrameworkCore.Relational" version="7.0.15" />
       </group>
 		</dependencies>
 	</metadata>

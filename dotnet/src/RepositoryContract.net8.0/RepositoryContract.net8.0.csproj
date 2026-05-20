@@ -40,7 +40,6 @@
   <Import Project="..\RepositoryContract\RepositoryContract.projitems" Label="Shared" />
 
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="FUSE-fx.ModelReader" Version="0.2.17" />
   </ItemGroup>
 

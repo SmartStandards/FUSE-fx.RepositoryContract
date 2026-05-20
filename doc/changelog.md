@@ -8,6 +8,8 @@ This files contains a version history including all changes relevant for semanti
 ## Upcoming Changes
 
 * **breaking Change**: Removed reference to 'Linq.Dynamic'-Library and changed Behavior of all searchExpression-based methods away from logical expression-parsing to a generic OR-related filtering over all Entity-Field having a 'Content' semantic.
+* Removed CSV-Helper and fixed peer-dependency info
+* (**MVP**-state is now reached)
 
 
 
