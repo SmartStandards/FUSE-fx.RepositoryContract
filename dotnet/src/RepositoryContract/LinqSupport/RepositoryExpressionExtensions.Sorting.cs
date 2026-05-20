@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security.Principal;
@@ -20,31 +19,6 @@ namespace System.Data.Fuse.LinqSupport {
     /// Value: LambdaExpression (Expression&lt;Func&lt;TEntity, TKey&gt;&gt;)
     /// </summary>
     private static readonly ConcurrentDictionary<string, LambdaExpression> _SelectorCache = new ConcurrentDictionary<string, LambdaExpression>(StringComparer.Ordinal);
-
-    /// <summary></summary>
-    /// <typeparam name="TEntity"></typeparam>
-    /// <param name="entities"></param>
-    /// <param name="sortedBy">
-    /// An array of field names to be used for sorting the results.
-    /// Use the character "^" as prefix for DESC sorting. Sample: ['^Age','Lastname']
-    /// </param>
-    /// <returns></returns>
-    [Obsolete("use 'ApplySorting' instead!")]
-    public static IQueryable<TEntity> ApplySortingViaLinqDynamic<TEntity>(this IQueryable<TEntity> entities, params string[] sortedBy) {
-      if (sortedBy == null) return entities;
-      foreach (var sortField in sortedBy) {
-        if (sortField.StartsWith("^")) {
-          string descSortField = sortField.Substring(1); // remove the "^" prefix
-          //HACK: internal usage of System.Linq.Dynamic.Core
-          entities = entities.OrderBy(descSortField + " descending");
-        }
-        else {
-          entities = entities.OrderBy(sortField);
-        }
-      }
-
-      return entities;
-    }
 
     /// <summary>
     /// Applies sorting to an <see cref="IQueryable{TEntity}"/> based on string field names.

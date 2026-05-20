@@ -4,7 +4,6 @@ using System.Data.Fuse.LinqSupport;
 using System.Data.ModelDescription;
 using System.Data.ModelDescription.Convenience;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -15,7 +14,6 @@ namespace System.Data.Fuse.Convenience {
 
     private SchemaRoot _SchemaRoot;
     private bool _MatchStringsCaseInsensitive = true; //more equal to SQL behavior
-    private bool _NewModeWithoutLinqDynamic = false;
 
     private readonly Func<TEntity, TKey> _KeyExtractor;
 
@@ -72,7 +70,6 @@ namespace System.Data.Fuse.Convenience {
     public InMemoryRepository(SchemaRoot schemaRoot, bool matchStringsCaseInsensitive) { //ACHTUNG: via dynamisch via activator vom InMemoryUniversalRepository!
       _SchemaRoot = schemaRoot;
       _MatchStringsCaseInsensitive = matchStringsCaseInsensitive;
-      _NewModeWithoutLinqDynamic = true; //gibts gratis mit diesem constructor (schleichende migration)
       _VirtualDbAddress = null;
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
       this.InitializeEntitiesListHandle();
@@ -91,7 +88,6 @@ namespace System.Data.Fuse.Convenience {
     public InMemoryRepository(SchemaRoot schemaRoot, bool matchStringsCaseInsensitive, string virtualDbAddress) { //ACHTUNG: via dynamisch via activator vom InMemoryUniversalRepository!
       _SchemaRoot = schemaRoot;
       _MatchStringsCaseInsensitive = matchStringsCaseInsensitive;
-      _NewModeWithoutLinqDynamic = true; //gibts gratis mit diesem constructor (schleichende migration)
       _VirtualDbAddress = virtualDbAddress;
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
       this.InitializeEntitiesListHandle();
@@ -248,19 +244,11 @@ namespace System.Data.Fuse.Convenience {
     }
 
     public int Count(ExpressionTree filter) {
-      if (_NewModeWithoutLinqDynamic) {
-        Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
-          filter, _MatchStringsCaseInsensitive
-        );
-        lock  (_Entities) {
-          return _Entities.Count(predicateExpression.Compile());
-        }
-      } 
-      else {
-        lock (_Entities) {
-          var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
-          return _Entities.AsQueryable().Count(filterExpression);
-        }
+      Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+        filter, _MatchStringsCaseInsensitive
+      );
+      lock  (_Entities) {
+        return _Entities.Count(predicateExpression.Compile());
       }
     }
 
@@ -272,7 +260,7 @@ namespace System.Data.Fuse.Convenience {
 
     public int CountBySearchExpression(string searchExpression) {
       lock (_Entities) {
-         return _Entities.AsQueryable().Count(searchExpression);
+         return _Entities.WhereContentContains(searchExpression).Count();
       }
     }
 
@@ -281,28 +269,16 @@ namespace System.Data.Fuse.Convenience {
       ExpressionTree filter, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       lock (_Entities) {
-        if (_NewModeWithoutLinqDynamic) {
 
-          Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
-            filter, _MatchStringsCaseInsensitive
-          );
-          IEnumerable<TEntity> entities = _Entities.Where(predicateExpression.Compile());
+        Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+          filter, _MatchStringsCaseInsensitive
+        );
+        IEnumerable<TEntity> entities = _Entities.Where(predicateExpression.Compile());
 
-          entities = entities.ApplySorting(sortedBy);
-          entities = entities.ApplyPaging(limit, skip);
+        entities = entities.ApplySorting(sortedBy);
+        entities = entities.ApplyPaging(limit, skip);
 
-          return entities.ToArray();
-        }
-        else {
-
-          var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
-          IQueryable<TEntity> entities = _Entities.AsQueryable().Where(filterExpression);
-         
-          entities = entities.ApplySortingViaLinqDynamic(sortedBy);
-          entities = entities.ApplyPaging(limit, skip);
-
-          return entities.ToArray();
-        }
+        return entities.ToArray();
       }
     }
 
@@ -346,11 +322,9 @@ namespace System.Data.Fuse.Convenience {
     ) {
       lock (_Entities) {
 
-        //HACK: internal usage of System.Data.Fuse.LinqSupport
-        var entities = _Entities.AsQueryable().Where(searchExpression);
+        IEnumerable<TEntity> entities = _Entities.WhereContentContains(searchExpression);
 
-        //HACK: internal usage of System.Data.Fuse.LinqSupport
-        entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+        entities = entities.ApplySorting(sortedBy);
         entities = entities.ApplyPaging(limit, skip);
 
         return entities.ToArray();
@@ -363,56 +337,27 @@ namespace System.Data.Fuse.Convenience {
       string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       lock (_Entities) {
-        if (_NewModeWithoutLinqDynamic) {
 
-          Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
-            filter, _MatchStringsCaseInsensitive
-          );
-          IEnumerable<TEntity> entities = _Entities.Where(predicateExpression.Compile());
+        Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+          filter, _MatchStringsCaseInsensitive
+        );
+        IEnumerable<TEntity> entities = _Entities.Where(predicateExpression.Compile());
 
-          entities = entities.ApplySorting(sortedBy);
-          entities = entities.ApplyPaging(limit, skip);
+        entities = entities.ApplySorting(sortedBy);
+        entities = entities.ApplyPaging(limit, skip);
 
-          Dictionary<string, object>[] result = entities.Select(
-            (sf) => {
-              Dictionary<string, object> dict = new Dictionary<string, object>();
-              foreach (string fieldName in includedFieldNames) {
-                //TODO: performance optimieren via cached propertyinfo -> extra helper bauen!!!
-                dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
-              }
-              return dict;
-            }
-          ).ToArray();
-
-          return result;
-        }
-        else {
-
-          var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
-          IQueryable<TEntity> entities = _Entities.AsQueryable().Where(filterExpression);
-
-          //HACK: internal usage of System.Data.Fuse.LinqSupport
-          entities = entities.ApplySortingViaLinqDynamic(sortedBy);
-          entities = entities.ApplyPaging(limit, skip);
-
-          // Build the select expression
-          string selectExpression = "new(" + string.Join(", ", includedFieldNames) + ")";
-
-          // Use the select expression to select the fields
-          var selectedFields = entities.Select(selectExpression).ToDynamicArray();
-
-          // Convert the selected fields to dictionaries
-          Dictionary<string, object>[] result = selectedFields.Select(sf => {
-            var dict = new Dictionary<string, object>();
-            foreach (var fieldName in includedFieldNames) {
+        Dictionary<string, object>[] result = entities.Select(
+          (sf) => {
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            foreach (string fieldName in includedFieldNames) {
               //TODO: performance optimieren via cached propertyinfo -> extra helper bauen!!!
               dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
             }
             return dict;
-          }).ToArray();
+          }
+        ).ToArray();
 
-          return result;
-        }
+        return result;
       } 
     }
 
@@ -556,39 +501,34 @@ namespace System.Data.Fuse.Convenience {
     /// </param>
     /// <returns></returns>
     public TKey[] Massupdate(ExpressionTree filter, Dictionary<string, object> fields) {
-      if (_NewModeWithoutLinqDynamic) {
 
-        // Ensure that the fields to be updated do not include any key fields
-        var keyFieldNames = this.PrimaryKeySet.Select(p => p.Name);
-        if (fields.Keys.Intersect(keyFieldNames).Any()) {
-          throw new ArgumentException("Update fields must not contain key fields.");
-        }
+      // Ensure that the fields to be updated do not include any key fields
+      var keyFieldNames = this.PrimaryKeySet.Select(p => p.Name);
+      if (fields.Keys.Intersect(keyFieldNames).Any()) {
+        throw new ArgumentException("Update fields must not contain key fields.");
+      }
 
-        lock (_Entities) {
+      lock (_Entities) {
 
-          Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
-            filter, _MatchStringsCaseInsensitive
-          );
-          IEnumerable<TEntity> entitiesToUpdate = _Entities.Where(predicateExpression.Compile());
+        Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+          filter, _MatchStringsCaseInsensitive
+        );
+        IEnumerable<TEntity> entitiesToUpdate = _Entities.Where(predicateExpression.Compile());
 
-          // Update the fields of the entities
-          foreach (TEntity entity in entitiesToUpdate) {
-            foreach (KeyValuePair<string,object> field in fields) {
-              PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
-              if (propertyInfo != null) {
-                propertyInfo.SetValue(entity, field.Value);
-              }
+        // Update the fields of the entities
+        foreach (TEntity entity in entitiesToUpdate) {
+          foreach (KeyValuePair<string,object> field in fields) {
+            PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
+            if (propertyInfo != null) {
+              propertyInfo.SetValue(entity, field.Value);
             }
           }
-
-          // Return the keys of the updated entities
-          return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
         }
+
+        // Return the keys of the updated entities
+        return entitiesToUpdate.Select(e => e.GetValues(PrimaryKeySet).ToKey<TKey>()).ToArray();
       }
-      else {
-        var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
-        return MassupdateByLinqExpression(filterExpression, fields);
-      }
+
     }
 
     public TKey[] MassupdateByKeys(TKey[] keysToUpdate, Dictionary<string, object> fields) {
@@ -621,6 +561,7 @@ namespace System.Data.Fuse.Convenience {
     }
     
     public TKey[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields) {
+
       lock (_Entities) {
 
         // Ensure that the fields to be updated do not include any key fields
@@ -629,13 +570,12 @@ namespace System.Data.Fuse.Convenience {
           throw new ArgumentException("Update fields must not contain key fields.");
         }
 
-        //HACK: internal usage of System.Data.Fuse.LinqSupport
-        var entitiesToUpdate = _Entities.AsQueryable().Where(searchExpression);
+        IEnumerable<TEntity> entitiesToUpdate = _Entities.WhereContentContains(searchExpression);
 
         // Update the fields of the entities
-        foreach (var entity in entitiesToUpdate) {
+        foreach (TEntity entity in entitiesToUpdate) {
           foreach (var field in fields) {
-            var propertyInfo = typeof(TEntity).GetProperty(field.Key);
+            PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
             if (propertyInfo != null) {
               propertyInfo.SetValue(entity, field.Value);
             }

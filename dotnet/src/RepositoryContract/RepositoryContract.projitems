@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)convenience\[internal]\SelectorMapper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\ExpressionTreeBuilder.2Tree.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\RepositoryExpressionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LinqSupport\TextualSearchExpressionHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[Assembly].cs" />
     <Compile Include="$(MSBuildThisFileDirectory)[Store]\IRepoFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\RepoFactoryDataStore.cs" />

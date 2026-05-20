@@ -17,15 +17,12 @@
 		<dependencies>
       <group targetFramework=".NETFramework4.8">
         <dependency id="FUSE-fx.ModelReader" version="0.2.14" />
-        <dependency id="System.Linq.Dynamic.Core" version="1.4.3" />
       </group>
 			<group targetFramework="net6.0">
         <dependency id="FUSE-fx.ModelReader" version="0.2.14" />
-        <dependency id="System.Linq.Dynamic.Core" version="1.4.3" />
 			</group>
       <group targetFramework="net8.0">
         <dependency id="FUSE-fx.ModelReader" version="0.2.14" />
-        <dependency id="System.Linq.Dynamic.Core" version="1.4.3" />
       </group>
 		</dependencies>
 	</metadata>

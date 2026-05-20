@@ -6,7 +6,6 @@ using System.Data.Entity;
 using System.Data.ModelDescription;
 using System.Linq;
 using System.Reflection;
-using System.Linq.Dynamic.Core;
 using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.Fuse.Convenience;
 using System.Collections.Generic;

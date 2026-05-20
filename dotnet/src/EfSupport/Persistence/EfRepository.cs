@@ -10,7 +10,6 @@ using System.Data.ModelDescription;
 using System.Data.ModelDescription.Convenience;
 using System.Linq;
 using System.Reflection;
-using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.Fuse.LinqSupport;
@@ -56,6 +55,12 @@ namespace System.Data.Fuse.Ef {
         return _ContextInstanceProvider;
       }
     }
+
+    //wir gehen davon aus, dass wir dieses feature (was für die inmemory-variante gebaut wurde)
+    //hier bei EF nicht brauchen, denn statt im .net code wird der SQL-server strings ohnehin
+    //case-insensitive vergleichen, deshalb false. Diese Constante dient als dokumentation, damit
+    //im code unten nicht einfach nur hier und da mal ein unerklärtes 'false' steht...
+    private const bool _MatchStringsCaseInsensitive = false; 
 
     public EfRepository(IDbContextInstanceProvider contextInstanceProvider) {
       _ContextInstanceProvider = contextInstanceProvider;
@@ -300,7 +305,7 @@ namespace System.Data.Fuse.Ef {
 
     public int CountBySearchExpression(string searchExpression) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
-        return dbContext.Set<TEntity>().Count(searchExpression);
+        return dbContext.Set<TEntity>().WhereContentContains(searchExpression).Count();
       });
     }
 
@@ -321,7 +326,7 @@ namespace System.Data.Fuse.Ef {
           entities = dbContext.Set<TEntity>().AsNoTracking().Where(filterExpression);
         }
 
-        entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+        entities = entities.ApplySorting(sortedBy);
         entities = entities.ApplyPaging(limit, skip);
 
         return entities.ToArray();
@@ -367,10 +372,10 @@ namespace System.Data.Fuse.Ef {
       string searchExpression, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
-        var entities = dbContext.Set<TEntity>().AsNoTracking().Where(searchExpression);
 
-        //HACK: internal usage of System.Data.Fuse.LinqSupport
-        entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+        IQueryable<TEntity> entities = dbContext.Set<TEntity>().AsNoTracking().WhereContentContains(searchExpression);
+       
+        entities = entities.ApplySorting(sortedBy);
         entities = entities.ApplyPaging(limit, skip);
 
         return entities.ToArray();
@@ -383,60 +388,34 @@ namespace System.Data.Fuse.Ef {
       string[] includedFieldNames, string[] sortedBy, int limit = 500, int skip = 0
     ) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
-        var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
-        IQueryable<TEntity> entities = dbContext.Set<TEntity>().AsNoTracking().Where(filterExpression);
 
-        //HACK: internal usage of System.Data.Fuse.LinqSupport
-        entities = entities.ApplySortingViaLinqDynamic(sortedBy);
+        Expression<Func<TEntity, bool>> predicateExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(
+          filter, _MatchStringsCaseInsensitive
+        );
+
+        IQueryable<TEntity> entities = dbContext.Set<TEntity>().AsNoTracking().Where(predicateExpression);
+
+        entities = entities.ApplySorting(sortedBy);
         entities = entities.ApplyPaging(limit, skip);
 
-        // Build the select expression
-        string selectExpression = "new(" + string.Join(", ", includedFieldNames) + ")";
+        Expression<Func<TEntity, TEntity>> selector = SelectorMapper.CreateDynamicSelectorExpression<TEntity>(includedFieldNames);
 
-        // Use the select expression to select the fields
-        dynamic[] selectedFields = entities.Select(selectExpression).ToDynamicArray();
+        TEntity[] materialized = entities.Select(selector).ToArray();
 
-        // Convert the selected fields to dictionaries
-        Dictionary<string, object>[] result = selectedFields.Select(sf => {
-          var dict = new Dictionary<string, object>();
-          foreach (var fieldName in includedFieldNames) {
-            dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
+        Dictionary<string, object>[] result = materialized.Select(
+          (sf) => {
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            foreach (string fieldName in includedFieldNames) {
+              //TODO: performance optimieren via cached propertyinfo -> extra helper bauen!!!
+              dict[fieldName] = sf.GetType().GetProperty(fieldName).GetValue(sf);
+            }
+            return dict;
           }
-          return dict;
-        }).ToArray();
+        ).ToArray();
 
         return result;
       });
     }
-
-    //private static IQueryable<TEntity> ApplySorting(string[] sortedBy, IQueryable<TEntity> entities) {
-    //  if (sortedBy == null) {
-    //    return entities;
-    //  }
-    //  foreach (var sortField in sortedBy) {
-    //    if (sortField.StartsWith("^")) {
-    //      string descSortField = sortField.Substring(1); // remove the "^" prefix
-    //      //HACK: internal usage of System.Linq.Dynamic.Core
-    //      entities = entities.OrderBy(descSortField + " descending");
-    //    } else {
-    //      entities = entities.OrderBy(sortField);
-    //    }
-    //  }
-
-    //  return entities;
-    //}
-
-    //private static IQueryable<TEntity> ApplyPaging(int limit, int skip, IQueryable<TEntity> entities) {
-    //  if (skip == 0 && limit == 0) {
-    //    return entities;
-    //  } else if (limit == 0) {
-    //    return entities.Skip(skip);
-    //  } else if (skip == 0) {
-    //    return entities.Take(limit);
-    //  } else {
-    //    return entities.Skip(skip).Take(limit);
-    //  }
-    //}
 
     /// <summary>
     /// Loads entity fields by their keys, in exact order as the given key-array.
@@ -507,7 +486,6 @@ namespace System.Data.Fuse.Ef {
         
       });
     }
-
 
     public Dictionary<string, object>[] GetEntityFieldsBySearchExpression(
       string searchExpression,
@@ -630,10 +608,9 @@ namespace System.Data.Fuse.Ef {
           throw new ArgumentException("Update fields must not contain key fields.");
         }
 
-        //HACK: internal usage of System.Data.Fuse.LinqSupport
-        var entitiesToUpdate = dbContext.Set<TEntity>().Where(searchExpression);
+        IQueryable<TEntity> entitiesToUpdate = dbContext.Set<TEntity>().WhereContentContains(searchExpression);
 
-        // Update the fields of the entities
+        //HACK: DAS DARF BEI IQUERYABLE NICHT ITERATIV SEIN -> muss mit EF boardmitteln an den server weitergeleitet werden
         foreach (var entity in entitiesToUpdate) {
           foreach (var field in fields) {
             var propertyInfo = typeof(TEntity).GetProperty(field.Key);
