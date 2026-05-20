@@ -30,6 +30,11 @@
         <dependency id="FUSE-fx.ModelDescription" version="2.0.22" />
         <dependency id="FUSE-fx.ModelReader" version="0.2.17" />
       </group>
+      <group targetFramework="net10.0">
+        <dependency id="FUSE-fx.EntityAnnotations" version="4.2.0" />
+        <dependency id="FUSE-fx.ModelDescription" version="2.0.22" />
+        <dependency id="FUSE-fx.ModelReader" version="0.2.17" />
+      </group>
 		</dependencies>
 	</metadata>
 	<files>
@@ -47,5 +52,9 @@
     <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.dll" target="lib/net8.0" />
     <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.xml" target="lib/net8.0" />
     <file src="dist\bin-net8.0\FUSE-fx.RepositoryContract.pdb" target="lib/net8.0" />
+    <!-- .NET 10.0 -->
+    <file src="dist\bin-net10.0\FUSE-fx.RepositoryContract.dll" target="lib/net10.0" />
+    <file src="dist\bin-net10.0\FUSE-fx.RepositoryContract.xml" target="lib/net10.0" />
+    <file src="dist\bin-net10.0\FUSE-fx.RepositoryContract.pdb" target="lib/net10.0" />
 	</files>
 </package>

@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>FUSE-fx.EfSupport</AssemblyName>
+    <RootNamespace>System</RootNamespace>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <PackageId>FUSE-fx.EfSupport</PackageId>
+    <Description></Description>
+    <Product>FUSE-fx.EfSupport</Product>
+    <Company>(public domain)</Company>
+    <Copyright>SmartStandards</Copyright>
+    <Version>0.10.2</Version>
+    <AssemblyVersion>0.10.2</AssemblyVersion>
+    <Authors>SmartStandards</Authors>
+    <FileVersion>0.10.2</FileVersion>
+    <PackageTags></PackageTags>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>..\..\dist\bin-net10.0\FUSE-fx.EfSupport.xml</DocumentationFile>
+    <OutputPath>..\..\dist\bin-net10.0\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <NoWarn>1701;1702;1591</NoWarn>
+    <DefineConstants>TRACE;DEBUG;NET5</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\..\dist\bin-net10.0\</OutputPath>
+    <DocumentationFile>..\..\dist\bin-net10.0\FUSE-fx.EfSupport.xml</DocumentationFile>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <NoWarn>1701;1702;1591</NoWarn>
+    <DefineConstants>TRACE;NET5</DefineConstants>
+  </PropertyGroup>
+
+  <Import Project="..\EfSupport\EfSupport.projitems" Label="Shared" />
+
+  <ItemGroup>
+    <PackageReference Include="FUSE-fx.ModelReader" Version="0.2.17" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.16" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.15" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RepositoryContract.net10.0\RepositoryContract.net10.0.csproj" />
+  </ItemGroup>
+
+</Project>
