@@ -16,4 +16,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\EfSupport.net8.0\EfSupport.net8.0.csproj" />
+    <ProjectReference Include="..\RepositoryContract.net8.0\RepositoryContract.net8.0.csproj" />
+  </ItemGroup>
+
 </Project>
