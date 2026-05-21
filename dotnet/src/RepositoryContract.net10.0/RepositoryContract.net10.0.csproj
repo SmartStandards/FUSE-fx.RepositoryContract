@@ -13,10 +13,10 @@
     <Product>FUSE-fx.RepositoryContract</Product>
     <Company>(public domain)</Company>
     <Copyright>SmartStandards</Copyright>
-    <Version>0.10.2</Version>
-    <AssemblyVersion>0.10.2</AssemblyVersion>
+    <Version>1.0.2</Version>
+    <AssemblyVersion>1.0.2</AssemblyVersion>
     <Authors>SmartStandards</Authors>
-    <FileVersion>0.10.2</FileVersion>
+    <FileVersion>1.0.2</FileVersion>
     <PackageTags></PackageTags>
     <Nullable>disable</Nullable>
   </PropertyGroup>
