@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Data.Fuse.AutoValueSupport;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.LinqSupport;
 using System.Data.ModelDescription;
@@ -14,6 +16,7 @@ namespace System.Data.Fuse.Convenience {
 
     private SchemaRoot _SchemaRoot;
     private bool _MatchStringsCaseInsensitive = true; //more equal to SQL behavior
+    private readonly AutoValueManager _AutoValueManager;
 
     private readonly Func<TEntity, TKey> _KeyExtractor;
 
@@ -62,6 +65,7 @@ namespace System.Data.Fuse.Convenience {
     [Obsolete("Use constructor with explicit 'matchStringsCaseInsensitive' parameter")]
     public InMemoryRepository(SchemaRoot schemaRoot) { //ACHTUNG: via dynamisch via activator vom InMemoryUniversalRepository!
       _SchemaRoot = schemaRoot;
+      _AutoValueManager = new AutoValueManager(typeof(TEntity));
       _VirtualDbAddress = SharedVirtualDbAddress;
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
       this.InitializeEntitiesListHandle();
@@ -69,6 +73,7 @@ namespace System.Data.Fuse.Convenience {
 
     public InMemoryRepository(SchemaRoot schemaRoot, bool matchStringsCaseInsensitive) { //ACHTUNG: via dynamisch via activator vom InMemoryUniversalRepository!
       _SchemaRoot = schemaRoot;
+      _AutoValueManager = new AutoValueManager(typeof(TEntity));
       _MatchStringsCaseInsensitive = matchStringsCaseInsensitive;
       _VirtualDbAddress = null;
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
@@ -87,6 +92,7 @@ namespace System.Data.Fuse.Convenience {
     /// </param>
     public InMemoryRepository(SchemaRoot schemaRoot, bool matchStringsCaseInsensitive, string virtualDbAddress) { //ACHTUNG: via dynamisch via activator vom InMemoryUniversalRepository!
       _SchemaRoot = schemaRoot;
+      _AutoValueManager = new AutoValueManager(typeof(TEntity));
       _MatchStringsCaseInsensitive = matchStringsCaseInsensitive;
       _VirtualDbAddress = virtualDbAddress;
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
@@ -156,6 +162,7 @@ namespace System.Data.Fuse.Convenience {
         }
 
         if (existingEntity == null) {
+          _AutoValueManager.ApplyValuesOnAdd(entity, _Entities, _Entities);
           _Entities.Add(entity);
           return entity;
         } else {
@@ -174,6 +181,7 @@ namespace System.Data.Fuse.Convenience {
       foreach (PropertyInfo propertyInfo in typeof(TEntity).GetProperties()) {
         if (!schema.Fields.Any((f) => f.Name == propertyInfo.Name)) continue;
         if (!copyPrimaryKey && PrimaryKeySet.Any(pk => pk.Name == propertyInfo.Name)) continue;
+        if (_AutoValueManager.ShouldPreserveValueOnUpdate(propertyInfo, propertyInfo.GetValue(from, null))) continue;
         propertyInfo.SetValue(to, propertyInfo.GetValue(from, null), null);
       }
     }
@@ -207,6 +215,7 @@ namespace System.Data.Fuse.Convenience {
           // Create a new instance of TEntity
           TEntity entity = Activator.CreateInstance<TEntity>();
           CopyFields2(fields, entity);
+          _AutoValueManager.ApplyValuesOnAdd(entity, _Entities, _Entities);
           existingEntity = entity;
           // If no existing entity found, add new entity
           _Entities.Add(entity);
@@ -224,17 +233,23 @@ namespace System.Data.Fuse.Convenience {
           }
         }
 
-        return conflictingFields;   
+        return conflictingFields;
       }
     }
 
-    private static void CopyFields2(Dictionary<string, object> fields, TEntity entity) {
+    private void CopyFields2(Dictionary<string, object> fields, TEntity entity) {
       foreach (var field in fields) {
         PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
         if (propertyInfo != null) {
+          if (_AutoValueManager.ShouldPreserveValueOnUpdate(propertyInfo, field.Value)) continue;
           propertyInfo.SetValue(entity, field.Value);
         }
       }
+    }
+
+    private bool IsDefaultValue(object value, Type type) {
+      object defaultValue = type.IsValueType ? Activator.CreateInstance(type) : null;
+      return Equals(value, defaultValue);
     }
 
     public bool ContainsKey(TKey key) {
@@ -299,7 +314,7 @@ namespace System.Data.Fuse.Convenience {
 
       lock (_Entities) {
 
-       Expression<Func<TEntity, bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
+        Expression<Func<TEntity, bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
 
         //TEntity[] result = _Entities.Where(lambda.Compile()).ToArray();
         ////TODO: BUG!! aktuell werden nur die entities zurückgegeben, die existieren,
@@ -559,7 +574,7 @@ namespace System.Data.Fuse.Convenience {
 
       }
     }
-    
+
     public TKey[] MassupdateBySearchExpression(string searchExpression, Dictionary<string, object> fields) {
 
       lock (_Entities) {
@@ -588,7 +603,7 @@ namespace System.Data.Fuse.Convenience {
       }
     }
 
-    public TKey[] MassupdateByLinqExpression(Expression<Func<TEntity,bool>> filterExpression, Dictionary<string, object> fields) {
+    public TKey[] MassupdateByLinqExpression(Expression<Func<TEntity, bool>> filterExpression, Dictionary<string, object> fields) {
       lock (_Entities) {
 
         // Ensure that the fields to be updated do not include any key fields
@@ -634,6 +649,7 @@ namespace System.Data.Fuse.Convenience {
 
           // If the entity does not exist, add it
           if (existingEntity == null) {
+            _AutoValueManager.ApplyValuesOnAdd(entity, _Entities, _Entities);
             _Entities.Add(entity);
             return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
           }
@@ -802,8 +818,8 @@ namespace System.Data.Fuse.Convenience {
               foreach (PropertyInfo propertyInfo in PrimaryKeySet) {
                 object newKeyValue = newKeyValues[i++];
                 propertyInfo.SetValue(existingEntity, newKeyValue);
-              }            
-            
+              }
+
               return true;
             }
           }

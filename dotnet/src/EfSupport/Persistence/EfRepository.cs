@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data.Fuse.AutoValueSupport;
 using System.Data.Fuse.Convenience;
 #if !NETCOREAPP
 using System.Data.Entity;
@@ -48,11 +49,28 @@ namespace System.Data.Fuse.Ef {
     #endregion
 
     private readonly Func<TEntity, TKey> _KeyExtractor;
+    private readonly AutoValueManager _AutoValueManager;
 
     private IDbContextInstanceProvider _ContextInstanceProvider;
     public IDbContextInstanceProvider ContextInstanceProvider {
       get {
         return _ContextInstanceProvider;
+      }
+    }
+
+    private void CopyFields2PreservingAutoValues(Dictionary<string, object> fields, TEntity entity) {
+      foreach (var field in fields) {
+        PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
+        if (propertyInfo != null) {
+          object fieldValue = field.Value;
+#if NETCOREAPP
+          if (fieldValue != null && fieldValue.GetType() == typeof(JsonElement)) {
+            fieldValue = GetValue(propertyInfo, (JsonElement)fieldValue);
+          }
+#endif
+          if (_AutoValueManager.ShouldPreserveValueOnUpdate(propertyInfo, fieldValue, this.IsDatabaseIdentityProperty)) continue;
+          propertyInfo.SetValue(entity, fieldValue);
+        }
       }
     }
 
@@ -64,18 +82,21 @@ namespace System.Data.Fuse.Ef {
 
     public EfRepository(IDbContextInstanceProvider contextInstanceProvider) {
       _ContextInstanceProvider = contextInstanceProvider;
+      _AutoValueManager = new AutoValueManager(typeof(TEntity));
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(this.GetSchemaRoot());
     }
 
     [Obsolete("This overload is unsave, because it doesnt care about lifetime management of the dbcontext!")]
     public EfRepository(DbContext dbContext) {
       _ContextInstanceProvider = new LongLivingDbContextInstanceProvider(dbContext);
+      _AutoValueManager = new AutoValueManager(typeof(TEntity));
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(this.GetSchemaRoot());
     }
 
     public EfRepository(IDbContextInstanceProvider contextInstanceProvider, SchemaRoot schemaRoot) {
       _ContextInstanceProvider = contextInstanceProvider;
       _SchemaRoot = schemaRoot;
+      _AutoValueManager = new AutoValueManager(typeof(TEntity));
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
     }
 
@@ -83,11 +104,13 @@ namespace System.Data.Fuse.Ef {
     public EfRepository(DbContext dbContext, SchemaRoot schemaRoot) {
       _ContextInstanceProvider = new LongLivingDbContextInstanceProvider(dbContext);
       _SchemaRoot = schemaRoot;
+      _AutoValueManager = new AutoValueManager(typeof(TEntity));
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
     }
 
     private static List<List<PropertyInfo>> _UniqueKeySets;
     private static List<PropertyInfo> _PrimaryKeySet;
+    private static Dictionary<string, bool> _DbGeneratedIdentityByPropertyName;
 
     protected List<List<PropertyInfo>> Keysets {
       get {
@@ -104,6 +127,20 @@ namespace System.Data.Fuse.Ef {
           _PrimaryKeySet = InitPrimaeyKeySet();
         }
         return _PrimaryKeySet;
+      }
+    }
+
+    protected Dictionary<string, bool> DbGeneratedIdentityByPropertyName {
+      get {
+        if (_DbGeneratedIdentityByPropertyName == null) {
+          EntitySchema schema = GetSchemaRoot().GetSchema(typeof(TEntity).Name);
+          _DbGeneratedIdentityByPropertyName = schema.Fields.ToDictionary(
+            f => f.Name,
+            f => f.DbGeneratedIdentity,
+            StringComparer.OrdinalIgnoreCase
+          );
+        }
+        return _DbGeneratedIdentityByPropertyName;
       }
     }
 
@@ -141,7 +178,14 @@ namespace System.Data.Fuse.Ef {
         }
 
         if (existingEntity == null) {
+          _AutoValueManager.ApplyValuesOnAdd(
+            entity,
+            dbContext.Set<TEntity>().AsNoTracking().ToArray(), 
+            dbContext.GetType(),
+            p => this.IsDatabaseIdentityProperty(p)
+          );
           dbContext.Set<TEntity>().Add(entity);
+          this.UnsetIdentityFields(entity);
           dbContext.SaveChanges();
           return entity;
         } else {
@@ -204,14 +248,16 @@ namespace System.Data.Fuse.Ef {
 
         if (existingEntity != null) {
           // If existing entity found, update it
-          CopyFields2(fields, existingEntity);
+          CopyFields2PreservingAutoValues(fields, existingEntity);
         } else {
           // Create a new instance of TEntity
           TEntity entity = Activator.CreateInstance<TEntity>();
           CopyFields2(fields, entity);
+          _AutoValueManager.ApplyValuesOnAdd(entity, dbContext.Set<TEntity>().AsNoTracking().ToArray(), dbContext.GetType(), p => this.IsDatabaseIdentityProperty(p));
           existingEntity = entity;
           // If no existing entity found, add new entity
           dbContext.Set<TEntity>().Add(entity);
+          this.UnsetIdentityFields(entity);
         }
 
         dbContext.SaveChanges();
@@ -237,8 +283,15 @@ namespace System.Data.Fuse.Ef {
       foreach (PropertyInfo propertyInfo in typeof(TEntity).GetProperties()) {
         if (!schema.Fields.Any((f) => f.Name == propertyInfo.Name)) continue;
         if (!copyPrimaryKey && PrimaryKeySet.Any(pk => pk.Name == propertyInfo.Name)) continue;
+        if (_AutoValueManager.ShouldPreserveValueOnUpdate(propertyInfo, propertyInfo.GetValue(from, null), p => this.IsDatabaseIdentityProperty(p))) continue;
         propertyInfo.SetValue(to, propertyInfo.GetValue(from, null), null);
       }
+    }
+
+    private bool IsDatabaseIdentityProperty(PropertyInfo propertyInfo) {
+      return propertyInfo != null &&
+        DbGeneratedIdentityByPropertyName.TryGetValue(propertyInfo.Name, out bool isDbGeneratedIdentity) &&
+        isDbGeneratedIdentity;
     }
     private static void CopyFields2(Dictionary<string, object> fields, TEntity entity) {
       foreach (var field in fields) {
@@ -674,7 +727,9 @@ namespace System.Data.Fuse.Ef {
 
           // If the entity does not exist, add it
           if (existingEntity == null) {
+            _AutoValueManager.ApplyValuesOnAdd(entity, dbContext.Set<TEntity>().AsNoTracking().ToArray(), dbContext.GetType(), p => this.IsDatabaseIdentityProperty(p));
             dbContext.Set<TEntity>().Add(entity);
+            this.UnsetIdentityFields(entity);
             dbContext.SaveChanges();
             return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
           }
@@ -802,7 +857,7 @@ namespace System.Data.Fuse.Ef {
 
         if (existingEntity != null) {
           // If existing entity found, update it
-          CopyFields2(fields, existingEntity);
+          CopyFields2PreservingAutoValues(fields, existingEntity);
         } else {
           return null;
         }
@@ -859,6 +914,7 @@ namespace System.Data.Fuse.Ef {
               dbContext.Set<TEntity>().Remove(existingEntity);
               // Add the new entity
               dbContext.Set<TEntity>().Add(updatedEntity);
+              this.UnsetIdentityFields(updatedEntity);
 
               dbContext.SaveChanges();
               return true;

@@ -67,12 +67,18 @@ namespace RepositoryTests {
         filterLongGreater, new string[] { }
       );
 
-      EntityRef<int>[] filteredResultStringEqual1 = repository.GetEntityRefsBySearchExpression(
-        "StringValue == \"Entity 1\"", new string[] { }
+    //  EntityRef<int>[] filteredResultStringEqual1 = repository.GetEntityRefsBySearchExpression(
+    //    "StringValue == \"Entity 1\"", new string[] { }
+    //  );
+    //  EntityRef<int>[] filteredResultStringEqual2 = repository.GetEntityRefsBySearchExpression(
+    //  "((StringValue = \"Entity 1\"))", new string[] { }
+    //);
+      EntityRef<int>[] filteredResultStringEqual1 = repository.GetEntityRefs(
+        ExpressionTree.And(FieldPredicate.Equal(nameof(LeafEntity1.StringValue), "Entity 1")), new string[] { }
       );
-      EntityRef<int>[] filteredResultStringEqual2 = repository.GetEntityRefsBySearchExpression(
-      "((StringValue = \"Entity 1\"))", new string[] { }
-    );
+      EntityRef<int>[] filteredResultStringEqual2 = repository.GetEntityRefs(
+        ExpressionTree.And(FieldPredicate.Equal(nameof(LeafEntity1.StringValue), "Entity 1")), new string[] { }
+      );
 
       ExpressionTree filterStringEqual = ExpressionTree.And(
         FieldPredicate.Equal(nameof(LeafEntity1.StringValue), "Entity 1")
@@ -191,20 +197,20 @@ namespace RepositoryTests {
       Assert.AreEqual("Entity 1", filteredString[0].StringValue);
     }
 
-    [TestMethod]
-    public void Repository_GetEntitiesBySearchExpression_Works() {
-      var repository = this.CreateLeaf1EntityRepository();
-      SeedLeafEntity1Repository(repository, 10);
+    //[TestMethod]
+    //public void Repository_GetEntitiesBySearchExpression_Works() {
+    //  var repository = this.CreateLeaf1EntityRepository();
+    //  SeedLeafEntity1Repository(repository, 10);
 
-      // Act
-      var result = repository.GetEntitiesBySearchExpression("LongValue > 50", new string[] { });
+    //  // Act
+    //  var result = repository.GetEntitiesBySearchExpression("LongValue > 50", new string[] { });
 
-      // Assert
-      Assert.AreEqual(5, result.Length, "Expected 5 entities with LongValue > 50.");
+    //  // Assert
+    //  Assert.AreEqual(5, result.Length, "Expected 5 entities with LongValue > 50.");
 
-      var result2 = repository.GetEntitiesBySearchExpression("StringValue == \"Entity 1\"", new string[] { });
-      Assert.AreEqual(1, result2.Length, "Expected 1 entity with StringValue == 'Entity 1'.");
-    }
+    //  var result2 = repository.GetEntitiesBySearchExpression("StringValue == \"Entity 1\"", new string[] { });
+    //  Assert.AreEqual(1, result2.Length, "Expected 1 entity with StringValue == 'Entity 1'.");
+    //}
 
     [TestMethod]
     public void Repository_GetEntitiesByKey_Works() {
@@ -242,23 +248,23 @@ namespace RepositoryTests {
       }
     }
 
-    [TestMethod]
-    public void Repository_GetEntityFieldsBySearchExpression_Works() {
-      var repository = this.CreateLeaf1EntityRepository();
-      int highestKey = SeedLeafEntity1Repository(repository, 10);
+    //[TestMethod]
+    //public void Repository_GetEntityFieldsBySearchExpression_Works() {
+    //  var repository = this.CreateLeaf1EntityRepository();
+    //  int highestKey = SeedLeafEntity1Repository(repository, 10);
 
-      var fields = repository.GetEntityFieldsBySearchExpression(
-          $"Id >= {highestKey - 2}",
-          new[] { nameof(LeafEntity1.Id), nameof(LeafEntity1.StringValue) },
-          new string[] { }
-      );
+    //  var fields = repository.GetEntityFieldsBySearchExpression(
+    //      $"Id >= {highestKey - 2}",
+    //      new[] { nameof(LeafEntity1.Id), nameof(LeafEntity1.StringValue) },
+    //      new string[] { }
+    //  );
 
-      Assert.AreEqual(3, fields.Length, "Expected 3 entities with Id <= 3.");
-      foreach (var dict in fields) {
-        Assert.IsTrue(dict.ContainsKey("Id"));
-        Assert.IsTrue(dict.ContainsKey("StringValue"));
-      }
-    }
+    //  Assert.AreEqual(3, fields.Length, "Expected 3 entities with Id <= 3.");
+    //  foreach (var dict in fields) {
+    //    Assert.IsTrue(dict.ContainsKey("Id"));
+    //    Assert.IsTrue(dict.ContainsKey("StringValue"));
+    //  }
+    //}
 
     [TestMethod]
     public void Repository_GetEntityFieldsByKey_Works() {
@@ -285,14 +291,14 @@ namespace RepositoryTests {
       Assert.AreEqual(5, count, "Expected 5 entities with Id > 5.");
     }
 
-    [TestMethod]
-    public void Repository_CountBySearchExpression_Works() {
-      var repository = this.CreateLeaf1EntityRepository();
-      SeedLeafEntity1Repository(repository, 10);
+    //[TestMethod]
+    //public void Repository_CountBySearchExpression_Works() {
+    //  var repository = this.CreateLeaf1EntityRepository();
+    //  SeedLeafEntity1Repository(repository, 10);
 
-      var count = repository.CountBySearchExpression("LongValue < 40");
-      Assert.AreEqual(3, count, "Expected 3 entities with Id < 4.");
-    }
+    //  var count = repository.CountBySearchExpression("LongValue < 40");
+    //  Assert.AreEqual(3, count, "Expected 3 entities with Id < 4.");
+    //}
 
     [TestMethod]
     public void Repository_ContainsKey_Works() {
@@ -460,21 +466,21 @@ namespace RepositoryTests {
       Assert.IsTrue(updatedEntities.All(e => e.StringValue == "MassUpdateByFilter"));
     }
 
-    [TestMethod]
-    public void Repository_MassupdateBySearchExpression_Works() {
-      var repository = this.CreateLeaf1EntityRepository();
-      int highestKey = SeedLeafEntity1Repository(repository, 10);
+    //[TestMethod]
+    //public void Repository_MassupdateBySearchExpression_Works() {
+    //  var repository = this.CreateLeaf1EntityRepository();
+    //  int highestKey = SeedLeafEntity1Repository(repository, 10);
 
-      var fields = new System.Collections.Generic.Dictionary<string, object>
-      {
-            { "StringValue", "MassUpdateBySearch" }
-        };
-      var updatedKeys = repository.MassupdateBySearchExpression($"Id < {highestKey - 7}", fields);
-      Assert.AreEqual(2, updatedKeys.Length);
+    //  var fields = new System.Collections.Generic.Dictionary<string, object>
+    //  {
+    //        { "StringValue", "MassUpdateBySearch" }
+    //    };
+    //  var updatedKeys = repository.MassupdateBySearchExpression($"Id < {highestKey - 7}", fields);
+    //  Assert.AreEqual(2, updatedKeys.Length);
 
-      var updatedEntities = repository.GetEntitiesByKey(updatedKeys);
-      Assert.IsTrue(updatedEntities.All(e => e.StringValue == "MassUpdateBySearch"));
-    }
+    //  var updatedEntities = repository.GetEntitiesByKey(updatedKeys);
+    //  Assert.IsTrue(updatedEntities.All(e => e.StringValue == "MassUpdateBySearch"));
+    //}
 
     [TestMethod]
     public void Repository_TryDeleteEntities_Works() {

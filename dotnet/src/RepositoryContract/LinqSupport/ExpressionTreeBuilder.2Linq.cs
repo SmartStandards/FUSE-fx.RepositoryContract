@@ -56,15 +56,13 @@ namespace System.Data.Fuse.LinqSupport {
       // No content → return TRUE
       if (elements.Count == 0) {
         baseExpression = Expression.Constant(true);
-      }
-      else {
+      } else {
         baseExpression = elements[0];
 
         for (int i = 1; i < elements.Count; i++) {
           if (node.MatchAll) {
             baseExpression = Expression.AndAlso(baseExpression, elements[i]);
-          }
-          else {
+          } else {
             baseExpression = Expression.OrElse(baseExpression, elements[i]);
           }
         }
@@ -78,7 +76,7 @@ namespace System.Data.Fuse.LinqSupport {
       return baseExpression;
     }
 
-    private static MethodInfo _StringToLowerMethod = typeof(string).GetMethod(nameof(string.ToLower), new Type[] {});
+    private static MethodInfo _StringToLowerMethod = typeof(string).GetMethod(nameof(string.ToLower), new Type[] { });
 
     //=====================================================================
     // Build one predicate: FieldOperators.* + IN + string ops
@@ -111,8 +109,8 @@ namespace System.Data.Fuse.LinqSupport {
           return Expression.GreaterThan(member, Expression.Convert(constExpr, member.Type));
 
         case FieldOperators.GreaterOrEqual: // + FieldOperators.Contains        
-          if(member.Type == typeof(string)) {
-            return BuildStringCall(member, "Contains", constantValue);
+          if (member.Type == typeof(string)) {
+            return BuildStringCall(member, "Contains", constExpr);
           }
           return Expression.GreaterThanOrEqual(member, Expression.Convert(constExpr, member.Type));
 
@@ -123,13 +121,13 @@ namespace System.Data.Fuse.LinqSupport {
           return Expression.LessThanOrEqual(member, Expression.Convert(constExpr, member.Type));
 
         case FieldOperators.StartsWith:
-          return BuildStringCall(member, "StartsWith", constantValue);
+          return BuildStringCall(member, "StartsWith", constExpr);
 
         case FieldOperators.EndsWith:
-          return BuildStringCall(member, "EndsWith", constantValue);
+          return BuildStringCall(member, "EndsWith", constExpr);
 
         case FieldOperators.In:
-          return BuildInOperator(member, constantValue);
+          return BuildInOperator(member, constantValue, matchStringsCaseInsensitive);
 
         default:
           throw new NotSupportedException("Unsupported FieldOperator: " + predicate.Operator.ToString());
@@ -161,7 +159,7 @@ namespace System.Data.Fuse.LinqSupport {
     //=====================================================================
     //  String methods
     //=====================================================================
-    private static Expression BuildStringCall(Expression member, string method, object value) {
+    private static Expression BuildStringCall(Expression member, string method, Expression constatExpression) {
       if (member.Type != typeof(string)) {
         throw new InvalidOperationException(
             "String operator '" + method + "' used on non-string member " + member.ToString()
@@ -170,14 +168,16 @@ namespace System.Data.Fuse.LinqSupport {
 
       MethodInfo mi = typeof(string).GetMethod(method, new Type[] { typeof(string) });
 
-      return Expression.Call(member, mi, Expression.Constant(value, typeof(string)));
+      return Expression.Call(member, mi, constatExpression);
     }
 
     //=====================================================================
     //  IN operator →   array.Contains(member)
     //=====================================================================
-    private static Expression BuildInOperator(Expression member, object value) {
-      object[] array = value as object[];
+    private static Expression BuildInOperator(
+      Expression member, object arrayOfValues, bool transformElementsToLowerCase
+    ) {
+      object[] array = arrayOfValues as object[];
 
       if (array == null) {
         throw new InvalidOperationException("IN operator expects an object[] array.");
@@ -191,8 +191,13 @@ namespace System.Data.Fuse.LinqSupport {
 
       // Create a properly typed array using reflection
       Array typedArray = Array.CreateInstance(member.Type, array.Length);
+
       for (int i = 0; i < array.Length; i++) {
-        typedArray.SetValue(Convert.ChangeType(array[i], member.Type), i);
+        object element = Convert.ChangeType(array[i], member.Type);
+        if (element is string && transformElementsToLowerCase) {
+          element = ((string)element).ToLower();
+        }
+        typedArray.SetValue(element, i);
       }
 
       //TODO_Krn: Review

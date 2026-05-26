@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Data.Fuse.AutoValueSupport;
 using System.Data.Fuse.Convenience;
 using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.Fuse.Sql.InstanceManagement;
@@ -115,6 +116,7 @@ namespace System.Data.Fuse.Sql {
     private readonly string _SchemaName = null;
 
     private readonly Func<TEntity, TKey> _KeyExtractor;
+    private readonly AutoValueManager _AutoValueManager;
 
     private string SchemaAndTableName => string.IsNullOrEmpty(_SchemaName) ? _TableName : $"{_SchemaName}.{_TableName}";
 
@@ -142,6 +144,7 @@ namespace System.Data.Fuse.Sql {
       _ConnectionProvider = connectionProvider;
       _SchemaRoot = schemaRoot;
       _OwnsConnection = false;
+      _AutoValueManager = new AutoValueManager(typeof(TEntity));
       _KeyExtractor = ConversionHelper.GetKeyExtractor<TEntity, TKey>(_SchemaRoot);
       _TableName = string.IsNullOrEmpty(tableName) ? schema.NamePlural : tableName;
       _SchemaName = schemaName;
@@ -157,6 +160,7 @@ namespace System.Data.Fuse.Sql {
 
     private static List<List<PropertyInfo>> _UniqueKeySets;
     private static List<PropertyInfo> _PrimaryKeySet;
+    private static Dictionary<string, bool> _DbGeneratedIdentityByPropertyName;
 
     protected List<List<PropertyInfo>> Keysets {
       get {
@@ -173,6 +177,20 @@ namespace System.Data.Fuse.Sql {
           _PrimaryKeySet = InitPrimaryKeySet();
         }
         return _PrimaryKeySet;
+      }
+    }
+
+    protected Dictionary<string, bool> DbGeneratedIdentityByPropertyName {
+      get {
+        if (_DbGeneratedIdentityByPropertyName == null) {
+          EntitySchema schema = GetSchemaRoot().GetSchema(typeof(TEntity).Name);
+          _DbGeneratedIdentityByPropertyName = schema.Fields.ToDictionary(
+            f => f.Name,
+            f => f.DbGeneratedIdentity,
+            StringComparer.OrdinalIgnoreCase
+          );
+        }
+        return _DbGeneratedIdentityByPropertyName;
       }
     }
 
@@ -675,12 +693,37 @@ namespace System.Data.Fuse.Sql {
         if (fieldSchema.SetabilityFlags == (int)Setability.Never) {
           continue; // Skip read-only fields
         }
+        if (fieldSchema.DbGeneratedIdentity) {
+          continue; // Skip DB-generated identity fields — SQL Server manages these via IDENTITY
+        }
         if (prop.CanRead) {
           fields[prop.Name] = prop.GetValue(entity);
         }
       }
 
       return fields;
+    }
+
+    private Dictionary<string, object> FilterUpdateFields(Dictionary<string, object> fields) {
+      Dictionary<string, object> filteredFields = new Dictionary<string, object>(fields);
+
+      foreach (PropertyInfo keyProp in PrimaryKeySet) {
+        filteredFields.Remove(keyProp.Name);
+      }
+
+      foreach (var field in fields.ToArray()) {
+        PropertyInfo propertyInfo = typeof(TEntity).GetProperty(field.Key);
+        if (propertyInfo == null) {
+          filteredFields.Remove(field.Key);
+          continue;
+        }
+
+        if (_AutoValueManager.ShouldPreserveValueOnUpdate(propertyInfo, field.Value, p => this.IsDatabaseIdentityProperty(p))) {
+          filteredFields.Remove(field.Key);
+        }
+      }
+
+      return filteredFields;
     }
 
     private Dictionary<string, object> ExtractNonKeyFieldsFromEntity(TEntity entity) {
@@ -691,7 +734,20 @@ namespace System.Data.Fuse.Sql {
         fields.Remove(keyProp.Name);
       }
 
+      foreach (PropertyInfo propertyInfo in typeof(TEntity).GetProperties()) {
+        if (!fields.ContainsKey(propertyInfo.Name)) continue;
+        if (_AutoValueManager.ShouldPreserveValueOnUpdate(propertyInfo, fields[propertyInfo.Name], p => this.IsDatabaseIdentityProperty(p))) {
+          fields.Remove(propertyInfo.Name);
+        }
+      }
+
       return fields;
+    }
+
+    private bool IsDatabaseIdentityProperty(PropertyInfo propertyInfo) {
+      return propertyInfo != null &&
+        DbGeneratedIdentityByPropertyName.TryGetValue(propertyInfo.Name, out bool isDbGeneratedIdentity) &&
+        isDbGeneratedIdentity;
     }
 
     #endregion
@@ -788,6 +844,7 @@ namespace System.Data.Fuse.Sql {
           return existingEntity;
         } else {
           // Insert new entity
+          _AutoValueManager.ApplyValuesOnAdd(entity, GetEntities(ExpressionTree.Empty(), Array.Empty<string>()), connection, p => this.IsDatabaseIdentityProperty(p));
           Dictionary<string, object> fields = ExtractFieldsFromEntity(entity);
 
           using (var command = connection.CreateCommand()) {
@@ -882,10 +939,7 @@ namespace System.Data.Fuse.Sql {
             return null;
           }
           // Create a dictionary of non-key fields for update
-          Dictionary<string, object> updateFields = new Dictionary<string, object>(fields);
-          foreach (PropertyInfo keyProp in PrimaryKeySet) {
-            updateFields.Remove(keyProp.Name);
-          }
+          Dictionary<string, object> updateFields = FilterUpdateFields(fields);
 
           // Update existing entity
           using (var command = connection.CreateCommand()) {
@@ -908,6 +962,16 @@ namespace System.Data.Fuse.Sql {
           }
         } else {
           // Insert new entity
+          TEntity entity = Activator.CreateInstance<TEntity>();
+          foreach (var field in fields) {
+            PropertyInfo prop = typeof(TEntity).GetProperty(field.Key);
+            if (prop != null && prop.CanWrite) {
+              prop.SetValue(entity, field.Value);
+            }
+          }
+          _AutoValueManager.ApplyValuesOnAdd(entity, GetEntities(ExpressionTree.Empty(), Array.Empty<string>()), connection, p => this.IsDatabaseIdentityProperty(p));
+          fields = ExtractFieldsFromEntity(entity);
+
           using (var command = connection.CreateCommand()) {
             command.CommandText = BuildInsertSql(fields);
             AddFieldParameters(command, fields);
@@ -916,13 +980,7 @@ namespace System.Data.Fuse.Sql {
           }
 
           // Create a new entity with the inserted fields
-          existingEntity = Activator.CreateInstance<TEntity>();
-          foreach (var field in fields) {
-            PropertyInfo prop = typeof(TEntity).GetProperty(field.Key);
-            if (prop != null && prop.CanWrite) {
-              prop.SetValue(existingEntity, field.Value);
-            }
-          }
+          existingEntity = entity;
         }
 
         // Create the dictionary of conflicting fields
@@ -1240,6 +1298,7 @@ namespace System.Data.Fuse.Sql {
 
           // If the entity does not exist, add it
           if (!entityExists) {
+            _AutoValueManager.ApplyValuesOnAdd(entity, GetEntities(ExpressionTree.Empty(), Array.Empty<string>()), connection, p => this.IsDatabaseIdentityProperty(p));
             Dictionary<string, object> fields = ExtractFieldsFromEntity(entity);
 
             using (var command = connection.CreateCommand()) {
@@ -1371,10 +1430,7 @@ namespace System.Data.Fuse.Sql {
           // If the entity exists, update its fields
           if (existingEntity != null) {
             // Create a dictionary of non-key fields for update
-            Dictionary<string, object> updateFields = new Dictionary<string, object>(fields);
-            foreach (var keyField in keyFieldNames) {
-              updateFields.Remove(keyField);
-            }
+            Dictionary<string, object> updateFields = FilterUpdateFields(fields);
 
             using (var command = connection.CreateCommand()) {
               command.CommandText = BuildUpdateSql(updateFields, BuildWhereClauseForKey(keySetValues.ToKey<TKey>(), false));

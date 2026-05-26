@@ -9,6 +9,7 @@
     <Import_RootNamespace>System</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AutoValueSupport\AutoValueManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ConversionHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)convenience\DataStoreExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Convenience\ModelVsEntityDataStore.cs" />

@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RepositoryContract.Tests;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Data.Fuse;
 using System.Data.Fuse.Convenience;
 using System.Data.ModelDescription;

@@ -67,7 +67,7 @@ namespace RepositoryContract.Tests {
         ExpressionTree.Empty(), new string[] { $"^{nameof(RootEntity1.Id)}" }
       ).Max(r => r.Key);
 
-      for (int i = 0; i < 10; i++) {
+      for (int i = 1; i <= 10; i++) {
         store.AddOrUpdate<ChildEntity1, int>(
           new ChildEntity1() {
             Id = i,
@@ -85,7 +85,7 @@ namespace RepositoryContract.Tests {
         }
       );     
 
-      for (int i = 0; i < 10; i++) {
+      for (int i = 1; i <= 10; i++) {
         store.AddOrUpdate<ChildEntityOfRootEntityWithCompositeKey, int>(
           new ChildEntityOfRootEntityWithCompositeKey() {
             Id = i,
