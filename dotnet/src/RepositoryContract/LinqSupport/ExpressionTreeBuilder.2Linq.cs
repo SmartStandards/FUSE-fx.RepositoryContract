@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+#if !NETCOREAPP
+using System.Globalization;
+#endif
 
 namespace System.Data.Fuse.LinqSupport {
 
@@ -85,40 +88,47 @@ namespace System.Data.Fuse.LinqSupport {
       string fieldName = predicate.FieldName;
 
       Expression member = BuildMemberAccess(param, fieldName);
+      Type memberType = member.Type;
 
-      object constantValue = predicate.Value;
+      if (matchStringsCaseInsensitive && memberType == typeof(string)) {
+        member = Expression.Call(member, _StringToLowerMethod);
+      }
+
+      if (predicate.Operator == FieldOperators.In) {
+        Type elementType = Nullable.GetUnderlyingType(memberType) ?? memberType;
+        object[] inValues = DeserializeAsObjectArray(predicate.ValueSerialized, elementType);
+        return BuildInOperator(member, inValues, matchStringsCaseInsensitive);
+      }
+
+      Type targetType = Nullable.GetUnderlyingType(memberType) ?? memberType;
+      object constantValue = DeserializeScalar(predicate.ValueSerialized, targetType);
       Expression constExpr = Expression.Constant(constantValue);
 
-      if (matchStringsCaseInsensitive) {
-        if (member.Type == typeof(string)) {
-          member = Expression.Call(member, _StringToLowerMethod);
-        }
-        if (constExpr.Type == typeof(string)) {
-          constExpr = Expression.Call(constExpr, _StringToLowerMethod);
-        }
+      if (matchStringsCaseInsensitive && constExpr.Type == typeof(string)) {
+        constExpr = Expression.Call(constExpr, _StringToLowerMethod);
       }
 
       switch (predicate.Operator) {
         case FieldOperators.Equal:
-          return Expression.Equal(member, Expression.Convert(constExpr, member.Type));
+          return Expression.Equal(member, Expression.Convert(constExpr, memberType));
 
         case FieldOperators.NotEqual:
-          return Expression.NotEqual(member, Expression.Convert(constExpr, member.Type));
+          return Expression.NotEqual(member, Expression.Convert(constExpr, memberType));
 
         case FieldOperators.Greater:
-          return Expression.GreaterThan(member, Expression.Convert(constExpr, member.Type));
+          return Expression.GreaterThan(member, Expression.Convert(constExpr, memberType));
 
-        case FieldOperators.GreaterOrEqual: // + FieldOperators.Contains        
-          if (member.Type == typeof(string)) {
+        case FieldOperators.GreaterOrEqual: // + FieldOperators.Contains
+          if (memberType == typeof(string)) {
             return BuildStringCall(member, "Contains", constExpr);
           }
-          return Expression.GreaterThanOrEqual(member, Expression.Convert(constExpr, member.Type));
+          return Expression.GreaterThanOrEqual(member, Expression.Convert(constExpr, memberType));
 
         case FieldOperators.Less:
-          return Expression.LessThan(member, Expression.Convert(constExpr, member.Type));
+          return Expression.LessThan(member, Expression.Convert(constExpr, memberType));
 
         case FieldOperators.LessOrEqual: //TODO_Krn: SubstringOf ?
-          return Expression.LessThanOrEqual(member, Expression.Convert(constExpr, member.Type));
+          return Expression.LessThanOrEqual(member, Expression.Convert(constExpr, memberType));
 
         case FieldOperators.StartsWith:
           return BuildStringCall(member, "StartsWith", constExpr);
@@ -126,13 +136,39 @@ namespace System.Data.Fuse.LinqSupport {
         case FieldOperators.EndsWith:
           return BuildStringCall(member, "EndsWith", constExpr);
 
-        case FieldOperators.In:
-          return BuildInOperator(member, constantValue, matchStringsCaseInsensitive);
-
         default:
           throw new NotSupportedException("Unsupported FieldOperator: " + predicate.Operator.ToString());
       }
     }
+
+#if NETCOREAPP
+    private static object DeserializeScalar(string valueSerialized, Type type) {
+      if (string.IsNullOrEmpty(valueSerialized) || valueSerialized == "null") {
+        return type.IsValueType ? Activator.CreateInstance(type) : null;
+      }
+      return System.Text.Json.JsonSerializer.Deserialize(valueSerialized, type);
+    }
+
+    private static object[] DeserializeAsObjectArray(string valueSerialized, Type elementType) {
+      if (string.IsNullOrEmpty(valueSerialized) || valueSerialized == "null") {
+        return new object[0];
+      }
+      Array typedArray = (Array)System.Text.Json.JsonSerializer.Deserialize(valueSerialized, elementType.MakeArrayType());
+      object[] result = new object[typedArray.Length];
+      for (int i = 0; i < typedArray.Length; i++) {
+        result[i] = typedArray.GetValue(i);
+      }
+      return result;
+    }
+#else
+    private static object DeserializeScalar(string valueSerialized, Type type) {
+      return FieldPredicate.DeserializeValueForNetFramework(valueSerialized, type);
+    }
+
+    private static object[] DeserializeAsObjectArray(string valueSerialized, Type elementType) {
+      return FieldPredicate.DeserializeArrayForNetFramework(valueSerialized, elementType);
+    }
+#endif
 
     //=====================================================================
     //  Member Access: "Address.City" → p.Address.City

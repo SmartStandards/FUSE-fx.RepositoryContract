@@ -329,7 +329,11 @@ namespace System.Data.Fuse.LinqSupport {
               FieldPredicate inPredicate = new FieldPredicate();
               inPredicate.FieldName = fieldName;
               inPredicate.Operator = FieldOperators.In;
-              inPredicate.Value = arrayValue;
+#if NETCOREAPP
+              inPredicate.ValueSerialized = System.Text.Json.JsonSerializer.Serialize(arrayValue);
+#else
+              inPredicate.ValueSerialized = FieldPredicate.SerializeArrayForNetFramework(arrayValue);
+#endif
 
               predicate = inPredicate;
               return true;
@@ -354,11 +358,7 @@ namespace System.Data.Fuse.LinqSupport {
           }
 
           if (methodCallExpression.Method.Name == "EndsWith") {
-            FieldPredicate endsWithPredicate = new FieldPredicate();
-            endsWithPredicate.FieldName = fieldName;
-            endsWithPredicate.Operator = FieldOperators.EndsWith;
-            endsWithPredicate.Value = argumentValue;
-            predicate = endsWithPredicate;
+            predicate = FieldPredicate.EndsWith(fieldName, argumentValue);
             return true;
           }
 

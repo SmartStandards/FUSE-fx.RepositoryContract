@@ -85,31 +85,19 @@ namespace System.Data.Fuse.Convenience {
         StringBuilder result1 = new StringBuilder();
         result1.Append("(");
 
-#if NETCOREAPP
-        IEnumerable? values = relationElement.TryGetValue<IEnumerable>();
-        if (values == null) {
-          throw new ArgumentException("The value of the 'in' operator must be an Array.");
-        }
-#else
-        object rawValues = relationElement.Value;
-        IEnumerable values = (IEnumerable)rawValues;
-#endif
-        object[] valuesArray = values.OfType<object>().ToArray();
-        if (valuesArray.Length == 0) {
+        List<string> elementJsons = FieldPredicate.GetJsonArrayElementJsons(relationElement.ValueSerialized);
+        if (elementJsons.Count == 0) {
           // represent an always-false condition
           return "false";
         }
 
         int count = 0;
-        foreach (object value in valuesArray) {
+        foreach (string elementJson in elementJsons) {
           count++;
           FieldPredicate innerRelationElement = new FieldPredicate() {
             FieldName = relationElement.FieldName,
             Operator = "=",
-#if NETCOREAPP
-            ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
-#endif
-            Value = value
+            ValueSerialized = elementJson.Trim()
           };
           result1.Append(
             CompileFieldPredicateToWhereStatement(entitySchema, innerRelationElement, mode, prefix)
@@ -172,11 +160,7 @@ namespace System.Data.Fuse.Convenience {
         serializedValue = "";
       } else {
 
-#if NETCOREAPP
-        string relationElementValue = relationElement.GetValueAsString();
-#else
-        string relationElementValue = relationElement.Value.ToString();
-#endif
+        string relationElementValue = relationElement.GetValueAsRawString();
 
         if (
           (fieldType == "DateTime" || fieldType == "Date")
@@ -454,8 +438,9 @@ namespace System.Data.Fuse.Convenience {
           Operator = FieldOperators.Equal,
 #if NETCOREAPP
           ValueSerialized = System.Text.Json.JsonSerializer.Serialize(value),
+#else
+          ValueSerialized = FieldPredicate.SerializeValueForNetFramework(value),
 #endif
-          Value = value
         };
 
         expressionTree.Predicates.Add(fieldPredicate);

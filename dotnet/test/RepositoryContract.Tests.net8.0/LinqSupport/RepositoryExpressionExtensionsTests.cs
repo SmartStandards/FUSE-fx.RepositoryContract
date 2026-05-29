@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RepositoryContract.Tests;
 using System;
 using System.Collections.Generic;
@@ -47,7 +47,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
       Assert.AreEqual(FieldOperators.Equal, pred.Operator);
-      Assert.AreEqual(30, pred.Value);
+      Assert.AreEqual(30, pred.TryGetValue<int>());
     }
 
     [TestMethod]
@@ -60,7 +60,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Name", pred.FieldName);
       Assert.AreEqual(FieldOperators.Equal, pred.Operator);
-      Assert.AreEqual(name, pred.Value);
+      Assert.AreEqual(name, pred.TryGetValue<string>());
     }
 
     [TestMethod]
@@ -73,7 +73,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = FirstPredicate(tree);
       Assert.AreEqual("Name", pred.FieldName);
       Assert.AreEqual(FieldOperators.Equal, pred.Operator);
-      Assert.AreEqual(name, pred.Value);
+      Assert.AreEqual(name, pred.TryGetValue<string>());
     }
 
     // --------------------------------------------------------------------
@@ -88,7 +88,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
       Assert.AreEqual(FieldOperators.NotEqual, pred.Operator);
-      Assert.AreEqual(10, pred.Value);
+      Assert.AreEqual(10, pred.TryGetValue<int>());
     }
 
     // --------------------------------------------------------------------
@@ -103,7 +103,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
       Assert.AreEqual(FieldOperators.Greater, pred.Operator);
-      Assert.AreEqual(18, pred.Value);
+      Assert.AreEqual(18, pred.TryGetValue<int>());
     }
 
     // --------------------------------------------------------------------
@@ -118,7 +118,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
       Assert.AreEqual(FieldOperators.GreaterOrEqual, pred.Operator);
-      Assert.AreEqual(21, pred.Value);
+      Assert.AreEqual(21, pred.TryGetValue<int>());
     }
 
     // --------------------------------------------------------------------
@@ -133,7 +133,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
       Assert.AreEqual(FieldOperators.Less, pred.Operator);
-      Assert.AreEqual(99, pred.Value);
+      Assert.AreEqual(99, pred.TryGetValue<int>());
     }
 
     // --------------------------------------------------------------------
@@ -148,7 +148,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Age", pred.FieldName);
       Assert.AreEqual(FieldOperators.LessOrEqual, pred.Operator);
-      Assert.AreEqual(40, pred.Value);
+      Assert.AreEqual(40, pred.TryGetValue<int>());
     }
 
     // --------------------------------------------------------------------
@@ -163,7 +163,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Name", pred.FieldName);
       Assert.AreEqual(FieldOperators.Contains, pred.Operator);
-      Assert.AreEqual("abc", pred.Value);
+      Assert.AreEqual("abc", pred.TryGetValue<string>());
     }
 
     // --------------------------------------------------------------------
@@ -178,7 +178,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Name", pred.FieldName);
       Assert.AreEqual(FieldOperators.StartsWith, pred.Operator);
-      Assert.AreEqual("Jo", pred.Value);
+      Assert.AreEqual("Jo", pred.TryGetValue<string>());
     }
 
     // --------------------------------------------------------------------
@@ -193,7 +193,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("Name", pred.FieldName);
       Assert.AreEqual(FieldOperators.EndsWith, pred.Operator);
-      Assert.AreEqual("son", pred.Value);
+      Assert.AreEqual("son", pred.TryGetValue<string>());
     }
 
     // --------------------------------------------------------------------
@@ -213,7 +213,7 @@ namespace System.Data.Fuse.LinqSupport {
       Assert.AreEqual("Country", pred.FieldName);
       Assert.AreEqual(FieldOperators.In, pred.Operator);
 
-      object[] arr = pred.Value as object[];
+      string[] arr = pred.TryGetValue<string[]>();
       Assert.IsNotNull(arr);
       Assert.AreEqual(3, arr.Length);
     }
@@ -231,7 +231,7 @@ namespace System.Data.Fuse.LinqSupport {
       Assert.AreEqual("Country", pred.FieldName);
       Assert.AreEqual(FieldOperators.In, pred.Operator);
 
-      object[] arr = pred.Value as object[];
+      string[] arr = pred.TryGetValue<string[]>();
       Assert.IsNotNull(arr);
       Assert.AreEqual(0, arr.Length);
     }
@@ -248,7 +248,7 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual("IsActive", pred.FieldName);
       Assert.AreEqual(FieldOperators.Equal, pred.Operator);
-      Assert.AreEqual(true, pred.Value);
+      Assert.AreEqual(true, pred.TryGetValue<bool>());
     }
 
 
@@ -277,7 +277,7 @@ namespace System.Data.Fuse.LinqSupport {
     }
 
     // --------------------------------------------------------------------
-    // NOT 
+    // NOT
     // --------------------------------------------------------------------
 
     [TestMethod]
@@ -366,7 +366,7 @@ namespace System.Data.Fuse.LinqSupport {
 
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual(FieldOperators.Greater, pred.Operator);
-      Assert.AreEqual(10, pred.Value);
+      Assert.AreEqual(10, pred.TryGetValue<int>());
     }
 
   }
