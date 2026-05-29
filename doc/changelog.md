@@ -7,6 +7,12 @@ This files contains a version history including all changes relevant for semanti
 
 ## Upcoming Changes
 
+*(none)*
+
+
+
+## v 2.0.0
+released **2026-05-29**, including:
  - **breaking Change**: removed "Value" property from FieldPredicate
 
 

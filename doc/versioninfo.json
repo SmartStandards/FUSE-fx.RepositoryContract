@@ -1,13 +1,13 @@
 {
-  "currentVersion": "1.1.0",
-  "currentVersionWithSuffix": "1.1.0",
+  "currentVersion": "2.0.0",
+  "currentVersionWithSuffix": "2.0.0",
   "releaseType": "",
-  "previousVersion": "1.0.2",
-  "changeGrade": "minor",
-  "currentMajor": 1,
-  "currentMinor": 1,
+  "previousVersion": "1.1.0",
+  "changeGrade": "major",
+  "currentMajor": 2,
+  "currentMinor": 0,
   "currentPatch": 0,
   "versionDateInfo": "2026-05-29",
-  "versionTimeInfo": "09:16:48",
-  "versionNotes": "- new Feature: added AutoValue Feature to repository implementations\n- Fixed Bug in linq ExpressionTreeBuilder (constantValue)\n"
+  "versionTimeInfo": "13:06:00",
+  "versionNotes": "- breaking Change: removed \"Value\" property from FieldPredicate\n"
 }
