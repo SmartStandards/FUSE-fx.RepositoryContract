@@ -1,13 +1,13 @@
 {
-  "currentVersion": "1.0.2",
-  "currentVersionWithSuffix": "1.0.2",
+  "currentVersion": "1.1.0",
+  "currentVersionWithSuffix": "1.1.0",
   "releaseType": "",
-  "previousVersion": "1.0.1",
-  "changeGrade": "fix",
+  "previousVersion": "1.0.2",
+  "changeGrade": "minor",
   "currentMajor": 1,
-  "currentMinor": 0,
-  "currentPatch": 2,
-  "versionDateInfo": "2026-05-21",
-  "versionTimeInfo": "06:07:27",
-  "versionNotes": "- Rebuild\n"
+  "currentMinor": 1,
+  "currentPatch": 0,
+  "versionDateInfo": "2026-05-29",
+  "versionTimeInfo": "09:16:48",
+  "versionNotes": "- new Feature: added AutoValue Feature to repository implementations\n- Fixed Bug in linq ExpressionTreeBuilder (constantValue)\n"
 }

@@ -6,9 +6,15 @@ This files contains a version history including all changes relevant for semanti
 
 
 ## Upcoming Changes
- - new Feature: added AutoValue Feature to repository implementations
- - Fixed Bug in linq ExpressionTreeBuilder (constantValue)
 
+*(none)*
+
+
+
+## v 1.1.0
+released **2026-05-29**, including:
+ - **new Feature**: added AutoValue Feature to repository implementations
+ - Fixed Bug in linq ExpressionTreeBuilder (constantValue)
 
 
 
