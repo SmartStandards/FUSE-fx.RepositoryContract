@@ -11,6 +11,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 2.0.1
+released **2026-06-18**, including:
+ - fixed fieldpredicate serialize
+
+
+
 ## v 2.0.0
 released **2026-05-29**, including:
  - **breaking Change**: removed "Value" property from FieldPredicate

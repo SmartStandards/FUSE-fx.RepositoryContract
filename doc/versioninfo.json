@@ -1,13 +1,13 @@
 {
-  "currentVersion": "2.0.0",
-  "currentVersionWithSuffix": "2.0.0",
+  "currentVersionWithSuffix": "2.0.1",
   "releaseType": "",
-  "previousVersion": "1.1.0",
-  "changeGrade": "major",
+  "currentVersion": "2.0.1",
   "currentMajor": 2,
   "currentMinor": 0,
-  "currentPatch": 0,
-  "versionDateInfo": "2026-05-29",
-  "versionTimeInfo": "13:06:00",
-  "versionNotes": "- breaking Change: removed \"Value\" property from FieldPredicate\n"
+  "currentFix": 1,
+  "previousVersion": "0.0.0",
+  "changeGrade": "initial",
+  "versionTimeInfo": "00:00:00",
+  "versionDateInfo": "1900-01-01",
+  "versionNotes": ""
 }
