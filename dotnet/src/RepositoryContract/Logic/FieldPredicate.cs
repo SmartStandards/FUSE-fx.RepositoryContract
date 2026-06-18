@@ -91,6 +91,9 @@ namespace System.Data.Fuse {
       if (value is byte[] bytesValue) {
         return $"\"{Convert.ToBase64String(bytesValue)}\"";
       }
+      if (value is System.Collections.IEnumerable enumerableValue) {
+        return SerializeArrayForNetFramework(enumerableValue);
+      }
       if (value is Enum) {
         return Convert.ToInt64(value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
       }
@@ -101,14 +104,16 @@ namespace System.Data.Fuse {
     }
 
     public static string SerializeArrayForNetFramework(object arrayValue) {
-      object[] array = arrayValue as object[];
-      if (array == null) {
+      System.Collections.IEnumerable enumerable = arrayValue as System.Collections.IEnumerable;
+      if (enumerable == null) {
         return "null";
       }
       StringBuilder sb = new StringBuilder("[");
-      for (int i = 0; i < array.Length; i++) {
-        if (i > 0) sb.Append(",");
-        sb.Append(SerializeValueForNetFramework(array[i]));
+      bool first = true;
+      foreach (object item in enumerable) {
+        if (!first) sb.Append(",");
+        sb.Append(SerializeValueForNetFramework(item));
+        first = false;
       }
       sb.Append("]");
       return sb.ToString();
