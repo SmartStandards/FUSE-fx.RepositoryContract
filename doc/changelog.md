@@ -11,6 +11,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 2.0.2
+released **2026-07-02**, including:
+ - Fix ApplyValuesOnAdd
+
+
+
 ## v 2.0.1
 released **2026-06-18**, including:
  - fixed fieldpredicate serialize
