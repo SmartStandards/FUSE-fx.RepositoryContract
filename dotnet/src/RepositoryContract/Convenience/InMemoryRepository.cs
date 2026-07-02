@@ -162,7 +162,7 @@ namespace System.Data.Fuse.Convenience {
         }
 
         if (existingEntity == null) {
-          _AutoValueManager.ApplyValuesOnAdd(entity, _Entities, _Entities);
+          _AutoValueManager.ApplyValuesOnAdd(entity, this.GetHighestExistingValue, _Entities);
           _Entities.Add(entity);
           return entity;
         } else {
@@ -215,7 +215,7 @@ namespace System.Data.Fuse.Convenience {
           // Create a new instance of TEntity
           TEntity entity = Activator.CreateInstance<TEntity>();
           CopyFields2(fields, entity);
-          _AutoValueManager.ApplyValuesOnAdd(entity, _Entities, _Entities);
+          _AutoValueManager.ApplyValuesOnAdd(entity, this.GetHighestExistingValue, _Entities);
           existingEntity = entity;
           // If no existing entity found, add new entity
           _Entities.Add(entity);
@@ -649,7 +649,7 @@ namespace System.Data.Fuse.Convenience {
 
           // If the entity does not exist, add it
           if (existingEntity == null) {
-            _AutoValueManager.ApplyValuesOnAdd(entity, _Entities, _Entities);
+            _AutoValueManager.ApplyValuesOnAdd(entity, this.GetHighestExistingValue, _Entities);
             _Entities.Add(entity);
             return entity.GetValues(PrimaryKeySet).ToKey<TKey>();
           }
@@ -661,6 +661,19 @@ namespace System.Data.Fuse.Convenience {
 
       // If the entity already exists or if an error occurs, return default(TKey)
       return default(TKey);
+    }
+
+    private decimal? GetHighestExistingValue(PropertyInfo propertyInfo) {
+      if (propertyInfo == null) {
+        return null;
+      }
+
+      return _Entities
+        .Select(entity => propertyInfo.GetValue(entity, null))
+        .Where(value => value != null)
+        .Select(value => (decimal?)Convert.ToDecimal(value))
+        .DefaultIfEmpty()
+        .Max();
     }
 
     /// <summary>

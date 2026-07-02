@@ -42,7 +42,7 @@ namespace System.Data.Fuse.AutoValueSupport {
     }
 
     public void ApplyValuesOnAdd(
-      object entity, IEnumerable existingEntities, object scopeKey = null,
+      object entity, Func<PropertyInfo, decimal?> getHighestExistingValue, object scopeKey = null,
       Func<PropertyInfo, bool> skipProperty = null
     ) {
       if (entity == null) { return; }
@@ -50,7 +50,7 @@ namespace System.Data.Fuse.AutoValueSupport {
       foreach (AutoValuePropertyDescriptor descriptor in this.GetAutoValueProperties(skipProperty)) {
         object currentValue = descriptor.PropertyInfo.GetValue(entity, null);
         AutoValueContext context = this.CreateContext(
-          descriptor, entity, currentValue, existingEntities, scopeKey
+          descriptor, entity, currentValue, getHighestExistingValue, scopeKey
         );
 
         object nextValue = this.ResolveHandler(descriptor)(context);
@@ -108,11 +108,11 @@ namespace System.Data.Fuse.AutoValueSupport {
 
     private AutoValueContext CreateContext(
       AutoValuePropertyDescriptor descriptor, object entity, object currentValue,
-      IEnumerable existingEntities, object scopeKey
+      Func<PropertyInfo, decimal?> getHighestExistingValue, object scopeKey
     ) {
       decimal? highestAssignedValue;
       decimal? highestExistingValue;
-      this.GetHighestValues(descriptor, existingEntities, scopeKey, out highestAssignedValue, out highestExistingValue);
+      this.GetHighestValues(descriptor, getHighestExistingValue, scopeKey, out highestAssignedValue, out highestExistingValue);
 
       return new AutoValueContext(
         _EntityType,
@@ -132,7 +132,7 @@ namespace System.Data.Fuse.AutoValueSupport {
 
     private void GetHighestValues(
       AutoValuePropertyDescriptor descriptor,
-      IEnumerable existingEntities,
+      Func<PropertyInfo, decimal?> getHighestExistingValue,
       object scopeKey,
       out decimal? highestAssignedValue,
       out decimal? highestExistingValue
@@ -153,7 +153,7 @@ namespace System.Data.Fuse.AutoValueSupport {
         }
       }
 
-      highestExistingValue = this.GetHighestExistingValue(descriptor, existingEntities);
+      highestExistingValue = this.GetHighestExistingValue(descriptor, getHighestExistingValue);
 
       lock (_SyncRoot) {
         if (_HighestAssignedValues.TryGetValue(key, out decimal rememberedHighestAssignedValue)) {
@@ -171,28 +171,11 @@ namespace System.Data.Fuse.AutoValueSupport {
       }
     }
 
-    private decimal? GetHighestExistingValue(AutoValuePropertyDescriptor descriptor, IEnumerable existingEntities) {
-      if (existingEntities == null) {
+    private decimal? GetHighestExistingValue(AutoValuePropertyDescriptor descriptor, Func<PropertyInfo, decimal?> getHighestExistingValue) {
+      if (getHighestExistingValue == null) {
         return null;
       }
-
-      decimal? highestExistingValue = null;
-      foreach (object existingEntity in existingEntities) {
-        if (existingEntity == null) {
-          continue;
-        }
-
-        object existingValue = descriptor.PropertyInfo.GetValue(existingEntity, null);
-        if (this.IsDefaultValue(existingValue, descriptor.PropertyInfo.PropertyType)) {
-          continue;
-        }
-
-        decimal numericValue = Convert.ToDecimal(existingValue);
-        if (!highestExistingValue.HasValue || numericValue > highestExistingValue.Value) {
-          highestExistingValue = numericValue;
-        }
-      }
-
+      decimal? highestExistingValue = getHighestExistingValue(descriptor.PropertyInfo);  
       return highestExistingValue;
     }
 

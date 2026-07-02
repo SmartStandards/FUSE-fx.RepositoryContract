@@ -12,6 +12,7 @@ using System.Data.ModelDescription.Convenience;
 using System.Linq;
 using System.Reflection;
 using System.Linq.Expressions;
+using System.Collections.Concurrent;
 using System.Data.Fuse.Ef.InstanceManagement;
 using System.Data.Fuse.LinqSupport;
 #if !NETCOREAPP
@@ -50,6 +51,7 @@ namespace System.Data.Fuse.Ef {
 
     private readonly Func<TEntity, TKey> _KeyExtractor;
     private readonly AutoValueManager _AutoValueManager;
+    private DbContext _CurrentDbContext;
 
     private IDbContextInstanceProvider _ContextInstanceProvider;
     public IDbContextInstanceProvider ContextInstanceProvider {
@@ -78,7 +80,7 @@ namespace System.Data.Fuse.Ef {
     //hier bei EF nicht brauchen, denn statt im .net code wird der SQL-server strings ohnehin
     //case-insensitive vergleichen, deshalb false. Diese Constante dient als dokumentation, damit
     //im code unten nicht einfach nur hier und da mal ein unerklärtes 'false' steht...
-    private const bool _MatchStringsCaseInsensitive = false; 
+    private const bool _MatchStringsCaseInsensitive = false;
 
     public EfRepository(IDbContextInstanceProvider contextInstanceProvider) {
       _ContextInstanceProvider = contextInstanceProvider;
@@ -111,6 +113,7 @@ namespace System.Data.Fuse.Ef {
     private static List<List<PropertyInfo>> _UniqueKeySets;
     private static List<PropertyInfo> _PrimaryKeySet;
     private static Dictionary<string, bool> _DbGeneratedIdentityByPropertyName;
+    private static readonly ConcurrentDictionary<string, CachedMaxQueryInfo> _CachedMaxQueriesByPropertyName = new ConcurrentDictionary<string, CachedMaxQueryInfo>(StringComparer.Ordinal);
 
     protected List<List<PropertyInfo>> Keysets {
       get {
@@ -154,50 +157,114 @@ namespace System.Data.Fuse.Ef {
 
     public TEntity AddOrUpdateEntity(TEntity entity) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
+        _CurrentDbContext = dbContext;
+        try {
 
-        object[] keySetValues = entity.GetValues(PrimaryKeySet);
-        TEntity existingEntity = dbContext.Set<TEntity>().Find(keySetValues.ToArray());
-        bool foundByPrimaryKey = existingEntity != null;
+          object[] keySetValues = entity.GetValues(PrimaryKeySet);
+          TEntity existingEntity = dbContext.Set<TEntity>().Find(keySetValues.ToArray());
+          bool foundByPrimaryKey = existingEntity != null;
 
-        if (existingEntity == null) {
-          foreach (var keyset in Keysets) {
-            object[] keysetValues = entity.GetValues(keyset);
-            var parameter = Expression.Parameter(typeof(TEntity), "e");
-            Expression body = Expression.Constant(true);
-            for (int i = 0; i < keyset.Count; i++) {
-              var prop = Expression.Property(parameter, keyset[i]);
-              var val = Expression.Constant(keysetValues[i], keyset[i].PropertyType);
-              body = Expression.AndAlso(body, Expression.Equal(prop, val));
-            }
-            var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
-            existingEntity = dbContext.Set<TEntity>().FirstOrDefault(predicate);
-            if (existingEntity != null) {
-              break;
+          if (existingEntity == null) {
+            foreach (var keyset in Keysets) {
+              object[] keysetValues = entity.GetValues(keyset);
+              var parameter = Expression.Parameter(typeof(TEntity), "e");
+              Expression body = Expression.Constant(true);
+              for (int i = 0; i < keyset.Count; i++) {
+                var prop = Expression.Property(parameter, keyset[i]);
+                var val = Expression.Constant(keysetValues[i], keyset[i].PropertyType);
+                body = Expression.AndAlso(body, Expression.Equal(prop, val));
+              }
+              var predicate = Expression.Lambda<Func<TEntity, bool>>(body, parameter);
+              existingEntity = dbContext.Set<TEntity>().FirstOrDefault(predicate);
+              if (existingEntity != null) {
+                break;
+              }
             }
           }
-        }
 
-        if (existingEntity == null) {
-          _AutoValueManager.ApplyValuesOnAdd(
-            entity,
-            dbContext.Set<TEntity>().AsNoTracking().ToArray(), 
-            dbContext.GetType(),
-            p => this.IsDatabaseIdentityProperty(p)
-          );
-          dbContext.Set<TEntity>().Add(entity);
-          this.UnsetIdentityFields(entity);
-          dbContext.SaveChanges();
-          return entity;
-        } else {
-          if (!foundByPrimaryKey && !keySetValues.All(v => v == null || v.Equals(Activator.CreateInstance(v.GetType())))) {
-            return null;
+          if (existingEntity == null) {
+            _AutoValueManager.ApplyValuesOnAdd(
+              entity,
+              getHighestExistingValue,
+              dbContext.GetType(),
+              p => this.IsDatabaseIdentityProperty(p)
+            );
+            dbContext.Set<TEntity>().Add(entity);
+            this.UnsetIdentityFields(entity);
+            dbContext.SaveChanges();
+            return entity;
+          } else {
+            if (!foundByPrimaryKey && !keySetValues.All(v => v == null || v.Equals(Activator.CreateInstance(v.GetType())))) {
+              return null;
+            }
+            CopyFields(entity, existingEntity, false);
+            dbContext.SaveChanges();
+            return existingEntity;
           }
-          CopyFields(entity, existingEntity, false);
-          dbContext.SaveChanges();
-          return existingEntity;
-        }
 
+        } finally {
+          _CurrentDbContext = null;
+        }
       });
+    }
+
+    private decimal? getHighestExistingValue(PropertyInfo info) {
+      if (info == null || _CurrentDbContext == null) {
+        return null;
+      }
+
+      CachedMaxQueryInfo cachedMaxQueryInfo = _CachedMaxQueriesByPropertyName.GetOrAdd(
+        info.Name,
+        _ => CreateCachedMaxQueryInfo(info)
+      );
+
+      object highestExistingValue = cachedMaxQueryInfo.MaxMethod.Invoke(
+        null,
+        new object[] { _CurrentDbContext.Set<TEntity>().AsNoTracking(), cachedMaxQueryInfo.Selector }
+      );
+
+      if (highestExistingValue == null) {
+        return null;
+      }
+
+      return Convert.ToDecimal(highestExistingValue);
+    }
+
+    private static CachedMaxQueryInfo CreateCachedMaxQueryInfo(PropertyInfo info) {
+      Type propertyType = info.PropertyType;
+      Type nullablePropertyType = Nullable.GetUnderlyingType(propertyType) == null
+        ? typeof(Nullable<>).MakeGenericType(propertyType)
+        : propertyType;
+
+      ParameterExpression entityParameter = Expression.Parameter(typeof(TEntity), "entity");
+      Expression propertyExpression = Expression.Property(entityParameter, info);
+      if (nullablePropertyType != propertyType) {
+        propertyExpression = Expression.Convert(propertyExpression, nullablePropertyType);
+      }
+
+      Type selectorType = typeof(Func<,>).MakeGenericType(typeof(TEntity), nullablePropertyType);
+      LambdaExpression selector = Expression.Lambda(selectorType, propertyExpression, entityParameter);
+
+      MethodInfo maxMethod = typeof(Queryable).GetMethods()
+        .Where(m => m.Name == nameof(Queryable.Max) && m.IsGenericMethodDefinition)
+        .Single(m => {
+          ParameterInfo[] parameters = m.GetParameters();
+          return parameters.Length == 2 && parameters[1].ParameterType.GetGenericTypeDefinition() == typeof(Expression<>);
+        })
+        .MakeGenericMethod(typeof(TEntity), nullablePropertyType);
+
+      return new CachedMaxQueryInfo(selector, maxMethod);
+    }
+
+    private sealed class CachedMaxQueryInfo {
+      public CachedMaxQueryInfo(LambdaExpression selector, MethodInfo maxMethod) {
+        Selector = selector;
+        MaxMethod = maxMethod;
+      }
+
+      public LambdaExpression Selector { get; }
+
+      public MethodInfo MaxMethod { get; }
     }
 
     private void UnsetIdentityFields(TEntity entity) {
@@ -253,7 +320,8 @@ namespace System.Data.Fuse.Ef {
           // Create a new instance of TEntity
           TEntity entity = Activator.CreateInstance<TEntity>();
           CopyFields2(fields, entity);
-          _AutoValueManager.ApplyValuesOnAdd(entity, dbContext.Set<TEntity>().AsNoTracking().ToArray(), dbContext.GetType(), p => this.IsDatabaseIdentityProperty(p));
+          _AutoValueManager.ApplyValuesOnAdd(
+            entity, getHighestExistingValue, dbContext.GetType(), p => this.IsDatabaseIdentityProperty(p));
           existingEntity = entity;
           // If no existing entity found, add new entity
           dbContext.Set<TEntity>().Add(entity);
@@ -346,7 +414,7 @@ namespace System.Data.Fuse.Ef {
     public int Count(ExpressionTree filter) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
         var filterExpression = ExpressionTreeMapper.BuildLinqExpressionFromTree<TEntity>(filter, false);
-        return dbContext.Set<TEntity>().Count(filterExpression);        
+        return dbContext.Set<TEntity>().Count(filterExpression);
       });
     }
 
@@ -427,7 +495,7 @@ namespace System.Data.Fuse.Ef {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
         IQueryable<TEntity> entities = dbContext.Set<TEntity>().AsNoTracking().WhereContentContains(searchExpression);
-       
+
         entities = entities.ApplySorting(sortedBy);
         entities = entities.ApplyPaging(limit, skip);
 
@@ -511,14 +579,14 @@ namespace System.Data.Fuse.Ef {
         //  }
         //).ToArray();
 
-        var orderedResult = new ArrayOrderedResult<TKey,Dictionary<string,object>>(keysToLoad);
+        var orderedResult = new ArrayOrderedResult<TKey, Dictionary<string, object>>(keysToLoad);
 
-        Expression<Func<TEntity,bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
+        Expression<Func<TEntity, bool>> queryByKeys = keysToLoad.BuildInArrayPredicate<TEntity, TKey>(PrimaryKeySet.ToArray());
 
         string[] keyPropertyNames = PrimaryKeySet.Select(p => p.Name).ToArray();
-        string[] fieldNamesToLoad =  includedFieldNames.Union(keyPropertyNames).Distinct().ToArray();
+        string[] fieldNamesToLoad = includedFieldNames.Union(keyPropertyNames).Distinct().ToArray();
 
-        Expression<Func<TEntity,TEntity>> selector = SelectorMapper.CreateDynamicSelectorExpression<TEntity>(includedFieldNames);
+        Expression<Func<TEntity, TEntity>> selector = SelectorMapper.CreateDynamicSelectorExpression<TEntity>(includedFieldNames);
 
         //full entity-class, but only with selected fields loaded
         TEntity[] partiallyLoadedEntitiesInUnknownOrder = dbContext.Set<TEntity>().AsNoTracking()
@@ -536,7 +604,7 @@ namespace System.Data.Fuse.Ef {
 
         Dictionary<string, object>[] result = orderedResult.GetResultItems(keepEmptyEntriesForMissingResults: true).ToArray();
         return result;
-        
+
       });
     }
 
@@ -681,7 +749,7 @@ namespace System.Data.Fuse.Ef {
       });
     }
 
-    public TKey[] MassupdateByLinqFilter(Expression<Func<TEntity,bool>> filterExpression, Dictionary<string, object> fields) {
+    public TKey[] MassupdateByLinqFilter(Expression<Func<TEntity, bool>> filterExpression, Dictionary<string, object> fields) {
       return _ContextInstanceProvider.VisitCurrentDbContext((dbContext) => {
 
         // Ensure that the fields to be updated do not include any key fields
@@ -727,7 +795,7 @@ namespace System.Data.Fuse.Ef {
 
           // If the entity does not exist, add it
           if (existingEntity == null) {
-            _AutoValueManager.ApplyValuesOnAdd(entity, dbContext.Set<TEntity>().AsNoTracking().ToArray(), dbContext.GetType(), p => this.IsDatabaseIdentityProperty(p));
+            _AutoValueManager.ApplyValuesOnAdd(entity, getHighestExistingValue, dbContext.GetType(), p => this.IsDatabaseIdentityProperty(p));
             dbContext.Set<TEntity>().Add(entity);
             this.UnsetIdentityFields(entity);
             dbContext.SaveChanges();

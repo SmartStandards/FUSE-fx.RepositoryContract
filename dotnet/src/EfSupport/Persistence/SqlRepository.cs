@@ -117,6 +117,7 @@ namespace System.Data.Fuse.Sql {
 
     private readonly Func<TEntity, TKey> _KeyExtractor;
     private readonly AutoValueManager _AutoValueManager;
+    private IDbConnection _CurrentConnection;
 
     private string SchemaAndTableName => string.IsNullOrEmpty(_SchemaName) ? _TableName : $"{_SchemaName}.{_TableName}";
 
@@ -200,6 +201,20 @@ namespace System.Data.Fuse.Sql {
 
     protected List<PropertyInfo> InitPrimaryKeySet() {
       return GetSchemaRoot().GetPrimaryKeyProperties(typeof(TEntity)).ToList();
+    }
+
+    private decimal? GetHighestExistingValue(PropertyInfo propertyInfo) {
+      if (propertyInfo == null || _CurrentConnection == null) {
+        return null;
+      }
+
+      using (var command = _CurrentConnection.CreateCommand()) {
+        command.CommandText = $"SELECT MAX({propertyInfo.Name}) FROM {SchemaAndTableName}";
+        object result = command.ExecuteScalar();
+        return (result == null || result == DBNull.Value)
+          ? null
+          : (decimal?)Convert.ToDecimal(result);
+      }
     }
 
     #region " Helper Methods "
@@ -844,27 +859,32 @@ namespace System.Data.Fuse.Sql {
           return existingEntity;
         } else {
           // Insert new entity
-          _AutoValueManager.ApplyValuesOnAdd(entity, GetEntities(ExpressionTree.Empty(), Array.Empty<string>()), connection, p => this.IsDatabaseIdentityProperty(p));
-          Dictionary<string, object> fields = ExtractFieldsFromEntity(entity);
+          _CurrentConnection = connection;
+          try {
+            _AutoValueManager.ApplyValuesOnAdd(entity, this.GetHighestExistingValue, connection, p => this.IsDatabaseIdentityProperty(p));
+            Dictionary<string, object> fields = ExtractFieldsFromEntity(entity);
 
-          using (var command = connection.CreateCommand()) {
-            command.CommandText = BuildInsertSql(fields);
-            AddFieldParameters(command, fields);
+            using (var command = connection.CreateCommand()) {
+              command.CommandText = BuildInsertSql(fields);
+              AddFieldParameters(command, fields);
 
-            var insertedId = command.ExecuteScalar();
+              var insertedId = command.ExecuteScalar();
 
-            if (insertedId != null) {
-              if (PrimaryKeySet.Count == 1 && PrimaryKeySet[0].PropertyType == typeof(int)) {
-                insertedId = Convert.ToInt32(insertedId);
-                PropertyInfo keyProp = typeof(TEntity).GetProperty(PrimaryKeySet[0].Name);
-                if (keyProp != null && keyProp.CanWrite) {
-                  keyProp.SetValue(entity, insertedId);
+              if (insertedId != null) {
+                if (PrimaryKeySet.Count == 1 && PrimaryKeySet[0].PropertyType == typeof(int)) {
+                  insertedId = Convert.ToInt32(insertedId);
+                  PropertyInfo keyProp = typeof(TEntity).GetProperty(PrimaryKeySet[0].Name);
+                  if (keyProp != null && keyProp.CanWrite) {
+                    keyProp.SetValue(entity, insertedId);
+                  }
                 }
               }
-
             }
+
+            return entity;
+          } finally {
+            _CurrentConnection = null;
           }
-          return entity;
         }
       });
     }
@@ -969,18 +989,23 @@ namespace System.Data.Fuse.Sql {
               prop.SetValue(entity, field.Value);
             }
           }
-          _AutoValueManager.ApplyValuesOnAdd(entity, GetEntities(ExpressionTree.Empty(), Array.Empty<string>()), connection, p => this.IsDatabaseIdentityProperty(p));
-          fields = ExtractFieldsFromEntity(entity);
+          _CurrentConnection = connection;
+          try {
+            _AutoValueManager.ApplyValuesOnAdd(entity, this.GetHighestExistingValue, connection, p => this.IsDatabaseIdentityProperty(p));
+            fields = ExtractFieldsFromEntity(entity);
 
-          using (var command = connection.CreateCommand()) {
-            command.CommandText = BuildInsertSql(fields);
-            AddFieldParameters(command, fields);
+            using (var command = connection.CreateCommand()) {
+              command.CommandText = BuildInsertSql(fields);
+              AddFieldParameters(command, fields);
 
-            command.ExecuteNonQuery();
+              command.ExecuteNonQuery();
+            }
+
+            // Create a new entity with the inserted fields
+            existingEntity = entity;
+          } finally {
+            _CurrentConnection = null;
           }
-
-          // Create a new entity with the inserted fields
-          existingEntity = entity;
         }
 
         // Create the dictionary of conflicting fields
@@ -1284,6 +1309,7 @@ namespace System.Data.Fuse.Sql {
 
     public TKey TryAddEntity(TEntity entity) {
       return _ConnectionProvider.VisitCurrentConnection((connection) => {
+        _CurrentConnection = connection;
         try {
           // Check if the entity already exists
           object[] keySetValues = entity.GetValues(PrimaryKeySet);
@@ -1298,7 +1324,7 @@ namespace System.Data.Fuse.Sql {
 
           // If the entity does not exist, add it
           if (!entityExists) {
-            _AutoValueManager.ApplyValuesOnAdd(entity, GetEntities(ExpressionTree.Empty(), Array.Empty<string>()), connection, p => this.IsDatabaseIdentityProperty(p));
+            _AutoValueManager.ApplyValuesOnAdd(entity, this.GetHighestExistingValue, connection, p => this.IsDatabaseIdentityProperty(p));
             Dictionary<string, object> fields = ExtractFieldsFromEntity(entity);
 
             using (var command = connection.CreateCommand()) {
@@ -1312,6 +1338,8 @@ namespace System.Data.Fuse.Sql {
           }
         } catch (Exception) {
           // Ignore exceptions and return default(TKey)
+        } finally {
+          _CurrentConnection = null;
         }
 
         // If the entity already exists or if an error occurs, return default(TKey)
