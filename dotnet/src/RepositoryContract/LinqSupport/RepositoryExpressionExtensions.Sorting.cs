@@ -38,7 +38,8 @@ namespace System.Data.Fuse.LinqSupport {
         throw new ArgumentNullException(nameof(entities));
       }
       if (sortedBy == null) {
-        throw new ArgumentNullException(nameof(sortedBy));
+        return entities; // No sorting applied if sortedBy is null.
+        //throw new ArgumentNullException(nameof(sortedBy));
       }
 
       IQueryable<TEntity> current = entities;
