@@ -11,6 +11,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 3.0.0
+released **2026-07-14**, including:
+ - Fix nach Breaking Change
+
+
+
 ## v 2.0.2
 released **2026-07-02**, including:
  - Fix ApplyValuesOnAdd
