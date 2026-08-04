@@ -100,9 +100,16 @@ namespace System.Data.Fuse.LinqSupport {
         return BuildInOperator(member, inValues, matchStringsCaseInsensitive);
       }
 
-      Type targetType = Nullable.GetUnderlyingType(memberType) ?? memberType;
-      object constantValue = DeserializeScalar(predicate.ValueSerialized, targetType);
-      Expression constExpr = Expression.Constant(constantValue);
+      Type nullableMemberType = Nullable.GetUnderlyingType(memberType);
+      Type targetType = nullableMemberType ?? memberType;
+      bool useNullConstant = nullableMemberType != null
+          && (string.IsNullOrEmpty(predicate.ValueSerialized) || predicate.ValueSerialized == "null");
+      object constantValue = useNullConstant
+          ? null
+          : DeserializeScalar(predicate.ValueSerialized, targetType);
+      Expression constExpr = constantValue == null
+          ? Expression.Constant(null, memberType)
+          : Expression.Constant(constantValue);
 
       if (matchStringsCaseInsensitive && constExpr.Type == typeof(string)) {
         constExpr = Expression.Call(constExpr, _StringToLowerMethod);

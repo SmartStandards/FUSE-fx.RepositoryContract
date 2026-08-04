@@ -18,6 +18,10 @@ namespace System.Data.Fuse.LinqSupport {
       public string Country { get; set; }
     }
 
+    private class PersonWithNullableDate {
+      public DateTime? Date { get; set; }
+    }
+
     // --------------------------------------------------------------------
     // Helper: Extract first predicate for simple expressions
     // --------------------------------------------------------------------
@@ -367,6 +371,17 @@ namespace System.Data.Fuse.LinqSupport {
       FieldPredicate pred = SinglePredicate(tree);
       Assert.AreEqual(FieldOperators.Greater, pred.Operator);
       Assert.AreEqual(10, pred.TryGetValue<int>());
+    }
+
+    [TestMethod]
+    public void LinqSupp_NullableEqualNull_RebuildsNullableNullConstant() {
+      ExpressionTree tree = ExpressionTree.And(FieldPredicate.Equal(nameof(PersonWithNullableDate.Date), (DateTime?)null));
+
+      Expression<Func<PersonWithNullableDate, bool>> expr = ExpressionTreeMapper.BuildLinqExpressionFromTree<PersonWithNullableDate>(tree, false);
+      Func<PersonWithNullableDate, bool> predicate = expr.Compile();
+
+      Assert.IsTrue(predicate(new PersonWithNullableDate { Date = null }));
+      Assert.IsFalse(predicate(new PersonWithNullableDate { Date = DateTime.UtcNow }));
     }
 
   }
