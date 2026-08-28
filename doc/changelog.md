@@ -5,9 +5,9 @@ This files contains a version history including all changes relevant for semanti
 
 
 
-## Upcoming Changes
-
-*(none)*
+## Upcoming Changes (3.0.2-efcore10)
+released **2026-08-28**, including:
+ - Update auf EF10
 
 
 
