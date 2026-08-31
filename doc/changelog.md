@@ -11,6 +11,12 @@ This files contains a version history including all changes relevant for semanti
 
 
 
+## v 3.0.2
+released **2026-08-31**, including:
+ - Fix missing null-check in ExpressionTreeMapper
+
+
+
 ## v 3.0.1
 released **2026-08-04**, including:
  - Fix nullable fields
