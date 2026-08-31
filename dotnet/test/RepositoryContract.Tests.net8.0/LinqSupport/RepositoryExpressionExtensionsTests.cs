@@ -384,6 +384,17 @@ namespace System.Data.Fuse.LinqSupport {
       Assert.IsFalse(predicate(new PersonWithNullableDate { Date = DateTime.UtcNow }));
     }
 
+    [TestMethod]
+    public void LinqSupp_StringEqualNull_CaseInsensitive_DoesNotCallToLowerOnNull() {
+      ExpressionTree tree = ExpressionTree.And(FieldPredicate.Equal(nameof(Person.Name), (string)null));
+
+      Expression<Func<Person, bool>> expr = ExpressionTreeMapper.BuildLinqExpressionFromTree<Person>(tree, true);
+      Func<Person, bool> predicate = expr.Compile();
+
+      Assert.IsTrue(predicate(new Person { Name = null }));
+      Assert.IsFalse(predicate(new Person { Name = "Karl" }));
+    }
+
   }
 
 }

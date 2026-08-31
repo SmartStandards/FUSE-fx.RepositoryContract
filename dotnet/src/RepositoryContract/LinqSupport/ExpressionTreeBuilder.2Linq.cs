@@ -91,7 +91,7 @@ namespace System.Data.Fuse.LinqSupport {
       Type memberType = member.Type;
 
       if (matchStringsCaseInsensitive && memberType == typeof(string)) {
-        member = Expression.Call(member, _StringToLowerMethod);
+        member = BuildNullSafeToLowerExpression(member);
       }
 
       if (predicate.Operator == FieldOperators.In) {
@@ -112,7 +112,7 @@ namespace System.Data.Fuse.LinqSupport {
           : Expression.Constant(constantValue);
 
       if (matchStringsCaseInsensitive && constExpr.Type == typeof(string)) {
-        constExpr = Expression.Call(constExpr, _StringToLowerMethod);
+        constExpr = BuildNullSafeToLowerExpression(constExpr);
       }
 
       switch (predicate.Operator) {
@@ -176,6 +176,14 @@ namespace System.Data.Fuse.LinqSupport {
       return FieldPredicate.DeserializeArrayForNetFramework(valueSerialized, elementType);
     }
 #endif
+
+    private static Expression BuildNullSafeToLowerExpression(Expression expression) {
+      return Expression.Condition(
+          Expression.Equal(expression, Expression.Constant(null, typeof(string))),
+          Expression.Constant(null, typeof(string)),
+          Expression.Call(expression, _StringToLowerMethod)
+      );
+    }
 
     //=====================================================================
     //  Member Access: "Address.City" → p.Address.City
