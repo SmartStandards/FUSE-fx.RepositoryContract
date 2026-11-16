@@ -22,6 +22,21 @@ SimpleExpressionTree //light expression tree for filtering, which is serializabl
 
 
 
+## Documentation
+
+- [Requirements](doc/requirements.md)
+- [Architecture](doc/architecture.md)
+- [Quickstart](doc/quickstart.md)
+- [Ecosystem](doc/ecosystem.md)
+- [Developer guide (German draft)](doc/developer-guide.md)
+- [Query operators](doc/query-operators.md)
+- [Changelog](doc/changelog.md)
+- [Decisions](doc/decisions/)
+- [Epics (future ideas)](doc/epics/)
+- [Backlog](doc/work/backlog.md) and [tech debt](doc/work/tech-debt.md)
+
+
+
 ## History
 
 After several experiments from [KornSW](https://github.com/KornSW/) in the past (see the ["kPers"-Project](https://github.com/KornSW/kPers/blob/master/kPers/kPers/IRepository.cs) containing the **IRepository** and the ["DynamicRepository"-Project](https://github.com/KornSW/DynamicRepository) which uses **LinqDynamic**) all the Ideas have been submitted to the 'SmartStandards' work group bringing all peaces together to find a really generic repo pattern that also supports multi-tier...

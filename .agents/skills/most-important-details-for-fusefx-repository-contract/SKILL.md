@@ -11,7 +11,9 @@ FUSE-fx.RepositoryContract is the central contract repository for repository-sty
 
 ## Documentation layout
 
-- Root `readme.md` describes repository/service contracts and UJMW-style call-based access.
+- Root `readme.md` describes repository/service contracts and UJMW-style call-based access and links all docs.
+- `doc/` follows the SmartStandards layout without numeric prefixes: `requirements.md`, `architecture.md`, `quickstart.md`, `ecosystem.md`, `developer-guide.md` (German 2024 draft, translate on next substantial edit), `query-operators.md`, `changelog.md` (pipeline-maintained, only `## Upcoming Changes` may be touched), `decisions/`, `epics/`, `work/backlog.md`, `work/tech-debt.md`.
+- `doc/epics/epic-mandatory-access-control.md` holds the MAC concept (derived from the PoC `KornSW.EntityFrameworkCore.DataAccessFilter`, local `C:\GIT-TK\EntityFrameworkCore.DataAccessFilter`). It is not an active requirement yet; it is intended to become a dedicated skill. Read it before working on access control, repository decorators or `EfRepository` query roots.
 - `dotnet/FUSE-fx.RepositoryContract.sln` is the solution entry point.
 - `dotnet/FUSE-fx.RepositoryContract.nuspec` packages the core contracts.
 - `dotnet/FUSE-fx.EfSupport.nuspec` packages EF support.
